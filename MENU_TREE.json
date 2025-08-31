@@ -1,0 +1,98 @@
+{
+  "Main Menu": [
+    "WiFi",
+    "Bluetooth",
+    "Device",
+    "Reboot"
+  ],
+  "WiFi": {
+    "Sniffers": [
+      "Probe Request Sniff",
+      "Beacon Sniff",
+      "Deauth Sniff",
+      "Packet Count",
+      "EAPOL/PMKID Scan",
+      "Packet Monitor",
+      "Channel Analyzer",
+      "Raw Capture",
+      "Detect Pwnagotchi",
+      "Detect Pineapple",
+      "Detect MultiSSID"
+    ],
+    "Scanners": [
+      "Ping Scan",
+      "ARP Scan",
+      "Port Scan All",
+      "SSH Scan",
+      "Telnet Scan"
+    ],
+    "Wardriving": [
+      "Wardrive",
+      "Station Wardrive"
+    ],
+    "Attacks": [
+      "Beacon Spam List",
+      "Beacon Spam Random",
+      "Rick Roll Beacon",
+      "Probe Req Flood",
+      "Evil Portal",
+      "Deauth Flood",
+      "AP Clone Spam",
+      "Deauth Targeted",
+      "Karma",
+      "Bad Msg",
+      "Bad Msg Targeted",
+      "Assoc Sleep",
+      "Assoc Sleep Targ"
+    ],
+    "General": [
+      "Generate SSIDs",
+      "Select probe SSIDs",
+      "Add SSIDs",
+      "Clear SSIDs",
+      "Clear APs",
+      "Clear Stations",
+      "Select APs",
+      "Select Stations",
+      "Select EP HTML File",
+      "View AP Info",
+      "Join WiFi",
+      "Join Saved WiFi",
+      "Set MACs",
+      "Shutdown WiFi"
+    ]
+  },
+  "Bluetooth": {
+    "Sniffers": [
+      "Bluetooth Sniffer",
+      "Flipper Sniff",
+      "Airtag Sniff",
+      "BT Wardrive",
+      "BT Wardrive Continuous",
+      "Detect Card Skimmers",
+      "Bluetooth Analyzer"
+    ],
+    "Bluetooth Attacks": [
+      "Sour Apple",
+      "Swiftpair Spam",
+      "Samsung BLE Spam",
+      "Google BLE Spam",
+      "Flipper BLE Spam",
+      "BLE Spam All",
+      "Spoof Airtag",
+      "Spoof Airtag"
+    ]
+  },
+  "Device": [
+    "Update Firmware",
+    "Save/Load Files",
+    "Language",
+    "Device Info",
+    "Settings",
+    "Delete SD Files",
+    "GPS Data",
+    "NMEA Stream",
+    "GPS Tracker",
+    "GPS POI"
+  ]
+}
