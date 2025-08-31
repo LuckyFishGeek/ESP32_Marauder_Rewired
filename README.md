@@ -1,34 +1,76 @@
-# ESP32 Marauder Scaffold (Clean v3, No Duplicates)
+# ESP32 Marauder Rewired
 
-This package is a **clean scaffold** of the ESP32 Marauder menu system, with all tools split into their own stub modules.
-It preserves the **original menu structure** while removing duplicate entries (`Spoof Airtag` and `Select EP HTML File`).
+*A modular, menu-accurate scaffold of the ESP32 Marauder firmware for incremental rebuilding.*
 
-## Structure
+---
 
-- `MENU_TREE.md` / `MENU_TREE.json`
-  - Human-readable and machine-readable copies of the complete menu tree.
-- `scaffold/registry/`
-  - `ToolRegistry.*` — lightweight registry system to hold menu entries and their associated tool launchers.
-- `scaffold/example_integration/`
-  - `RegistryInit.*` — registers all tools into the registry.
-  - `MenuFromRegistry.*` — builds menus from the registry.
-  - `main_demo_snippet.ino` — Arduino demo showing how to render and navigate menus via Serial.
-- `scaffold/wifi/*`, `scaffold/bluetooth/*`, `scaffold/device/`
-  - Each subfolder corresponds to a **menu category** (e.g., WiFi / Sniffers, Bluetooth / Attacks).
-  - Each tool has its own `.h`/`.cpp` pair with empty `setup()` / `loop()` stubs.
-  - Each folder contains a `README.md` describing its section.
+## Overview
 
-## How to Use
+ESP32 Marauder Rewired is a **deconstructed + rewired scaffold** of the original ESP32 Marauder firmware.  
+It preserves the **exact menu tree** while separating each tool into its own module (`.h` / `.cpp`),  
+so you can rebuild features **step by step** without wrestling the full monolith.
 
-1. Open `example_integration/main_demo_snippet.ino` in Arduino IDE (with ESP32 board installed).
-2. Flash to your ESP32 and open Serial Monitor at 115200 baud.
-3. Use the Serial UI to navigate menus (`w`=up, `s`=down, `e`=enter, `b`=back).
-4. When you select a tool, a stub message will be printed (e.g., `[Tool] Ping Scan launched (stub)`).
-5. Implement tool logic gradually by editing each `.cpp` file.
+- ✅ All original menu entries (Sniffers, Scanners, Wardriving, Attacks, Device)  
+- ✅ Duplicates removed (`Spoof Airtag`, `Select EP HTML File`)  
+- ✅ Minimal `ToolRegistry` system to populate menus  
+- ✅ PlatformIO-ready project (`platformio.ini`, `src/`, `include/`)  
+- ✅ Every tool has its own stub file waiting to be implemented  
 
-## Notes
+---
 
-- This scaffold is **non-functional** by default — all tools are stubs.
-- It is meant as a safe starting point to **rebuild features bit by bit**.
-- Menu duplicates from the original Marauder source have been **removed**.
+## Build-Out Checklist
 
+### Core
+- [x] Menu tree, registry, stubs
+- [x] PlatformIO project wired
+
+### Milestones
+**M1 — Passive Wi-Fi sniffers**  
+ProbeSniffer → BeaconSniffer → DeauthSniffer → PacketMonitor → EAPOL/PMKID Scan → ChannelAnalyzer → RawCapture
+
+**M2 — Bluetooth sniffers**  
+BluetoothSniffer → FlipperSniff → AirtagSniff → DetectCardSkimmers → BluetoothAnalyzer
+
+**M3 — Scanners**  
+PingScan (ICMP), ArpScan, PortScanAll, SshScan, TelnetScan
+
+**M4 — Wardriving**  
+Wardrive, StationWardrive + GPS loggers (CSV/GPX/JSON)
+
+**M5 — Device utilities**  
+DeviceInfo, Settings, Save/Load Files, Language, Delete SD, GPS tools
+
+**M6 — Wi-Fi General**  
+Generate/Select/Add/Clear SSIDs, Select APs/Stations, View AP Info, Join WiFi, Join Saved WiFi, Set MACs, Shutdown WiFi
+
+**M7 — (Optional) Attacks**  
+Stubbed until everything else is stable; gate behind compile-time flag.
+
+---
+
+## Repo Name & Tagline
+
+**ESP32 Marauder Rewired**  
+> *“A modular, menu-accurate scaffold of the ESP32 Marauder firmware for incremental rebuilding.”*
+
+---
+
+## Quick Start
+
+1. Open `platformio_project/` in VS Code with PlatformIO.  
+2. Build & upload to an ESP32 board.  
+3. Open Serial Monitor @ 115200 baud.  
+4. Navigate menus using:
+   - `w` = up  
+   - `s` = down  
+   - `e` = select  
+   - `b` = back  
+
+Each tool currently prints a stub message like:  
+```
+[Tool] Ping Scan launched (stub)
+```
+
+Implement tool logic gradually by editing the matching `.cpp` in `platformio_project/src/...`.
+
+---

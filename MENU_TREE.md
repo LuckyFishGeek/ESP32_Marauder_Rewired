@@ -1,4 +1,4 @@
-# ESP32 Marauder — Menu Tree (Clean v3)
+# ESP32 Marauder Rewired — Menu Tree
 
 ## Main Menu
 - WiFi
