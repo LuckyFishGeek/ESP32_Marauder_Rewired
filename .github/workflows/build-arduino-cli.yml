@@ -35,6 +35,7 @@ jobs:
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
           echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
+          export PATH="${GITHUB_WORKSPACE}/bin:$PATH"   # make available in THIS step too
           which arduino-cli
           arduino-cli version
 
@@ -128,10 +129,10 @@ jobs:
           set -e
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
-          # Entry point
+          # Entry point (boots to Main Menu per your change)
           cp scaffold/example_integration/main_demo_snippet.ino \
              "$SKETCH_DIR/esp32_marauder_rewired.ino"
-          # Bring in all .h/.hpp/.c/.cpp (keep relative dirs)
+          # Include all .h/.hpp/.c/.cpp (keep relative dirs)
           find scaffold -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
             | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
