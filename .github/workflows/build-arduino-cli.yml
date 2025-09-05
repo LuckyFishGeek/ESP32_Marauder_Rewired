@@ -91,8 +91,8 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: PaulStoffregen/XPT2046_Touchscreen
-        ref: v1.4
-          path: Custom/XPT2046_Touchscreen
+          ref: v1.4
+          path: CustomXPT2046_Touchscreen
 
       - name: Install NimBLE-Arduino
         uses: actions/checkout@v2
@@ -134,7 +134,7 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Your .ino is now at scaffold/ root. Pick the .ino there (rename if needed).
+          # Pick the .ino at scaffold/ root (after your move)
           INO_SRC=$(ls scaffold/*.ino | head -n 1)
           if [ -z "$INO_SRC" ]; then
             echo "No .ino found at scaffold/ root"; exit 1
@@ -156,9 +156,24 @@ jobs:
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
+          set -e
           FQBN="${{ inputs.fqbn || matrix.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+
+          # Add every subdir under the sketch as an include path to be safe
+          EXTRA_INCLUDES=""
+          while IFS= read -r -d '' d; do
+            EXTRA_INCLUDES="$EXTRA_INCLUDES -I$d"
+          done < <(find "$SKETCH_DIR" -type d -print0)
+
           echo "Compiling for $FQBN"
-          arduino-cli compile --fqbn "$FQBN" "${{ steps.prep.outputs.sketch_dir }}" --warnings none --export-binaries
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            "$SKETCH_DIR" \
+            --warnings none \
+            --export-binaries \
+            --build-property compiler.cpp.extra_flags="$EXTRA_INCLUDES" \
+            --build-property compiler.c.extra_flags="$EXTRA_INCLUDES"
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
