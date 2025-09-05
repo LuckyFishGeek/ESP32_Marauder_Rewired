@@ -48,7 +48,7 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Libraries ----------
+      # ---------- Install libraries ----------
       - name: Ensure Arduino libraries folder
         run: mkdir -p "$HOME/Arduino/libraries"
 
@@ -125,41 +125,69 @@ jobs:
             echo "No custom TFT_eSPI User_*.h found; skipping."
           fi
 
-      # ---------- Create Arduino sketch from /scaffold ----------
-      - name: Prepare Sketch Folder (from scaffold/)
-        id: prep
+      # ---------- Package scaffold as a temporary Arduino library ----------
+      - name: Create ESP32MarauderRewired library from scaffold/
+        id: makelib
+        shell: bash
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRewired"
+          mkdir -p "$LIBDIR/src"
+          # Copy entire scaffold tree into the library src (preserve structure)
+          rsync -a --delete scaffold/ "$LIBDIR/src/"
+
+          # Minimal library.properties so Arduino treats it as a library
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRewired
+          version=0.0.1
+          author=Rewired
+          maintainer=Rewired
+          sentence=ESP32 Marauder Rewired scaffold as an Arduino library.
+          paragraph=Builds the deconstructed menu system as a library for Arduino CLI compilation.
+          category=Other
+          architectures=*
+          includes=example_integration/RegistryInit.h
+          PROP
+
+          echo "Library created at: $LIBDIR"
+          find "$LIBDIR" -maxdepth 2 -type d | sort
+
+      # ---------- Create tiny sketch that uses the library ----------
+      - name: Prepare Sketch Folder (uses the library)
+        id: prepsketch
         shell: bash
         run: |
           set -e
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Generate .ino that points to headers by relative path
-          sed 's|#include "RegistryInit.h"|#include "example_integration/RegistryInit.h"|' scaffold/example_integration/main_demo_snippet.ino \
-          | sed 's|#include "MenuFromRegistry.h"|#include "example_integration/MenuFromRegistry.h"|' \
-          > "$SKETCH_DIR/esp32_marauder_rewired.ino"
+          # Create simple .ino that includes headers via library path
+          cat > "$SKETCH_DIR/esp32_marauder_rewired.ino" <<'INO'
+          #include <Arduino.h>
+          #include "example_integration/RegistryInit.h"
+          #include "example_integration/MenuFromRegistry.h"
 
-          # Copy ALL sources but from inside 'scaffold' so paths land at sketch root
-          pushd scaffold >/dev/null
-          find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
-            | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
-          popd >/dev/null
+          void setup() {
+            Serial.begin(115200);
+            delay(500);
+            init_tool_registry();
+            runSerialMenu("Main Menu");
+          }
 
-          # Sanity checks
-          ls -la "$SKETCH_DIR/example_integration/RegistryInit.h"
-          ls -la "$SKETCH_DIR/example_integration/MenuFromRegistry.h"
-          ls -la "$SKETCH_DIR/registry/ToolRegistry.h"
+          void loop() {}
+          INO
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch contents (top-level):"
-          find "$SKETCH_DIR" -maxdepth 2 -type d -print | sort
+          echo "Sketch prepared at $SKETCH_DIR"
+          ls -la "$SKETCH_DIR"
 
+      # ---------- Compile ----------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
           FQBN="${{ inputs.fqbn || matrix.fqbn }}"
           echo "Compiling for $FQBN"
-          arduino-cli compile --fqbn "$FQBN" "${{ steps.prep.outputs.sketch_dir }}" --warnings none --export-binaries
+          arduino-cli compile --fqbn "$FQBN" "${{ steps.prepsketch.outputs.sketch_dir }}" --warnings none --export-binaries
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
