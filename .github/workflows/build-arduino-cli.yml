@@ -1,4 +1,4 @@
-name: Build (Arduino CLI — ESP32 Marauder Rewired)
+name: Build (Arduino CLI ? ESP32 Marauder Rewired)
 
 on:
   push:
@@ -141,7 +141,7 @@ jobs:
           fi
           cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
 
-          # Copy all code files from scaffold (keep directories – registry/, wifi/, etc.)
+          # Copy all code files from scaffold (keep directories ? registry/, wifi/, etc.)
           pushd scaffold >/dev/null
           find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
             | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
