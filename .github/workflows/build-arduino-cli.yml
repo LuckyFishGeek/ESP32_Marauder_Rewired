@@ -53,21 +53,21 @@ jobs:
         run: mkdir -p "$HOME/Arduino/libraries"
 
       - name: Install ESP32Ping
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: marian-craciunescu/ESP32Ping
           ref: 1.6
           path: CustomESP32Ping
 
       - name: Install AsyncTCP
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: me-no-dev/AsyncTCP
           ref: master
           path: CustomAsyncTCP
 
       - name: Install MicroNMEA
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: stevemarple/MicroNMEA
           ref: v2.0.6
@@ -81,21 +81,21 @@ jobs:
           echo "Installed custom ESPAsyncWebServer from repo"
 
       - name: Install TFT_eSPI
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: Bodmer/TFT_eSPI
           ref: V2.5.34
           path: CustomTFT_eSPI
 
       - name: Install XPT2046_Touchscreen
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: PaulStoffregen/XPT2046_Touchscreen
           ref: v1.4
           path: CustomXPT2046_Touchscreen
 
       - name: Install NimBLE-Arduino
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: h2zero/NimBLE-Arduino
           ref: 1.3.8
@@ -125,6 +125,34 @@ jobs:
             echo "No custom TFT_eSPI User_*.h found; skipping."
           fi
 
+      # ---------- Package 'scaffold/registry' as a local Arduino library ----------
+      - name: Create ESP32MarauderRegistry local library
+        id: reglib
+        shell: bash
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          # Copy everything from scaffold/registry (both .h and .cpp)
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+
+          # Minimal library.properties so Arduino treats it as a lib
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.1
+          author=Rewired
+          maintainer=Rewired
+          sentence=Registry (ToolRegistry, etc.) for ESP32 Marauder Rewired.
+          paragraph=Provides registry core so sketches can link without flattening sources.
+          category=Other
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+
+          echo "Local library created at $LIBDIR"
+          echo "Contents:"
+          find "$LIBDIR" -maxdepth 3 -type f | sort
+
       # ---------- Create Arduino sketch from scaffold root ----------
       - name: Prepare Sketch Folder (from scaffold/)
         id: prep
@@ -134,18 +162,25 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Pick the .ino at scaffold/ root (after your move)
+          # Pick the .ino at scaffold/ root
           INO_SRC=$(ls scaffold/*.ino | head -n 1)
           if [ -z "$INO_SRC" ]; then
             echo "No .ino found at scaffold/ root"; exit 1
           fi
+          echo "Using INO: $INO_SRC"
           cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
 
-          # Copy all code files from scaffold (keep directories ? registry/, wifi/, etc.)
-          pushd scaffold >/dev/null
-          find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
-            | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
-          popd >/dev/null
+          # Copy top-level code files (.h/.hpp/.c/.cpp) from scaffold root only
+          find scaffold -maxdepth 1 -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -exec cp "{}" "$SKETCH_DIR/" \;
+
+          # Copy header folders that the sketch includes (but NOT registry .cpp; those are in the local lib)
+          for dir in wifi bluetooth device ; do
+            if [ -d "scaffold/$dir" ]; then
+              mkdir -p "$SKETCH_DIR/$dir"
+              # copy headers only; sources for these can stay here if needed later
+              find "scaffold/$dir" -type f \( -name "*.h" -o -name "*.hpp" \) -exec cp --parents "{}" "$SKETCH_DIR/" \;
+            fi
+          done
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           echo "Sketch tree (top):"
@@ -153,6 +188,7 @@ jobs:
           echo "Root files:"
           ls -la "$SKETCH_DIR"
 
+      # ---------- Compile ----------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
@@ -160,20 +196,12 @@ jobs:
           FQBN="${{ inputs.fqbn || matrix.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
 
-          # Add every subdir under the sketch as an include path to be safe
-          EXTRA_INCLUDES=""
-          while IFS= read -r -d '' d; do
-            EXTRA_INCLUDES="$EXTRA_INCLUDES -I$d"
-          done < <(find "$SKETCH_DIR" -type d -print0)
-
           echo "Compiling for $FQBN"
           arduino-cli compile \
             --fqbn "$FQBN" \
             "$SKETCH_DIR" \
             --warnings none \
-            --export-binaries \
-            --build-property compiler.cpp.extra_flags="$EXTRA_INCLUDES" \
-            --build-property compiler.c.extra_flags="$EXTRA_INCLUDES"
+            --export-binaries
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
