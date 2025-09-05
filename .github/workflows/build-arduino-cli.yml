@@ -133,12 +133,22 @@ jobs:
           set -e
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
+
+          # Entry point (boots to Main Menu)
           cp scaffold/example_integration/main_demo_snippet.ino \
              "$SKETCH_DIR/esp32_marauder_rewired.ino"
+
+          # Copy all sources (keep relative directories for .cpp/.h)
           find scaffold -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
             | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
+
+          # Mirror key headers to sketch root so .ino can find them
+          cp scaffold/example_integration/RegistryInit.h "$SKETCH_DIR/"
+          cp scaffold/example_integration/MenuFromRegistry.h "$SKETCH_DIR/"
+
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch contents:"; find "$SKETCH_DIR" -maxdepth 3 -type f | sort
+          echo "Sketch contents:"
+          find "$SKETCH_DIR" -maxdepth 3 -type f | sort
 
       - name: Compile (Arduino CLI)
         shell: bash
