@@ -48,7 +48,7 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Install libraries ----------
+      # ---------- Libraries ----------
       - name: Ensure Arduino libraries folder
         run: mkdir -p "$HOME/Arduino/libraries"
 
@@ -91,7 +91,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: PaulStoffregen/XPT2046_Touchscreen
-          ref: v1.4
+        ref: v1.4
           path: CustomXPT2046_Touchscreen
 
       - name: Install NimBLE-Arduino
@@ -125,70 +125,40 @@ jobs:
             echo "No custom TFT_eSPI User_*.h found; skipping."
           fi
 
-      # ---------- Package scaffold as Arduino library ----------
-      - name: Create ESP32MarauderRewired library from scaffold/
-        id: makelib
-        shell: bash
-        run: |
-          set -e
-          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRewired"
-          mkdir -p "$LIBDIR/src"
-          rsync -a --delete scaffold/ "$LIBDIR/src/"
-
-          cat > "$LIBDIR/library.properties" <<'PROP'
-          name=ESP32MarauderRewired
-          version=0.0.1
-          author=Rewired
-          maintainer=Rewired
-          sentence=ESP32 Marauder Rewired scaffold as an Arduino library.
-          paragraph=Builds the deconstructed menu system as a library for Arduino CLI compilation.
-          category=Other
-          architectures=*
-          includes=example_integration/RegistryInit.h
-          PROP
-
-          echo "Library created at: $LIBDIR"
-
-      - name: List library tree (debug)
-        run: |
-          echo "=== ESP32MarauderRewired library tree ==="
-          find "$HOME/Arduino/libraries/ESP32MarauderRewired/src" -maxdepth 3 -type f | sort
-
-      # ---------- Create tiny sketch ----------
-      - name: Prepare Sketch Folder (uses the library)
-        id: prepsketch
+      # ---------- Create Arduino sketch from scaffold root ----------
+      - name: Prepare Sketch Folder (from scaffold/)
+        id: prep
         shell: bash
         run: |
           set -e
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          cat > "$SKETCH_DIR/esp32_marauder_rewired.ino" <<'INO'
-          #include <Arduino.h>
-          #include <example_integration/RegistryInit.h>
-          #include <example_integration/MenuFromRegistry.h>
+          # Your .ino is now at scaffold/ root. Pick the .ino there (rename if needed).
+          INO_SRC=$(ls scaffold/*.ino | head -n 1)
+          if [ -z "$INO_SRC" ]; then
+            echo "No .ino found at scaffold/ root"; exit 1
+          fi
+          cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
 
-          void setup() {
-            Serial.begin(115200);
-            delay(500);
-            init_tool_registry();
-            runSerialMenu("Main Menu");
-          }
-
-          void loop() {}
-          INO
+          # Copy all code files from scaffold (keep directories – registry/, wifi/, etc.)
+          pushd scaffold >/dev/null
+          find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
+            | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
+          popd >/dev/null
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch prepared at $SKETCH_DIR"
+          echo "Sketch tree (top):"
+          find "$SKETCH_DIR" -maxdepth 2 -type d | sort
+          echo "Root files:"
           ls -la "$SKETCH_DIR"
 
-      # ---------- Compile ----------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
           FQBN="${{ inputs.fqbn || matrix.fqbn }}"
           echo "Compiling for $FQBN"
-          arduino-cli compile --fqbn "$FQBN" "${{ steps.prepsketch.outputs.sketch_dir }}" --warnings none --export-binaries
+          arduino-cli compile --fqbn "$FQBN" "${{ steps.prep.outputs.sketch_dir }}" --warnings none --export-binaries
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
