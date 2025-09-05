@@ -92,7 +92,7 @@ jobs:
         with:
           repository: PaulStoffregen/XPT2046_Touchscreen
         ref: v1.4
-          path: CustomXPT2046_Touchscreen
+          path: Custom/XPT2046_Touchscreen
 
       - name: Install NimBLE-Arduino
         uses: actions/checkout@v2
