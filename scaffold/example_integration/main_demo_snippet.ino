@@ -13,7 +13,7 @@ void setup(){
   // runSerialMenu("Bluetooth/Sniffers");
   // runSerialMenu("Device");
 
-  runSerialMenu("WiFi/Scanners");
+  runSerialMenu("Main Menu");
 }
 
 void loop(){}
