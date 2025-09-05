@@ -1,0 +1,90 @@
+name: Build (Arduino CLI — ESP32 Marauder Rewired)
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ "*" ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      fqbn:
+        description: "FQBN to compile (overrides matrix)"
+        required: false
+      core_version:
+        description: "Arduino-ESP32 core version (e.g., 2.0.11)"
+        required: false
+        default: "2.0.11"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        fqbn:
+          # EDIT these to match your target boards
+          - esp32:esp32:esp32        # generic ESP32 Dev Module
+          - esp32:esp32:esp32s2      # ESP32-S2 Dev Module
+          - esp32:esp32:esp32s3      # ESP32-S3 Dev Module
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "${PWD}/bin" >> $GITHUB_PATH
+          arduino-cli version
+
+      - name: Configure Arduino CLI
+        run: |
+          arduino-cli config init --additional-urls https://github.com/espressif/arduino-esp32/releases/download/${{ inputs.core_version || '2.0.11' }}/package_esp32_dev_index.json
+          arduino-cli core update-index
+
+      - name: Install ESP32 Core
+        run: |
+          CORE_VER="${{ inputs.core_version || '2.0.11' }}"
+          echo "Installing esp32:esp32@${CORE_VER}"
+          arduino-cli core install "esp32:esp32@${CORE_VER}"
+
+      # OPTIONAL: install libraries if your code needs them.
+      # - name: Install Libraries
+      #   run: |
+      #     arduino-cli lib install ESP32Ping
+      #     arduino-cli lib install "TFT_eSPI@2.5.34"
+
+      - name: Prepare Sketch Folder
+        id: prep
+        shell: bash
+        run: |
+          # Create a temporary, Arduino-compatible sketch directory
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          mkdir -p "$SKETCH_DIR"
+
+          # Use your existing demo .ino as the sketch entry point
+          cp scaffold/example_integration/main_demo_snippet.ino "$SKETCH_DIR/esp32_marauder_rewired.ino"
+
+          # Copy ALL sources from scaffold (headers and .cpp) next to the .ino
+          rsync -av --prune-empty-dirs --include '*/' --include '*.h' --include '*.hpp' --include '*.c' --include '*.cpp' --exclude '*' scaffold/ "$SKETCH_DIR/"
+
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          echo "ls of sketch_dir:"
+          ls -la "$SKETCH_DIR"
+
+      - name: Compile (Arduino CLI)
+        shell: bash
+        run: |
+          FQBN="${{ inputs.fqbn || matrix.fqbn }}"
+          echo "Compiling for $FQBN"
+          arduino-cli compile --fqbn "$FQBN" "${{ steps.prep.outputs.sketch_dir }}" --warnings none --export-binaries
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rewired_${{ inputs.fqbn || matrix.fqbn }}_${{ github.sha }}
+          path: |
+            _build/esp32_marauder_rewired/build/*/*.bin
+          if-no-files-found: warn
+          retention-days: 7
