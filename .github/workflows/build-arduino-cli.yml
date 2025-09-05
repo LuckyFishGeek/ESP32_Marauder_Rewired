@@ -125,7 +125,7 @@ jobs:
             echo "No custom TFT_eSPI User_*.h found; skipping."
           fi
 
-      # ---------- Package scaffold as a temporary Arduino library ----------
+      # ---------- Package scaffold as Arduino library ----------
       - name: Create ESP32MarauderRewired library from scaffold/
         id: makelib
         shell: bash
@@ -133,10 +133,8 @@ jobs:
           set -e
           LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRewired"
           mkdir -p "$LIBDIR/src"
-          # Copy entire scaffold tree into the library src (preserve structure)
           rsync -a --delete scaffold/ "$LIBDIR/src/"
 
-          # Minimal library.properties so Arduino treats it as a library
           cat > "$LIBDIR/library.properties" <<'PROP'
           name=ESP32MarauderRewired
           version=0.0.1
@@ -150,9 +148,13 @@ jobs:
           PROP
 
           echo "Library created at: $LIBDIR"
-          find "$LIBDIR" -maxdepth 2 -type d | sort
 
-      # ---------- Create tiny sketch that uses the library ----------
+      - name: List library tree (debug)
+        run: |
+          echo "=== ESP32MarauderRewired library tree ==="
+          find "$HOME/Arduino/libraries/ESP32MarauderRewired/src" -maxdepth 3 -type f | sort
+
+      # ---------- Create tiny sketch ----------
       - name: Prepare Sketch Folder (uses the library)
         id: prepsketch
         shell: bash
@@ -161,11 +163,10 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Create simple .ino that includes headers via library path
           cat > "$SKETCH_DIR/esp32_marauder_rewired.ino" <<'INO'
           #include <Arduino.h>
-          #include "example_integration/RegistryInit.h"
-          #include "example_integration/MenuFromRegistry.h"
+          #include <example_integration/RegistryInit.h>
+          #include <example_integration/MenuFromRegistry.h>
 
           void setup() {
             Serial.begin(115200);
