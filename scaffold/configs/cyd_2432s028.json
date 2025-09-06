@@ -1,0 +1,21 @@
+{
+  "board": "CYD_2432S028",
+  "display": {
+    "driver": "ILI9341",
+    "size": "320x240",
+    "touch": true
+  },
+  "modules": {
+    "gps": false,
+    "sd": true,
+    "buttons": true
+  },
+  "pins": {
+    "tft_cs": 12,
+    "tft_dc": 2,
+    "tft_rst": 15,
+    "touch_cs": 13,
+    "gps_rx": -1,
+    "gps_tx": -1
+  }
+}

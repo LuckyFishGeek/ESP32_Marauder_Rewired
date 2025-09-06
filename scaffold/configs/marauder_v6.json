@@ -1,0 +1,21 @@
+{
+  "board": "MARAUDER_V6",
+  "display": {
+    "driver": "ILI9341",
+    "size": "320x240",
+    "touch": true
+  },
+  "modules": {
+    "gps": true,
+    "sd": true,
+    "buttons": true
+  },
+  "pins": {
+    "tft_cs": 14,
+    "tft_dc": 27,
+    "tft_rst": 33,
+    "touch_cs": 12,
+    "gps_rx": 16,
+    "gps_tx": 17
+  }
+}

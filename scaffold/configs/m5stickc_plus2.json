@@ -1,0 +1,21 @@
+{
+  "board": "M5STICKC_PLUS2",
+  "display": {
+    "driver": "ST7789",
+    "size": "240x135",
+    "touch": false
+  },
+  "modules": {
+    "gps": false,
+    "sd": false,
+    "buttons": true
+  },
+  "pins": {
+    "tft_cs": -1,
+    "tft_dc": 15,
+    "tft_rst": -1,
+    "touch_cs": -1,
+    "gps_rx": -1,
+    "gps_tx": -1
+  }
+}
