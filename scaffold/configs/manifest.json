@@ -1,0 +1,144 @@
+{
+  "boards": [
+    {
+      "label": "Flipper Zero WiFi Dev Board",
+      "fqbn": "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": ["MARAUDER_FLIPPER"]
+    },
+    {
+      "label": "Flipper Zero Multi Board S3",
+      "fqbn": "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": ["MARAUDER_MULTIBOARD_S3"]
+    },
+    {
+      "label": "OG Marauder",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
+      "defines": ["MARAUDER_V4"]
+    },
+    {
+      "label": "Marauder v6",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
+      "defines": ["MARAUDER_V6"]
+    },
+    {
+      "label": "Marauder v6.1",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
+      "defines": ["MARAUDER_V6_1"]
+    },
+    {
+      "label": "Marauder Kit",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
+      "defines": ["MARAUDER_KIT"]
+    },
+    {
+      "label": "Marauder Mini",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_marauder_mini.h" },
+      "defines": ["MARAUDER_MINI"]
+    },
+    {
+      "label": "ESP32 LDDB",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "", "partition": "" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": ["ESP32_LDDB"]
+    },
+    {
+      "label": "Marauder Dev Board Pro",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "", "partition": "" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": ["MARAUDER_DEV_BOARD_PRO"]
+    },
+    {
+      "label": "M5StickCPlus",
+      "fqbn": "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_marauder_m5stickc.h" },
+      "defines": ["MARAUDER_M5STICKC"]
+    },
+    {
+      "label": "M5StickCPlus 2",
+      "fqbn": "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_marauder_m5stickcp2.h" },
+      "defines": ["MARAUDER_M5STICKCP2"]
+    },
+    {
+      "label": "Rev Feather",
+      "fqbn": "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_marauder_rev_feather.h" },
+      "defines": ["MARAUDER_REV_FEATHER"]
+    },
+    {
+      "label": "Marauder v7",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_dual_nrf24.h" },
+      "defines": ["MARAUDER_V7"]
+    },
+    {
+      "label": "Marauder CYD 2432S028",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_cyd_micro.h" },
+      "defines": ["MARAUDER_CYD_MICRO"]
+    },
+    {
+      "label": "Marauder CYD 2432S024 GUITION",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_cyd_guition.h" },
+      "defines": ["MARAUDER_CYD_GUITION"]
+    },
+    {
+      "label": "Marauder CYD 2432S028 2 USB",
+      "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_cyd_2usb.h" },
+      "defines": ["MARAUDER_CYD_2USB"]
+    },
+    {
+      "label": "Marauder v7.1",
+      "fqbn": "esp32:esp32:dfrobot_firebeetle2_esp32e:FlashSize=16M,PartitionScheme=min_spiffs,PSRAM=enabled",
+      "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_dual_nrf24.h" },
+      "defines": ["MARAUDER_V7_1"]
+    },
+    {
+      "label": "M5Cardputer",
+      "fqbn": "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M,PSRAM=disabled",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": true, "header": "User_Setup_marauder_m5cardputer.h" },
+      "defines": ["MARAUDER_CARDPUTER"]
+    },
+    {
+      "label": "ESP32-C5-DevKitC-1",
+      "fqbn": "esp32:esp32:esp32c5:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": ["MARAUDER_C5"]
+    },
+    {
+      "label": "Generic ESP32",
+      "fqbn": "esp32:esp32:esp32:PartitionScheme=min_spiffs",
+      "defaults": { "filesystem": "", "partition": "" },
+      "tft": { "enabled": false, "header": "" },
+      "defines": []
+    }
+  ]
+}
