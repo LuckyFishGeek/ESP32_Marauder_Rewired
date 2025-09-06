@@ -34,3 +34,4 @@
   "build_flags": [],
   "notes": "Has nRF24 headers on some variants\u2014set pins if used."
 }
+

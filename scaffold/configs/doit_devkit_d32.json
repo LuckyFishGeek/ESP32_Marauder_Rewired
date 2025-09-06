@@ -36,3 +36,4 @@
   "build_flags": [],
   "notes": "Classic DOIT pinout; set SPI/I2C pins if you attach a TFT."
 }
+

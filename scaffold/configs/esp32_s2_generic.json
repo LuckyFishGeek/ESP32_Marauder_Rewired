@@ -36,3 +36,4 @@
   "build_flags": [],
   "notes": "ESP32-S2 has Wi-Fi only (no classic BLE)."
 }
+

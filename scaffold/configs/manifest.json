@@ -1,6 +1,5 @@
-﻿﻿{
+﻿{
   "boards": [
-    /* ───────────── Generic / popular ESP32 dev boards ───────────── */
     {
       "label": "Generic ESP32 Dev Module",
       "fqbn": "esp32:esp32:esp32",
@@ -141,8 +140,6 @@
       "defaults": { "filesystem": "littlefs", "partition": "min_littlefs_ota.csv", "profile": "Displayless" },
       "tft": { "enabled": false, "header": "" }
     },
-
-    /* ──────────────────────── Marauder-specific boards ──────────────────────── */
     {
       "label": "Flipper Zero WiFi Dev Board",
       "fqbn": "esp32:esp32:esp32s2",
@@ -276,8 +273,6 @@
       "defaults": { "filesystem": "littlefs", "partition": "min_littlefs_ota.csv", "profile": "ESP32-C5-DevKitC-1" },
       "tft": { "enabled": false, "header": "" }
     },
-
-    /* ───────────── Convenience: Generic catch-all used by some flows ────────── */
     {
       "label": "Generic ESP32",
       "fqbn": "esp32:esp32:esp32",
@@ -287,4 +282,3 @@
     }
   ]
 }
-
