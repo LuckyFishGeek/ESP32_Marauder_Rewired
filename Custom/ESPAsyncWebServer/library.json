@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "ESP Async WebServer",
   "version": "2.10.4",
   "description": "Asynchronous HTTP and WebSocket Server Library for ESP32. Supports: WebSocket, SSE, Authentication, Arduino Json 7, File Upload, Static File serving, URL Rewrite, URL Redirect, etc.",

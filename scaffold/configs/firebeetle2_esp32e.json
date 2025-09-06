@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "FireBeetle2 ESP32-E",
   "board_fqbn": "esp32:esp32:dfrobot_firebeetle2_esp32e",
   "filesystem": {

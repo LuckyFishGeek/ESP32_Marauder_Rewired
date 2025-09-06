@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "M5Cardputer",
   "board_fqbn": "esp32:esp32:esp32s3",
   "filesystem": {

@@ -1,4 +1,4 @@
-{
+﻿{
   "board": "M5STICKC_PLUS",
   "display": {
     "driver": "ST7789",

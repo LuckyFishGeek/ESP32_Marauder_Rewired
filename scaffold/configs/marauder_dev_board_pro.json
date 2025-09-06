@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Marauder Dev Board Pro",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {

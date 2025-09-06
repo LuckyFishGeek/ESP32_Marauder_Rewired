@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "ESP32 LDDB",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {

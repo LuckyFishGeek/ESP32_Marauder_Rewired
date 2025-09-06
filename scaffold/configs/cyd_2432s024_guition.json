@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "CYD 2432S024 Guition",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {

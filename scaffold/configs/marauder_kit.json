@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Marauder Kit",
   "board_fqbn": "esp32:esp32:esp32",
   "filesystem": {

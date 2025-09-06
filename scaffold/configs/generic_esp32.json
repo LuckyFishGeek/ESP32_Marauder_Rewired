@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Generic ESP32",
   "board_fqbn": "esp32:esp32:esp32",
   "filesystem": {

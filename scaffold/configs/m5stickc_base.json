@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "M5StickC / M5StickC-Plus (base)",
   "board_fqbn": "esp32:esp32:m5stick-c",
   "filesystem": {

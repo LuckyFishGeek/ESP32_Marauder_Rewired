@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "CYD 2432S028 (2 USB)",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {

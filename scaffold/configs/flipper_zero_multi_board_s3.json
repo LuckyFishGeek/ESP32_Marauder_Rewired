@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Flipper Zero Multi Board S3",
   "board_fqbn": "esp32:esp32:esp32s3",
   "filesystem": {
