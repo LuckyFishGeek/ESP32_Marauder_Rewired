@@ -112,11 +112,9 @@ jobs:
           FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
           if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
 
-          # 🔧 Sanitize defines to prevent broken quotes leaking into CLI
+          # Sanitize defines (remove stray quotes/CRs)
           DEFINES="$(printf '%s' "$DEFINES" | tr -d '\r' | sed 's/["\x27]//g' | xargs || true)"
 
-          echo "Resolved FQBN: $FQBN"
-          echo "Resolved defines: $DEFINES"
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
@@ -233,10 +231,11 @@ jobs:
             fi
           fi
 
+      # ---------- PATCHED: array-based args to preserve -D flags ----------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
           DEFS="${{ steps.map.outputs.defines }}"
@@ -244,12 +243,25 @@ jobs:
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
 
-          echo "DEFS going into compiler.extra_flags: $DEFS"
+          echo "FQBN: $FQBN"
+          echo "Filesystem: ${FS:-<default>}"
+          echo "Partition:  ${PART:-<default>}"
+          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
+          echo "DEFINES: $DEFS"
 
-          PROPS="--build-property compiler.cpp.extra_flags=\"$EXTRA_INCLUDES $DEFS\" \
-                 --build-property compiler.c.extra_flags=\"$EXTRA_INCLUDES $DEFS\""
+          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
+          C_FLAGS="$EXTRA_INCLUDES $DEFS"
 
-          [ -n "$FS" ] && PROPS="$PROPS --build-property board_build.filesystem=$FS"
+          ARGS=()
+          ARGS+=(--fqbn "$FQBN")
+          ARGS+=(--warnings none)
+          ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
+          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
+
+          if [ -n "$FS" ]; then
+            ARGS+=(--build-property "board_build.filesystem=$FS")
+          fi
 
           if [ -n "$PART" ]; then
             mkdir -p "$SKETCH_DIR/partitions"
@@ -257,20 +269,14 @@ jobs:
               cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
             fi
             NAME_ONLY="${PART%.csv}"
-            PROPS="$PROPS --build-property build.partitions=$NAME_ONLY"
+            ARGS+=(--build-property "build.partitions=$NAME_ONLY")
           fi
 
-          echo "FQBN: $FQBN"
-          echo "Filesystem: ${FS:-<default>}"
-          echo "Partition:  ${PART:-<default>}"
-          echo "Props: $PROPS"
+          echo "arduino-cli compile args:"
+          printf '  %q\n' "${ARGS[@]}"
 
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            "$SKETCH_DIR" \
-            --warnings none \
-            --export-binaries \
-            $PROPS
+          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
+      # -------------------------------------------------------------------
 
       - name: Sanitize firmware artifact name
         id: sanitize_fw
@@ -286,3 +292,4 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
+```0
