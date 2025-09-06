@@ -1,9 +1,6 @@
-name: Build (Arduino CLI — ESP32 Marauder Rewired w/ Config)
+name: Build (Arduino CLI — ESP32 Marauder Rewired)
 
 on:
-  push:
-    branches: [ main, master ]
-  pull_request:
   workflow_dispatch:
     inputs:
       fqbn:
@@ -15,18 +12,39 @@ on:
         required: false
         default: '2.0.11'
       config_name:
-        description: 'Config filename in scaffold/configs (e.g., marauder_mini.json)'
+        description: 'Config in scaffold/configs (e.g., marauder_mini.json)'
         required: false
         default: 'marauder_mini.json'
       custom_config_json:
-        description: 'Optional: paste a full JSON to override config_name'
+        description: 'Optional JSON to override config_name (leave blank to skip)'
         required: false
+        default: ''
+      filesystem:
+        description: 'Filesystem define (leave blank to use sketch default)'
+        required: false
+        type: choice
+        options:
+          - ''         # no define
+          - spiffs
+          - littlefs
+        default: ''
+      partition_csv:
+        description: 'Partition CSV from ./partitions (leave blank for default core scheme)'
+        required: false
+        type: choice
+        options:
+          - ''                       # don’t copy a CSV
+          - hugeapp_1m_fs.csv
+          - marauder_littlefs.csv
+          - marauder_spiffs_ota.csv
+          - min_littlefs_ota.csv
+          - min_spiffs_ota.csv
+          - ota_1m_fs.csv
         default: ''
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -47,65 +65,17 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Libraries ----------
-      - name: Ensure Arduino libraries folder
-        run: mkdir -p "$HOME/Arduino/libraries"
-
-      - name: Install ESP32Ping
-        uses: actions/checkout@v4
-        with:
-          repository: marian-craciunescu/ESP32Ping
-          ref: 1.6
-          path: CustomESP32Ping
-
-      - name: Install AsyncTCP
-        uses: actions/checkout@v4
-        with:
-          repository: me-no-dev/AsyncTCP
-          ref: master
-          path: CustomAsyncTCP
-
-      - name: Install MicroNMEA
-        uses: actions/checkout@v4
-        with:
-          repository: stevemarple/MicroNMEA
-          ref: v2.0.6
-          path: CustomMicroNMEA
-
-      - name: Install ESPAsyncWebServer (Custom from repo)
+      # Libraries (download your tar bundle and extract)
+      - name: Download & Extract lib.tar
         run: |
-          rm -rf "$HOME/Arduino/libraries/ESPAsyncWebServer"
-          cp -r Custom/ESPAsyncWebServer "$HOME/Arduino/libraries/ESPAsyncWebServer"
+          mkdir -p "$HOME/Arduino/libraries"
+          echo "Downloading lib.tar from repo..."
+          curl -L "https://github.com/AirysDark/ESP32_Marauder_Rewired/raw/main/lib.tar" -o lib.tar
+          tar -xf lib.tar -C "$HOME/Arduino/libraries"
+          echo "Libraries installed to $HOME/Arduino/libraries"
+          ls -la "$HOME/Arduino/libraries"
 
-      - name: Install TFT_eSPI
-        uses: actions/checkout@v4
-        with:
-          repository: Bodmer/TFT_eSPI
-          ref: V2.5.34
-          path: CustomTFT_eSPI
-
-      - name: Install XPT2046_Touchscreen
-        uses: actions/checkout@v4
-        with:
-          repository: PaulStoffregen/XPT2046_Touchscreen
-          ref: v1.4
-          path: CustomXPT2046_Touchscreen
-
-      - name: Install NimBLE-Arduino
-        uses: actions/checkout@v4
-        with:
-          repository: h2zero/NimBLE-Arduino
-          ref: 1.3.8
-          path: CustomNimBLE-Arduino
-
-      - name: Install other libs
-        run: |
-          arduino-cli lib install "ArduinoJson@6.18.2" "Adafruit NeoPixel@1.10.7" "LinkedList@1.3.3" "EspSoftwareSerial@8.1.0" "Adafruit BusIO@1.15.0" "Adafruit MAX1704X@1.0.2"
-          for d in Custom*; do
-            bn=$(basename "$d"); rm -rf "$HOME/Arduino/libraries/$bn"; mv "$d" "$HOME/Arduino/libraries/$bn";
-          done
-
-      # ---------- Local library for registry ----------
+      # Helper library from scaffold/registry
       - name: Create ESP32MarauderRegistry local library
         run: |
           set -e
@@ -120,27 +90,24 @@ jobs:
           PROP
           echo "Library tree:"; find "$LIBDIR/src" -maxdepth 3 -type f | sort
 
-      # ---------- Select/prepare config ----------
+      # Config selection
       - name: Select config (file or custom JSON)
         id: cfg
         shell: bash
         run: |
           set -e
           mkdir -p scaffold/data scaffold/configs
-
           if [ -n "${{ inputs.custom_config_json }}" ]; then
             echo "${{ inputs.custom_config_json }}" > scaffold/configs/custom.json
             CONFIG_FILE="custom.json"
           else
             CONFIG_FILE="${{ inputs.config_name }}"
           fi
-
           test -f "scaffold/configs/$CONFIG_FILE" || { echo "::error ::Config not found: scaffold/configs/$CONFIG_FILE"; exit 1; }
           cp "scaffold/configs/$CONFIG_FILE" scaffold/data/config.json
-
           echo "config_file=$CONFIG_FILE" >> $GITHUB_OUTPUT
 
-      # ---------- Prepare Sketch ----------
+      # Prepare sketch & optional partitions.csv
       - name: Prepare Sketch Folder (from scaffold/)
         id: prep
         shell: bash
@@ -158,30 +125,60 @@ jobs:
             | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
           popd >/dev/null
 
+          # Optional partition CSV
+          if [ -n "${{ inputs.partition_csv }}" ]; then
+            SRC="partitions/${{ inputs.partition_csv }}"
+            if [ ! -f "$SRC" ]; then
+              echo "::error ::Partition CSV not found at $SRC"; exit 1;
+            fi
+            cp "$SRC" "$SKETCH_DIR/partitions.csv"
+            echo "Using custom partition table: $SRC -> $SKETCH_DIR/partitions.csv"
+          else
+            echo "No custom partition CSV selected; using core default."
+          fi
+
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      # ---------- Compile ----------
+      # Compile with optional FS define
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
           set -e
           FQBN="${{ inputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          EXTRA="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
-          echo "Compiling for $FQBN with config ${{ steps.cfg.outputs.config_file }}"
+
+          # Optional filesystem define (blank -> no define, use sketch defaults)
+          FSDEF=""
+          case "${{ inputs.filesystem }}" in
+            littlefs|LITTLEFS) FSDEF="-DFS_LITTLEFS=1" ;;
+            spiffs|SPIFFS)     FSDEF="-DFS_SPIFFS=1" ;;
+            "")                FSDEF="" ;;  # no define
+            *) echo "::error ::Unsupported filesystem: ${{ inputs.filesystem }} (use blank, spiffs, or littlefs)"; exit 1 ;;
+          esac
+
+          EXTRA_INCL="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+
+          echo "Compiling for: $FQBN"
+          echo "Filesystem:    '${{ inputs.filesystem }}' (defines: '$FSDEF')"
+          if [ -f "$SKETCH_DIR/partitions.csv" ]; then
+            echo "Custom partitions.csv present (auto-used by ESP32 core)."
+          else
+            echo "No partitions.csv (using FQBN/core default)."
+          fi
+
           arduino-cli compile \
             --fqbn "$FQBN" \
             "$SKETCH_DIR" \
             --warnings none \
             --export-binaries \
-            --build-property compiler.cpp.extra_flags="$EXTRA" \
-            --build-property compiler.c.extra_flags="$EXTRA"
+            --build-property compiler.cpp.extra_flags="$EXTRA_INCL $FSDEF" \
+            --build-property compiler.c.extra_flags="$EXTRA_INCL $FSDEF"
 
-      # ---------- Sanitize and Upload firmware artifact ----------
+      # Upload firmware
       - name: Sanitize firmware artifact name
         id: sanitize_fw
         run: |
-          NAME="firmware_${{ inputs.fqbn }}_${{ github.sha }}"
+          NAME="firmware_${{ inputs.filesystem || 'defaultfs' }}_${{ inputs.partition_csv || 'defaultpart' }}_${{ inputs.fqbn }}_${{ github.sha }}"
           SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/]/_/g')
           echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
