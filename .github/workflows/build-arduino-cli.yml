@@ -1,4 +1,4 @@
-name: Build (Arduino CLI ? ESP32 Marauder Rewired)
+name: Build (Arduino CLI — ESP32 Marauder Rewired)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       fqbn:
-        description: "Overwrite FQBN (e.g., esp32:esp32:esp32s3)"
+        description: "Override FQBN (e.g., esp32:esp32:esp32s3)"
         required: false
       core_version:
         description: "Arduino-ESP32 core (e.g., 2.0.11)"
@@ -31,12 +31,11 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v4
 
-      - name: Install Arduino CLI (via curl)
+      - name: Install Arduino CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
           echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
           export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
-          which arduino-cli
           arduino-cli version
 
       - name: Configure & Install ESP32 Core
@@ -73,13 +72,6 @@ jobs:
           ref: v2.0.6
           path: CustomMicroNMEA
 
-      # Use your custom ESPAsyncWebServer from repo root
-      - name: Install ESPAsyncWebServer (Custom from repo)
-        run: |
-          rm -rf "$HOME/Arduino/libraries/ESPAsyncWebServer"
-          cp -r Custom/ESPAsyncWebServer "$HOME/Arduino/libraries/"
-          echo "Installed custom ESPAsyncWebServer from repo"
-
       - name: Install TFT_eSPI
         uses: actions/checkout@v4
         with:
@@ -101,59 +93,34 @@ jobs:
           ref: 1.3.8
           path: CustomNimBLE-Arduino
 
-      - name: Install other registry libs
+      - name: Install other libs via Arduino-CLI
         run: |
-          arduino-cli lib install "ArduinoJson@6.18.2" "Adafruit NeoPixel@1.10.7" "LinkedList@1.3.3" "EspSoftwareSerial@8.1.0" "Adafruit BusIO@1.15.0" "Adafruit MAX1704X@1.0.2"
+          arduino-cli lib install \
+            "ArduinoJson@6.18.2" \
+            "Adafruit NeoPixel@1.10.7" \
+            "LinkedList@1.3.3" \
+            "EspSoftwareSerial@8.1.0" \
+            "Adafruit BusIO@1.15.0" \
+            "Adafruit MAX1704X@1.0.2"
 
-      - name: Move Custom libs into Arduino libraries folder
+      - name: Move custom libs into Arduino libraries
         run: |
           for d in Custom*; do
+            [ -d "$d" ] || continue
             bn=$(basename "$d")
-            echo "Installing $bn -> $HOME/Arduino/libraries/$bn"
             rm -rf "$HOME/Arduino/libraries/$bn"
             mv "$d" "$HOME/Arduino/libraries/$bn"
           done
           echo "Installed libs:"; ls -la "$HOME/Arduino/libraries"
 
-      # Optional TFT_eSPI user setups
-      - name: Configure TFT_eSPI (optional)
+      # ---------- Clean caches to avoid stale compiles ----------
+      - name: Clean Arduino caches
         run: |
-          if ls User_*.h >/dev/null 2>&1; then
-            cp User_*.h "$HOME/Arduino/libraries/TFT_eSPI/"
-            echo "Custom TFT_eSPI user files copied."
-          else
-            echo "No custom TFT_eSPI User_*.h found; skipping."
-          fi
+          rm -rf ~/.cache/arduino || true
+          arduino-cli cache clean || true
+          rm -rf _build || true
 
-      # ---------- Package 'scaffold/registry' as a local Arduino library ----------
-      - name: Create ESP32MarauderRegistry local library
-        id: reglib
-        shell: bash
-        run: |
-          set -e
-          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
-          mkdir -p "$LIBDIR/src/registry"
-          # Copy everything from scaffold/registry (both .h and .cpp)
-          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
-
-          # Minimal library.properties so Arduino treats it as a lib
-          cat > "$LIBDIR/library.properties" <<'PROP'
-          name=ESP32MarauderRegistry
-          version=0.0.1
-          author=Rewired
-          maintainer=Rewired
-          sentence=Registry (ToolRegistry, etc.) for ESP32 Marauder Rewired.
-          paragraph=Provides registry core so sketches can link without flattening sources.
-          category=Other
-          architectures=*
-          includes=registry/ToolRegistry.h
-          PROP
-
-          echo "Local library created at $LIBDIR"
-          echo "Contents:"
-          find "$LIBDIR" -maxdepth 3 -type f | sort
-
-      # ---------- Create Arduino sketch from scaffold root ----------
+      # ---------- Prepare sketch from scaffold/ root ----------
       - name: Prepare Sketch Folder (from scaffold/)
         id: prep
         shell: bash
@@ -162,7 +129,6 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Pick the .ino at scaffold/ root
           INO_SRC=$(ls scaffold/*.ino | head -n 1)
           if [ -z "$INO_SRC" ]; then
             echo "No .ino found at scaffold/ root"; exit 1
@@ -170,44 +136,76 @@ jobs:
           echo "Using INO: $INO_SRC"
           cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
 
-          # Copy top-level code files (.h/.hpp/.c/.cpp) from scaffold root only
-          find scaffold -maxdepth 1 -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -exec cp "{}" "$SKETCH_DIR/" \;
-
-          # Copy header folders that the sketch includes (but NOT registry .cpp; those are in the local lib)
-          for dir in wifi bluetooth device ; do
-            if [ -d "scaffold/$dir" ]; then
-              mkdir -p "$SKETCH_DIR/$dir"
-              # copy headers only; sources for these can stay here if needed later
-              find "scaffold/$dir" -type f \( -name "*.h" -o -name "*.hpp" \) -exec cp --parents "{}" "$SKETCH_DIR/" \;
-            fi
-          done
+          # Copy all code files from scaffold (preserve subfolders)
+          pushd scaffold >/dev/null
+          find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" \) -print0 \
+            | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
+          popd >/dev/null
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch tree (top):"
+          echo "Sketch tree (top 2 levels):"
           find "$SKETCH_DIR" -maxdepth 2 -type d | sort
-          echo "Root files:"
-          ls -la "$SKETCH_DIR"
 
-      # ---------- Compile ----------
+      # ---------- Make registry a local library so ToolRegistry.cpp links ----------
+      - name: Create ESP32MarauderRegistry local library (from scaffold/registry)
+        shell: bash
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+          echo "Local library tree:"
+          find "$LIBDIR/src" -maxdepth 3 -type f | sort
+
+      # (Optional safety) also copy registry headers into sketch include dir
+      - name: Ensure registry headers present in sketch
+        shell: bash
+        run: |
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          mkdir -p "$SKETCH_DIR/registry"
+          find scaffold/registry -maxdepth 1 -type f \( -name "*.h" -o -name "*.hpp" \) -exec cp "{}" "$SKETCH_DIR/registry/" \;
+          echo "Sketch registry headers:"
+          find "$SKETCH_DIR/registry" -type f | sort
+
+      # ---------- Sanity check includes before compile ----------
+      - name: Sanity-check ToolRegistry includes
+        shell: bash
+        run: |
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          echo "Search for ToolRegistry includes in sketch:"
+          grep -R --line-number 'ToolRegistry.h' "$SKETCH_DIR" || true
+          echo "Show heads of key files:"
+          for f in "$SKETCH_DIR/RegistryInit.cpp" "$SKETCH_DIR/MenuFromRegistry.cpp" "$SKETCH_DIR/MenuFromRegistry.h"; do
+            [ -f "$f" ] && { echo "----- $f"; sed -n '1,25p' "$f"; }
+          done
+
+      # ---------- Compile with explicit include roots ----------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
           set -e
           FQBN="${{ inputs.fqbn || matrix.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-
+          EXTRA_INCLUDES="-I$SKETCH_DIR -I$SKETCH_DIR/registry -I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           echo "Compiling for $FQBN"
           arduino-cli compile \
             --fqbn "$FQBN" \
             "$SKETCH_DIR" \
             --warnings none \
-            --export-binaries
+            --export-binaries \
+            --build-property compiler.cpp.extra_flags="$EXTRA_INCLUDES" \
+            --build-property compiler.c.extra_flags="$EXTRA_INCLUDES"
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
           name: rewired_${{ inputs.fqbn || matrix.fqbn }}_${{ github.sha }}
-          path: |
-            _build/esp32_marauder_rewired/build/*/*.bin
+          path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 7
