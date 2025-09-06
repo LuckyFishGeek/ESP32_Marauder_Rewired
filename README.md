@@ -2,7 +2,7 @@
 **Official Release v1.0.0**  
 
 ---
-
+ 
 ## 🚀 Overview  
 This is the **first official release** of **ESP32 Marauder Rewired (v1.0.0)** — a complete rebuild of the Marauder firmware system with modern GitHub Actions automation, manifest-driven board definitions, and modular CSV-based feature profiles.  
 
