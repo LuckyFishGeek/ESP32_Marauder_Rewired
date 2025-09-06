@@ -1,4 +1,4 @@
-name: Build (Custom — ESP32 Marauder Rewired, CSV presets)
+name: Build (Custom — ESP32 Marauder Rewired, CSV-driven profiles)
 
 on:
   workflow_dispatch:
@@ -29,14 +29,15 @@ on:
           - ESP32-C5-DevKitC-1
           - Generic ESP32
 
-      profile:
-        type: choice
-        description: 'Modules profile (Custom uses modules_csv below)'
+      # Free-text profile, read from modules_presets.csv (e.g., Minimal, Standard, Full, Wardriver, etc.)
+      profile_name:
+        description: 'Profile name from modules_presets.csv (or "Custom")'
+        required: false
         default: 'Standard'
-        options: ['Minimal','Standard','Full','Custom']
 
+      # Only used if profile_name=Custom
       modules_csv:
-        description: 'Used only if profile=Custom. CSV like: WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON'
+        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,...,TFT_ON|TFT_OFF'
         required: false
         default: ''
 
@@ -79,7 +80,6 @@ jobs:
       - name: Install jq & unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      # Manifest -> resolve board data
       - name: Load manifest and resolve board
         id: map
         shell: bash
@@ -110,7 +110,6 @@ jobs:
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER" >> $GITHUB_OUTPUT
 
-      # Arduino CLI + core
       - name: Install Arduino CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
@@ -128,7 +127,6 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # Libraries from lib.tar (repo root)
       - name: Extract pre-bundled libs (lib.tar)
         run: |
           mkdir -p $HOME/Arduino/libraries
@@ -139,7 +137,6 @@ jobs:
           fi
           ls -1 $HOME/Arduino/libraries || true
 
-      # Local registry shim for <registry/ToolRegistry.h>
       - name: Create ESP32MarauderRegistry local library
         run: |
           set -e
@@ -153,7 +150,6 @@ jobs:
           includes=registry/ToolRegistry.h
           PROP
 
-      # Optional TFT headers zip at repo root
       - name: Unpack display settings (optional)
         run: |
           if [ -f "display_settings.zip" ]; then
@@ -164,7 +160,6 @@ jobs:
             echo "display_settings.zip not present; skipping"
           fi
 
-      # Prepare sketch (single INO)
       - name: Prepare Sketch Folder
         id: prep
         shell: bash
@@ -193,14 +188,12 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
-      # Apply TFT header (board default; can be forced via CSV TFT_ON/TFT_OFF)
-      - name: Configure TFT_eSPI header (board default or custom override)
+      - name: Configure TFT_eSPI header (board default; CSV may force)
         id: tft
         shell: bash
         run: |
           USE="${{ steps.map.outputs.tft_enabled }}"
           HDR="${{ steps.map.outputs.tft_header }}"
-          # profile/custom will be resolved next step; we only add -DENABLE_TFT here if applying header
           if [ "$USE" = "true" ] && [ -n "$HDR" ]; then
             TE="$HOME/Arduino/libraries/TFT_eSPI"
             mkdir -p "$TE"
@@ -213,61 +206,63 @@ jobs:
             echo "tft_define=" >> $GITHUB_OUTPUT
           fi
 
-      # Resolve profile -> modules from modules_presets.csv (or use Custom CSV)
-      - name: Resolve modules CSV from presets (or Custom)
+      - name: Resolve modules from modules_presets.csv (or Custom CSV)
         id: mods
         shell: bash
         run: |
           set -e
-          PROFILE="${{ github.event.inputs.profile }}"
+          NAME="${{ github.event.inputs.profile_name }}"
           CUSTOM="${{ github.event.inputs.modules_csv }}"
           PRESETS="${GITHUB_WORKSPACE}/modules_presets.csv"
 
-          # Normalize: remove CR, trim spaces around commas
+          # list profiles if requested or file missing
+          list_profiles () {
+            if [ -f "$1" ]; then
+              echo "Available profiles in $1:"
+              awk -F',' 'BEGIN{IGNORECASE=1} /^[[:space:]]*#/ {next} NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); if($1!="") print "- " $1}' "$1"
+            else
+              echo "modules_presets.csv not found."
+            fi
+          }
+
           norm_csv () {
             tr -d '\r' | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[[:space:]]+|[[:space:]]+$//g'
           }
 
-          if [ "$PROFILE" = "Custom" ]; then
+          if [ "$NAME" = "Custom" ]; then
             RESOLVED="$(echo "$CUSTOM" | norm_csv)"
-            echo "Using custom CSV: $RESOLVED"
+            echo "Using Custom CSV: $RESOLVED"
             echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           if [ ! -f "$PRESETS" ]; then
-            echo "::error ::modules_presets.csv not found; cannot resolve profile '$PROFILE'"
+            echo "::error ::modules_presets.csv not found at repo root."
+            list_profiles "$PRESETS"
             exit 1
           fi
 
-          # Read the line whose first non-comment field matches PROFILE (case-insensitive)
-          # CSV format: Profile,MOD1,MOD2,...
-          LINE=$(awk -F',' -v want="$PROFILE" '
+          LINE=$(awk -F',' -v want="$NAME" '
             BEGIN{IGNORECASE=1}
             /^[[:space:]]*#/ {next}
             NF>=2 {
-              gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1)
-              if ($1==want) {
-                # reconstruct full line minus leading/trailing spaces
-                out=$2
-                for (i=3;i<=NF;i++) out=out "," $i
-                print out
-                exit
+              p=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", p);
+              if (p==want) {
+                out=$2; for (i=3;i<=NF;i++) out=out "," $i;
+                print out; exit
               }
             }' "$PRESETS")
 
           if [ -z "$LINE" ]; then
-            echo "::error ::Profile '"$PROFILE"' not found in modules_presets.csv"
-            echo "Available profiles:"
-            awk -F',' 'BEGIN{IGNORECASE=1} /^[[:space:]]*#/ {next} NF>=1 {print "- " $1}' "$PRESETS"
+            echo "::error ::Profile '"$NAME"' not found in modules_presets.csv"
+            list_profiles "$PRESETS"
             exit 1
           fi
 
           RESOLVED="$(echo "$LINE" | norm_csv)"
-          echo "Resolved modules for profile '$PROFILE': $RESOLVED"
+          echo "Resolved modules for '$NAME': $RESOLVED"
           echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
 
-      # FS / Partition (with overrides)
       - name: Resolve FS/Partition and install CSV into core (if provided)
         id: fs
         shell: bash
@@ -293,7 +288,6 @@ jobs:
             fi
           fi
 
-      # Compose -D flags from resolved modules + board flag + extras (+TFT define if header applied)
       - name: Compose defines
         id: defs
         shell: bash
@@ -306,9 +300,7 @@ jobs:
           CSV="${{ steps.mods.outputs.csv }}"
           TFT_D="${{ steps.tft.outputs.tft_define }}"
 
-          add () { # $1=token, $2=define
-            echo "$CSV" | grep -qi "\b$1\b" && D="$D -D$2"
-          }
+          add () { echo "$CSV" | grep -qi "\b$1\b" && D="$D -D$2"; }
 
           add WIFI       ENABLE_WIFI
           add BLE        ENABLE_BLE
@@ -323,8 +315,8 @@ jobs:
           add BATTERY    ENABLE_BATTERY
           add NRF24      ENABLE_NRF24
           add USB_MSC    ENABLE_USB_MSC
-          # TFT: allow CSV to force define too (header application already handled earlier)
           echo "$CSV" | grep -qi '\bTFT_ON\b'  && D="$D -DENABLE_TFT"
+          echo "$CSV" | grep -qi '\bTFT_OFF\b' && D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
 
           [ -n "$TFT_D" ] && D="$D $TFT_D"
 
@@ -334,7 +326,6 @@ jobs:
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
 
-      # Compile
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
