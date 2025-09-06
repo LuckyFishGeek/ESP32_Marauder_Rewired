@@ -35,17 +35,17 @@ on:
         options: ['', 'spiffs', 'littlefs']
       partition:
         type: choice
-        description: 'Override partition CSV from /partitions (blank = use manifest default)'
-        default: ''
+        description: 'Override partition CSV (pretty names) ? blank uses manifest default'
+        default: 'Default (use manifest)'
         options:
-          - ''
-          - marauder_default.csv
-          - hugeapp_1m_fs.csv
-          - marauder_littlefs.csv
-          - marauder_spiffs_ota.csv
-          - min_littlefs_ota.csv
-          - min_spiffs_ota.csv
-          - ota_1m_fs.csv
+          - 'Default (use manifest)'
+          - 'Huge App + 1MB FS (hugeapp_1m_fs.csv)'
+          - 'Marauder (LittleFS OTA) (marauder_littlefs.csv)'
+          - 'Marauder (SPIFFS OTA) (marauder_spiffs_ota.csv)'
+          - 'Minimal (LittleFS OTA) (min_littlefs_ota.csv)'
+          - 'Minimal (SPIFFS OTA) (min_spiffs_ota.csv)'
+          - 'OTA + 1MB FS (ota_1m_fs.csv)'
+          - 'Marauder Default (marauder_default.csv)'
       core_version:
         description: 'Arduino-ESP32 core version'
         required: false
@@ -212,13 +212,52 @@ jobs:
 
       - name: Resolve FS/Partition
         id: fs
+        shell: bash
         run: |
+          set -euo pipefail
           FS_INPUT="${{ github.event.inputs.filesystem }}"
-          PART_INPUT="${{ github.event.inputs.partition }}"
+          PART_INPUT_RAW="${{ github.event.inputs.partition }}"
+
+          # Map pretty label -> actual CSV filename (if present)
+          part_from_pretty () {
+            local s="$1"
+            # Default selection means "use manifest"
+            if [ -z "$s" ] || [ "$s" = "Default (use manifest)" ]; then
+              echo ""; return
+            fi
+            # If it looks like "... (filename.csv)" extract filename
+            if [[ "$s" =~ \(([^)]+\.csv)\)$ ]]; then
+              echo "${BASH_REMATCH[1]}"; return
+            fi
+            # Fallback: assume user typed a raw filename
+            echo "$s"
+          }
+
+          PART_INPUT="$(part_from_pretty "$PART_INPUT_RAW")"
+
+          # Prefer user input; otherwise manifest defaults resolved earlier
           FS="${FS_INPUT:-${{ steps.map.outputs.def_fs }}}"
-          PART="${PART_INPUT:-${{ steps.map.outputs.def_part }}}"
+          if [ -n "$PART_INPUT" ]; then
+            PART="$PART_INPUT"
+          else
+            PART="${{ steps.map.outputs.def_part }}"
+          fi
+
           echo "fs=$FS" >> $GITHUB_OUTPUT
           echo "partition=$PART" >> $GITHUB_OUTPUT
+
+          # If a custom partition CSV is referenced, install it into the core (optional convenience)
+          if [ -n "$PART" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
+            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
+            if [ -f "$SRC" ]; then
+              mkdir -p "$DEST"
+              cp -f "$SRC" "$DEST/$PART"
+              echo "Installed custom partition CSV to $DEST/$PART"
+            else
+              echo "Partition CSV '$PART' not found in repo /partitions; relying on core's copy (if any)."
+            fi
+          fi
 
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
