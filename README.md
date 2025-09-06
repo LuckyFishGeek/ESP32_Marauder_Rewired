@@ -1,76 +1,58 @@
-# ESP32 Marauder Rewired
-
-*A modular, menu-accurate scaffold of the ESP32 Marauder firmware for incremental rebuilding.*
-
----
+# ESP32 Marauder Rewired — v1.0.0
 
 ## Overview
-
-ESP32 Marauder Rewired is a **deconstructed + rewired scaffold** of the original ESP32 Marauder firmware.  
-It preserves the **exact menu tree** while separating each tool into its own module (`.h` / `.cpp`),  
-so you can rebuild features **step by step** without wrestling the full monolith.
-
-- ✅ All original menu entries (Sniffers, Scanners, Wardriving, Attacks, Device)  
-- ✅ Duplicates removed (`Spoof Airtag`, `Select EP HTML File`)  
-- ✅ Minimal `ToolRegistry` system to populate menus  
-- ✅ PlatformIO-ready project (`platformio.ini`, `src/`, `include/`)  
-- ✅ Every tool has its own stub file waiting to be implemented  
+This is the official **v1.0.0** release of ESP32 Marauder Rewired.  
+It marks the point where we’ve stabilized the build process and introduced flexible workflows for both **Premade Build Mode** and **Custom Build Mode**.
 
 ---
 
-## Build-Out Checklist
+## Build Modes
 
-### Core
-- [x] Menu tree, registry, stubs
-- [x] PlatformIO project wired
+### 🔹 Premade Build Mode
+Choose from a list of preconfigured board profiles (via `manifest.json`).  
+- Automatically sets up filesystem, partition, and profile settings.  
+- Ready to compile with a single click in GitHub Actions.  
 
-### Milestones
-**M1 — Passive Wi-Fi sniffers**  
-ProbeSniffer → BeaconSniffer → DeauthSniffer → PacketMonitor → EAPOL/PMKID Scan → ChannelAnalyzer → RawCapture
-
-**M2 — Bluetooth sniffers**  
-BluetoothSniffer → FlipperSniff → AirtagSniff → DetectCardSkimmers → BluetoothAnalyzer
-
-**M3 — Scanners**  
-PingScan (ICMP), ArpScan, PortScanAll, SshScan, TelnetScan
-
-**M4 — Wardriving**  
-Wardrive, StationWardrive + GPS loggers (CSV/GPX/JSON)
-
-**M5 — Device utilities**  
-DeviceInfo, Settings, Save/Load Files, Language, Delete SD, GPS tools
-
-**M6 — Wi-Fi General**  
-Generate/Select/Add/Clear SSIDs, Select APs/Stations, View AP Info, Join WiFi, Join Saved WiFi, Set MACs, Shutdown WiFi
-
-**M7 — (Optional) Attacks**  
-Stubbed until everything else is stable; gate behind compile-time flag.
+### 🔹 Custom Build Mode
+For advanced users.  
+- Select exactly which modules to include (WiFi, BLE, Web, SD, GPS, Touch, LVGL, NeoPixel, Buzzer, Buttons, Battery, NRF24, USB MSC, TFT).  
+- Supports manual entry of CSV module lists in the workflow dispatch menu.  
+- Upcoming support for **Custom Pin Menu** to remap hardware pins.
 
 ---
 
-## Repo Name & Tagline
+## Development Journey
 
-**ESP32 Marauder Rewired**  
-> *“A modular, menu-accurate scaffold of the ESP32 Marauder firmware for incremental rebuilding.”*
+We began by attempting to use the original ESP32 Marauder source, but faced numerous issues in building and porting it into a clean workflow.  
+Through trial and error, we stripped down and rebuilt the workflow system from scratch — focusing on modularity, manifest-driven board detection, and compatibility with multiple ESP32 cores.
+
+### Advantages of this Build
+- Manifest-driven board resolution (`manifest.json`)  
+- Custom partitions with pretty names for ease of selection  
+- Build system works across **Premade** and **Custom** modes  
+- Automatic TFT header configuration based on board profile  
+- Unified `marauder_default.csv` partition for consistency  
+
+### What’s Working
+- ✅ Multiple ESP32 boards supported  
+- ✅ TFT auto-configuration for supported boards  
+- ✅ Partition CSV selection (with pretty dropdown names)  
+- ✅ Premade/Custom build modes fully functional  
+- ✅ Firmware artifacts uploaded automatically  
+
+### What’s Missing / Coming Soon
+- ⏳ Custom Pin Menu for remapping hardware pins  
+- ⏳ Additional advanced profiles and presets  
+- ⏳ Expanded TFT header support for more displays  
+- ⏳ CI validation of all partitions before release  
 
 ---
 
-## Quick Start
-
-1. Open `platformio_project/` in VS Code with PlatformIO.  
-2. Build & upload to an ESP32 board.  
-3. Open Serial Monitor @ 115200 baud.  
-4. Navigate menus using:
-   - `w` = up  
-   - `s` = down  
-   - `e` = select  
-   - `b` = back  
-
-Each tool currently prints a stub message like:  
-```
-[Tool] Ping Scan launched (stub)
-```
-
-Implement tool logic gradually by editing the matching `.cpp` in `platformio_project/src/...`.
+## Versioning
+We’re starting here with **v1.0.0** as the first **official stable release**.  
+Future releases will follow semantic versioning (MAJOR.MINOR.PATCH).
 
 ---
+
+## Credits
+Thanks to the community of ESP32 Marauder contributors, testers, and tinkerers who helped shape this reimagined build system.
