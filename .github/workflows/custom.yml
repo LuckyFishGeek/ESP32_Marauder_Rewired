@@ -1,0 +1,176 @@
+name: Build (Arduino CLI — ESP32 Marauder Rewired w/ Config)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      fqbn:
+        description: 'FQBN (e.g., esp32:esp32:esp32s3)'
+        required: false
+        default: 'esp32:esp32:esp32s3'
+      core_version:
+        description: 'Arduino-ESP32 core (e.g., 2.0.11)'
+        required: false
+        default: '2.0.11'
+      config_name:
+        description: 'Config filename in scaffold/configs (e.g., marauder_mini.json)'
+        required: false
+        default: 'marauder_mini.json'
+      custom_config_json:
+        description: 'Optional: paste a full JSON to override config_name'
+        required: false
+        default: ''
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
+          export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
+          arduino-cli version
+
+      - name: Configure & Install ESP32 Core
+        env:
+          CORE_VER: ${{ inputs.core_version }}
+        run: |
+          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+          arduino-cli core update-index
+          arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core list
+
+      # ---------- Libraries from Custom/ ----------
+      - name: Ensure Arduino libraries folder
+        run: mkdir -p "$HOME/Arduino/libraries"
+
+      - name: Install all Custom libs into Arduino/libraries
+        shell: bash
+        run: |
+          set -e
+          LIBDST="$HOME/Arduino/libraries"
+          CUSTDIR="${GITHUB_WORKSPACE}/Custom"
+
+          if [[ ! -d "$CUSTDIR" ]]; then
+            echo "::error ::Custom/ folder not found. Please add your libraries under ./Custom/<LibName>."
+            exit 1
+          fi
+
+          echo "Installing libraries from: $CUSTDIR -> $LIBDST"
+          shopt -s nullglob
+          for src in "$CUSTDIR"/* ; do
+            [ -d "$src" ] || continue
+            bn="$(basename "$src")"
+            dst="$LIBDST/$bn"
+            rm -rf "$dst"
+            cp -r "$src" "$dst"
+            echo " - Installed $bn"
+          done
+
+          # Ensure ESPAsyncWebServer exists (required)
+          if [[ ! -d "$LIBDST/ESPAsyncWebServer" ]]; then
+            echo "::error ::ESPAsyncWebServer not found in Custom/. Please add Custom/ESPAsyncWebServer."
+            exit 1
+          fi
+
+          echo "Done. Contents of Arduino libraries:"
+          ls -la "$LIBDST"
+
+      # ---------- Local library for registry ----------
+      - name: Create ESP32MarauderRegistry local library
+        shell: bash
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+          echo "Library tree:"; find "$LIBDIR/src" -maxdepth 3 -type f | sort
+
+      # ---------- Select/prepare config ----------
+      - name: Select config (file or custom JSON)
+        id: cfg
+        shell: bash
+        run: |
+          set -e
+          mkdir -p scaffold/data scaffold/configs
+
+          if [ -n "${{ inputs.custom_config_json }}" ]; then
+            echo "${{ inputs.custom_config_json }}" > scaffold/configs/custom.json
+            CONFIG_FILE="custom.json"
+          else
+            CONFIG_FILE="${{ inputs.config_name }}"
+          fi
+
+          test -f "scaffold/configs/$CONFIG_FILE" || { echo "::error ::Config not found: scaffold/configs/$CONFIG_FILE"; exit 1; }
+          cp "scaffold/configs/$CONFIG_FILE" scaffold/data/config.json
+
+          echo "config_file=$CONFIG_FILE" >> $GITHUB_OUTPUT
+
+      # ---------- Prepare Sketch ----------
+      - name: Prepare Sketch Folder (from scaffold/)
+        id: prep
+        shell: bash
+        run: |
+          set -e
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          mkdir -p "$SKETCH_DIR"
+
+          INO_SRC=$(ls scaffold/*.ino | head -n 1)
+          [ -n "$INO_SRC" ] || (echo "No .ino found at scaffold/ root"; exit 1)
+          cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+
+          pushd scaffold >/dev/null
+          find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" -o -name "*.json" \) -print0 \
+            | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
+          popd >/dev/null
+
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+
+      # ---------- Compile ----------
+      - name: Compile (Arduino CLI)
+        shell: bash
+        run: |
+          set -e
+          FQBN="${{ inputs.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          EXTRA="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          echo "Compiling for $FQBN with config ${{ steps.cfg.outputs.config_file }}"
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            "$SKETCH_DIR" \
+            --warnings none \
+            --export-binaries \
+            --build-property compiler.cpp.extra_flags="$EXTRA" \
+            --build-property compiler.c.extra_flags="$EXTRA"
+
+      # ---------- Sanitize and Upload firmware artifact ----------
+      - name: Sanitize firmware artifact name
+        id: sanitize_fw
+        run: |
+          NAME="firmware_${{ inputs.fqbn }}_${{ github.sha }}"
+          SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/]/_/g')
+          echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.sanitize_fw.outputs.safe_name }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
+          if-no-files-found: warn
+          retention-days: 14
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
