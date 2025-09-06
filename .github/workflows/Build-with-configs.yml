@@ -1,4 +1,4 @@
-name: Build (Arduino CLI — ESP32 Marauder Rewired — Board→Config, TFT, Filesystem)
+name: Build (Arduino CLI — ESP32 Marauder Rewired — Per-board FS/Partition)
 
 on:
   workflow_dispatch:
@@ -28,14 +28,16 @@ on:
           - Marauder v7.1
           - M5Cardputer
           - ESP32-C5-DevKitC-1
+
       filesystem:
         type: choice
-        description: "Filesystem override (blank = use core/default)"
+        description: "Filesystem override (blank = use per-board default → core default)"
         default: ""
         options: ["", "spiffs", "littlefs"]
+
       partition:
         type: choice
-        description: "Partition CSV from /partitions (blank = default)"
+        description: "Partition CSV override (blank = per-board default → none)"
         default: ""
         options:
           - ""
@@ -45,6 +47,7 @@ on:
           - min_littlefs_ota.csv
           - min_spiffs_ota.csv
           - ota_1m_fs.csv
+
       core_version:
         description: "Arduino-ESP32 core version"
         required: false
@@ -58,7 +61,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      # ---- Arduino CLI ----
       - name: Install Arduino CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
@@ -74,14 +76,12 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---- Libraries from your prepacked tar (fast & deterministic) ----
       - name: Extract pre-bundled libs (lib.tar)
         run: |
           mkdir -p $HOME/Arduino/libraries
-          tar -xf lib.tar -C $HOME/Arduino/libraries
-          echo "User libs:"; ls -1 $HOME/Arduino/libraries
+          tar -xf lib.tar -C $HOME/Arduino/libraries || true
+          echo "User libs:"; ls -1 $HOME/Arduino/libraries || true
 
-      # ---- Local registry shim so <registry/ToolRegistry.h> resolves ----
       - name: Create ESP32MarauderRegistry local library
         run: |
           set -e
@@ -94,28 +94,24 @@ jobs:
           architectures=*
           includes=registry/ToolRegistry.h
           PROP
-          find "$LIBDIR" -maxdepth 3 -type f -print
 
-      # ---- Unpack your display headers (TFT_eSPI User_Setups) ----
-      # Put the ZIP at repo root as 'display_settings.zip'
-      - name: Unpack display settings
+      - name: Unpack display settings (optional)
         run: |
           if [ -f "display_settings.zip" ]; then
             mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
             unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
-            echo "Unpacked display headers into TFT_eSPI"
+            echo "Unpacked display headers."
           else
-            echo "display_settings.zip not found; skipping"
+            echo "display_settings.zip not found; skipping."
           fi
 
-      # ---- Resolve board → FQBN (+ opts) and TFT header ----
+      # --- Resolve board → fqbn + TFT header (same mapping you provided) ---
       - name: Resolve board mapping
         id: map
         shell: bash
         run: |
           sel="${{ github.event.inputs.board }}"
 
-          # FQBNs copied from your matrix (with options preserved)
           declare -A FQBN=(
             ["Flipper Zero WiFi Dev Board"]="esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled"
             ["Flipper Zero Multi Board S3"]="esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M"
@@ -139,8 +135,7 @@ jobs:
             ["Generic ESP32"]="esp32:esp32:esp32:PartitionScheme=min_spiffs"
           )
 
-          # Whether TFT is used and which header to include
-          declare -A TFTFLAG=(
+          declare -A TFT=(
             ["Flipper Zero WiFi Dev Board"]="false"
             ["Flipper Zero Multi Board S3"]="false"
             ["OG Marauder"]="true"
@@ -181,61 +176,133 @@ jobs:
           )
 
           echo "fqbn=${FQBN[$sel]}" >> $GITHUB_OUTPUT
-          echo "tft=${TFTFLAG[$sel]}" >> $GITHUB_OUTPUT
+          echo "tft=${TFT[$sel]}" >> $GITHUB_OUTPUT
           echo "tftfile=${TFTFILE[$sel]}" >> $GITHUB_OUTPUT
 
-      # ---- Prepare sketch (bring in your configs.h & scaffold) ----
+      # --- Optional: read defaults from manifest.json (filesystem/partition) ---
+      - name: Install jq (for manifest parsing)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Resolve per-board defaults (filesystem/partition)
+        id: defaults
+        shell: bash
+        run: |
+          sel="${{ github.event.inputs.board }}"
+          override_fs="${{ github.event.inputs.filesystem }}"
+          override_part="${{ github.event.inputs.partition }}"
+
+          # 1) Try manifest.json
+          FS=""
+          PART=""
+          if [ -f "scaffold/configs/manifest.json" ]; then
+            FS=$(jq -r --arg L "$sel" '
+                  .boards[] | select(.label == $L) | .defaults.filesystem // empty' scaffold/configs/manifest.json)
+            PART=$(jq -r --arg L "$sel" '
+                  .boards[] | select(.label == $L) | .defaults.partition // empty' scaffold/configs/manifest.json)
+          fi
+
+          # 2) Fallback hardcoded defaults (edit as you like)
+          if [ -z "$FS" ]; then
+            declare -A DFS=(
+              ["Generic ESP32"]=""
+              ["Flipper Zero WiFi Dev Board"]="spiffs"
+              ["Flipper Zero Multi Board S3"]="spiffs"
+              ["OG Marauder"]="spiffs"
+              ["Marauder v6"]="spiffs"
+              ["Marauder v6.1"]="spiffs"
+              ["Marauder Kit"]="spiffs"
+              ["Marauder Mini"]="spiffs"
+              ["ESP32 LDDB"]=""
+              ["Marauder Dev Board Pro"]=""
+              ["M5StickCPlus"]="spiffs"
+              ["M5StickCPlus 2"]="spiffs"
+              ["Rev Feather"]="spiffs"
+              ["Marauder v7"]="spiffs"
+              ["Marauder CYD 2432S028"]="spiffs"
+              ["Marauder CYD 2432S024 GUITION"]="spiffs"
+              ["Marauder CYD 2432S028 2 USB"]="spiffs"
+              ["Marauder v7.1"]="spiffs"
+              ["M5Cardputer"]="spiffs"
+              ["ESP32-C5-DevKitC-1"]="spiffs"
+            )
+            FS="${DFS[$sel]}"
+          fi
+
+          if [ -z "$PART" ]; then
+            declare -A DPT=(
+              ["Generic ESP32"]=""
+              ["Flipper Zero WiFi Dev Board"]="min_spiffs_ota.csv"
+              ["Flipper Zero Multi Board S3"]="min_spiffs_ota.csv"
+              ["OG Marauder"]="marauder_spiffs_ota.csv"
+              ["Marauder v6"]="marauder_spiffs_ota.csv"
+              ["Marauder v6.1"]="marauder_spiffs_ota.csv"
+              ["Marauder Kit"]="marauder_spiffs_ota.csv"
+              ["Marauder Mini"]="min_spiffs_ota.csv"
+              ["ESP32 LDDB"]=""
+              ["Marauder Dev Board Pro"]=""
+              ["M5StickCPlus"]="min_spiffs_ota.csv"
+              ["M5StickCPlus 2"]="min_spiffs_ota.csv"
+              ["Rev Feather"]="min_spiffs_ota.csv"
+              ["Marauder v7"]="marauder_spiffs_ota.csv"
+              ["Marauder CYD 2432S028"]="min_spiffs_ota.csv"
+              ["Marauder CYD 2432S024 GUITION"]="min_spiffs_ota.csv"
+              ["Marauder CYD 2432S028 2 USB"]="min_spiffs_ota.csv"
+              ["Marauder v7.1"]="marauder_spiffs_ota.csv"
+              ["M5Cardputer"]="min_spiffs_ota.csv"
+              ["ESP32-C5-DevKitC-1"]="min_spiffs_ota.csv"
+            )
+            PART="${DPT[$sel]}"
+          fi
+
+          # 3) Apply user overrides if provided
+          [ -n "$override_fs" ] && FS="$override_fs"
+          [ -n "$override_part" ] && PART="$override_part"
+
+          echo "fs=$FS" >> $GITHUB_OUTPUT
+          echo "part=$PART" >> $GITHUB_OUTPUT
+          echo "Resolved defaults => FS='$FS' PART='$PART' (after overrides)"
+
       - name: Prepare Sketch Folder
         id: prep
         run: |
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
-          # pick your main .ino from scaffold root
           cp scaffold/*.ino "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/"
-
-          # Ensure configs.h is present at sketch root (from repo root)
+          # bring in your configs.h from repo root
           if [ -f "configs.h" ]; then
             cp "configs.h" "$SKETCH_DIR/configs.h"
           fi
-
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      # ---- If TFT enabled, force User_Setup_Select.h to include chosen header ----
       - name: Configure TFT_eSPI header (if TFT board)
         if: steps.map.outputs.tft == 'true'
         run: |
           TE="$HOME/Arduino/libraries/TFT_eSPI"
           SEL="${{ steps.map.outputs.tftfile }}"
-          if [ -z "$SEL" ]; then
-            echo "No TFT header specified; skipping"
-            exit 0
+          if [ -n "$SEL" ]; then
+            echo "// Auto-generated by workflow" > "$TE/User_Setup_Select.h"
+            echo "#include <${SEL}>" >> "$TE/User_Setup_Select.h"
+            echo "Using TFT_eSPI setup: $SEL"
+          else
+            echo "TFT was true but no header specified; continuing."
           fi
-          # Create/patch User_Setup_Select.h to include the selected header
-          mkdir -p "$TE"
-          SELECT="$TE/User_Setup_Select.h"
-          echo "// Auto-generated by workflow" > "$SELECT"
-          echo "#include <${SEL}>" >> "$SELECT"
-          echo "Using TFT_eSPI setup: $SEL"
-          # Show files for debug
-          ls -la "$TE" | sed -n '1,120p'
 
-      # ---- Compile ----
       - name: Compile (Arduino CLI)
         run: |
           FQBN="${{ steps.map.outputs.fqbn }}"
-          FS="${{ github.event.inputs.filesystem }}"
-          PART="${{ github.event.inputs.partition }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
           EXTRA="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
 
+          FS="${{ steps.defaults.outputs.fs }}"
+          PART="${{ steps.defaults.outputs.part }}"
+
           BUILD_FLAGS=""
-          # Apply overrides only if user selected something
           [ -n "$FS" ] && BUILD_FLAGS="$BUILD_FLAGS --build-property board_build.filesystem=$FS"
           [ -n "$PART" ] && BUILD_FLAGS="$BUILD_FLAGS --build-property board_build.partitions=$PART"
 
           echo "FQBN: $FQBN"
-          echo "Overrides: FS=$FS PART=$PART"
+          echo "Final FS: $FS | Final PART: $PART"
           arduino-cli compile \
             --fqbn "$FQBN" \
             "$SKETCH_DIR" \
@@ -245,18 +312,10 @@ jobs:
             --build-property compiler.c.extra_flags="$EXTRA" \
             $BUILD_FLAGS
 
-      # ---- Upload firmware ----
-      - name: Name-safe firmware artifact
-        id: namefw
-        run: |
-          NAME="fw_${{ github.event.inputs.board }}_${{ github.sha }}"
-          SAFE=$(echo "$NAME" | sed 's/[:<>|*?\\\/ ]/_/g')
-          echo "safe=$SAFE" >> $GITHUB_OUTPUT
-
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.namefw.outputs.safe }}
+          name: fw_${{ github.event.inputs.board }}_${{ github.sha }}
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
