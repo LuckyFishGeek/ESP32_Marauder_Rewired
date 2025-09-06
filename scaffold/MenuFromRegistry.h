@@ -2,7 +2,7 @@
 #include <Arduino.h>
 #include <vector>
 #include <functional>
-#include <ToolRegistry.h>
+#include "ToolRegistry.h"
 
 struct SimpleMenuItem { String label; std::function<void(void)> onSelect; };
 struct SimpleMenu { String path; std::vector<SimpleMenuItem> items; };
