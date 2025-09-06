@@ -341,7 +341,7 @@ jobs:
             fi
           fi
 
-      # Compose -D flags from the resolved CSV + optional TFT flag + extra_defines
+      # 🔧 Patched: robust CSV token matching (no PCRE word-boundaries)
       - name: Compose defines
         id: defs
         shell: bash
@@ -351,7 +351,23 @@ jobs:
           CSV_FLAGS="${{ steps.mods.outputs.csv }}"
           TFT_D="${{ steps.tft.outputs.tft_define }}"
 
-          add () { echo "$CSV_FLAGS" | grep -qi "\b$1\b" && D="$D -D$2"; }
+          has_flag () {
+            awk -v FS=',' -v want="$1" '
+              BEGIN{IGNORECASE=1}
+              {
+                for(i=1;i<=NF;i++){
+                  gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
+                  if ($i==want) { print "YES"; exit }
+                }
+              }' <<<"$CSV_FLAGS"
+          }
+
+          add () {
+            if [ "$(has_flag "$1")" = "YES" ]; then
+              D="$D -D$2"
+            fi
+          }
+
           add WIFI       ENABLE_WIFI
           add BLE        ENABLE_BLE
           add WEB        ENABLE_WEB
@@ -366,12 +382,18 @@ jobs:
           add NRF24      ENABLE_NRF24
           add USB_MSC    ENABLE_USB_MSC
 
-          echo "$CSV_FLAGS" | grep -qi '\bTFT_ON\b'  && D="$D -DENABLE_TFT"
-          echo "$CSV_FLAGS" | grep -qi '\bTFT_OFF\b' && D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
+          # TFT gates
+          [ "$(has_flag TFT_ON)"  = "YES" ] && D="$D -DENABLE_TFT"
+          if [ "$(has_flag TFT_OFF)" = "YES" ]; then
+            D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
+          fi
           [ -n "$TFT_D" ] && D="$D $TFT_D"
 
+          # user extras
           EXTRA="${{ github.event.inputs.extra_defines }}"
-          if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
+          if [ -n "$EXTRA" ]; then
+            for t in $EXTRA; do D="$D -D$t"; done
+          fi
 
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
@@ -423,3 +445,4 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
+```0
