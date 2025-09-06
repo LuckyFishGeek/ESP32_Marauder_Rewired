@@ -96,22 +96,18 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      # NEW: sanitize & validate manifest.json to avoid jq parse errors (BOM/CRLF)
-      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
+      - name: Sanitize manifest.json (strip BOM/CRLF and validate if present)
         shell: bash
         run: |
           set -euo pipefail
           MAN=./scaffold/configs/manifest.json
           if [ -f "$MAN" ]; then
-            # Strip UTF-8 BOM if present
             MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
             if [ "$MAGIC" = "efbbbf" ]; then
               tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
               echo "Removed UTF-8 BOM from manifest.json"
             fi
-            # Normalize CRLF -> LF
             sed -i 's/\r$//' "$MAN"
-            # Validate JSON
             jq . "$MAN" >/dev/null
             echo "manifest.json OK"
           else
@@ -128,10 +124,7 @@ jobs:
           OVR="${{ github.event.inputs.fqbn_override }}"
           MAN="scaffold/configs/manifest.json"
 
-          # Helper to echo outputs
-          set_out() {
-            echo "$1=$2" >> $GITHUB_OUTPUT
-          }
+          set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
 
           if [ "$LABEL" = "Other (enter FQBN)" ]; then
             if [ -z "$OVR" ]; then
@@ -149,14 +142,12 @@ jobs:
 
           FOUND=""
           if [ -f "$MAN" ]; then
-            # Try to resolve from manifest.json
             FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
             FLAG=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].flag // empty' "$MAN")
             DEF_FS=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.filesystem // empty' "$MAN")
             DEF_PART=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.partition // empty' "$MAN")
             TFT_EN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.enabled // empty' "$MAN")
             TFT_HDR=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.header // empty' "$MAN")
-
             if [ -n "$FQBN" ]; then
               FOUND="yes"
               set_out fqbn "$FQBN"
@@ -170,7 +161,6 @@ jobs:
           fi
 
           if [ -z "$FOUND" ]; then
-            # Fallback hard-coded map
             case "$LABEL" in
               "Generic ESP32 Dev Module")                FQBN="esp32:esp32:esp32" ;;
               "DOIT ESP32 DEVKIT V1")                    FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
@@ -194,7 +184,6 @@ jobs:
               "M5Stamp S3")                               FQBN="esp32:esp32:m5stack_stampS3" ;;
               *) echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
             esac
-
             set_out fqbn "$FQBN"
             set_out flag ""
             set_out def_fs ""
@@ -388,7 +377,6 @@ jobs:
         shell: bash
         run: |
           CORE_VER="${{ github.event.inputs.core_version }}"
-          # prefer user inputs, else manifest defaults from Resolve FQBN
           FS_OVR="${{ github.event.inputs.filesystem }}"
           PART_OVR="${{ github.event.inputs.partition }}"
           DEF_FS="${{ steps.map.outputs.def_fs }}"
@@ -425,12 +413,7 @@ jobs:
           has_flag () {
             awk -v FS=',' -v want="$1" '
               BEGIN{IGNORECASE=1}
-              {
-                for(i=1;i<=NF;i++){
-                  gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i)
-                  if ($i==want) { print "YES"; exit }
-                }
-              }' <<<"$CSV_FLAGS"
+              { for(i=1;i<=NF;i++){ gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i); if ($i==want) { print "YES"; exit } } }' <<<"$CSV_FLAGS"
           }
 
           add () { if [ "$(has_flag "$1")" = "YES" ]; then D="$D -D$2"; fi; }
@@ -449,14 +432,12 @@ jobs:
           add NRF24      ENABLE_NRF24
           add USB_MSC    ENABLE_USB_MSC
 
-          # TFT gates
           [ "$(has_flag TFT_ON)"  = "YES" ] && D="$D -DENABLE_TFT"
           if [ "$(has_flag TFT_OFF)" = "YES" ]; then
             D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
           fi
           [ -n "$TFT_D" ] && D="$D $TFT_D"
 
-          # user extras
           EXTRA="${{ github.event.inputs.extra_defines }}"
           if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
 
@@ -464,12 +445,12 @@ jobs:
           echo "Defines => $D"
 
       # ───────────────────────────────────────────────────────────────────────────
-      # COMPILE BLOCK (FS/partition props included)
+      # COMPILE BLOCK (array-based args to preserve -D flags)
       # ───────────────────────────────────────────────────────────────────────────
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
           DEFS="${{ steps.defs.outputs.defs }}"
@@ -477,31 +458,39 @@ jobs:
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.part }}"
 
-          PROPS="--build-property compiler.cpp.extra_flags=\"$EXTRA_INCLUDES $DEFS\" \
-                 --build-property compiler.c.extra_flags=\"$EXTRA_INCLUDES $DEFS\""
+          echo "FQBN: $FQBN"
+          echo "Filesystem: ${FS:-<default>}"
+          echo "Partition:  ${PART:-<default>}"
+          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
+          echo "DEFINES: $DEFS"
 
-          [ -n "$FS" ] && PROPS="$PROPS --build-property board_build.filesystem=$FS"
+          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
+          C_FLAGS="$EXTRA_INCLUDES $DEFS"
 
-          if [ -n "$PART" ] ; then
+          ARGS=()
+          ARGS+=(--fqbn "$FQBN")
+          ARGS+=(--warnings none)
+          ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
+          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
+
+          if [ -n "$FS" ]; then
+            ARGS+=(--build-property "board_build.filesystem=$FS")
+          fi
+
+          if [ -n "$PART" ]; then
             mkdir -p "$SKETCH_DIR/partitions"
             if [ -f "partitions/$PART" ]; then
               cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
             fi
             NAME_ONLY="${PART%.csv}"
-            PROPS="$PROPS --build-property build.partitions=$NAME_ONLY"
+            ARGS+=(--build-property "build.partitions=$NAME_ONLY")
           fi
 
-          echo "FQBN: $FQBN"
-          echo "Filesystem: ${FS:-<default>}"
-          echo "Partition:  ${PART:-<default>}"
-          echo "Props: $PROPS"
+          echo "arduino-cli compile args:"
+          printf '  %q\n' "${ARGS[@]}"
 
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            "$SKETCH_DIR" \
-            --warnings none \
-            --export-binaries \
-            $PROPS
+          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
@@ -510,3 +499,4 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
+```0
