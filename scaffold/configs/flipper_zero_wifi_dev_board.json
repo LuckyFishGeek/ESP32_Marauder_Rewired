@@ -1,0 +1,31 @@
+{
+  "name": "Flipper Zero WiFi Dev Board",
+  "board_fqbn": "esp32:esp32:esp32s2",
+  "filesystem": {
+    "prefer": "auto"
+  },
+  "display": {
+    "present": false
+  },
+  "features": {
+    "wifi": true,
+    "bluetooth": false,
+    "gps": false,
+    "neopixel": false,
+    "nrf24": false
+  },
+  "pins": {
+    "i2c_sda": null,
+    "i2c_scl": null,
+    "spi_mosi": null,
+    "spi_miso": null,
+    "spi_sck": null,
+    "sd_cs": null,
+    "btn_up": null,
+    "btn_down": null,
+    "btn_enter": null,
+    "btn_back": null
+  },
+  "build_flags": [],
+  "notes": "External display not present; add if you wire one."
+}

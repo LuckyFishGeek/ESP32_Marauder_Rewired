@@ -1,0 +1,25 @@
+{
+  "name": "Marauder Dev Board Pro",
+  "board_fqbn": "esp32:esp32:d32",
+  "filesystem": {
+    "prefer": "auto"
+  },
+  "display": {
+    "present": false
+  },
+  "features": {
+    "wifi": true,
+    "bluetooth": true,
+    "gps": true,
+    "neopixel": false,
+    "nrf24": false
+  },
+  "pins": {
+    "gps_tx": null,
+    "gps_rx": null,
+    "i2c_sda": null,
+    "i2c_scl": null
+  },
+  "build_flags": [],
+  "notes": "Set GPS UART pins; add TFT if you attach one."
+}

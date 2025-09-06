@@ -1,14 +1,14 @@
 {
-  "name": "M5StickC Plus 2",
+  "name": "M5StickC / M5StickC-Plus (base)",
   "board_fqbn": "esp32:esp32:m5stick-c",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
     "present": true,
-    "controller": "ST7789",
-    "width": 135,
-    "height": 240,
+    "controller": "ST7735/ST7789",
+    "width": 160,
+    "height": 80,
     "rotation": 1,
     "touch": {
       "present": false
@@ -37,5 +37,5 @@
     "btn_back": null
   },
   "build_flags": [],
-  "notes": "Fill M5StickC Plus 2 specific pin map."
+  "notes": "Base profile; override with your exact M5StickC version details."
 }

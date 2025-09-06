@@ -1,21 +1,34 @@
 {
-  "board": "MARAUDER_V6_1",
-  "display": {
-    "driver": "ILI9341",
-    "size": "320x240",
-    "touch": true
+  "name": "Marauder v6.1",
+  "board_fqbn": "esp32:esp32:esp32",
+  "filesystem": {
+    "prefer": "auto"
   },
-  "modules": {
+  "display": {
+    "present": true,
+    "controller": "ILI9341/ILI9488",
+    "width": 320,
+    "height": 240,
+    "rotation": 1,
+    "touch": {
+      "present": false
+    }
+  },
+  "features": {
+    "wifi": true,
+    "bluetooth": true,
     "gps": false,
-    "sd": true,
-    "buttons": true
+    "neopixel": false,
+    "nrf24": false
   },
   "pins": {
-    "tft_cs": 5,
-    "tft_dc": 21,
-    "tft_rst": 22,
-    "touch_cs": 19,
-    "gps_rx": -1,
-    "gps_tx": -1
-  }
+    "spi_mosi": null,
+    "spi_miso": null,
+    "spi_sck": null,
+    "tft_cs": null,
+    "tft_dc": null,
+    "tft_rst": null
+  },
+  "build_flags": [],
+  "notes": "Fill per v6.1 wiring."
 }

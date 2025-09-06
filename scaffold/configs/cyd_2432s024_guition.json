@@ -1,12 +1,12 @@
 {
-  "name": "CYD 2432S028",
+  "name": "CYD 2432S024 Guition",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
     "present": true,
-    "controller": "ILI9341/ILI9488",
+    "controller": "ILI9341",
     "width": 320,
     "height": 240,
     "rotation": 1,
@@ -32,5 +32,5 @@
     "sd_cs": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Fill Guition variant pin map."
 }

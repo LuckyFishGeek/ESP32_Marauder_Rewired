@@ -1,24 +1,17 @@
 {
-  "name": "M5StickC Plus 2",
-  "board_fqbn": "esp32:esp32:m5stick-c",
+  "name": "Flipper Zero Multi Board S3",
+  "board_fqbn": "esp32:esp32:esp32s3",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
-    "present": true,
-    "controller": "ST7789",
-    "width": 135,
-    "height": 240,
-    "rotation": 1,
-    "touch": {
-      "present": false
-    }
+    "present": false
   },
   "features": {
     "wifi": true,
     "bluetooth": true,
     "gps": false,
-    "neopixel": true,
+    "neopixel": false,
     "nrf24": false
   },
   "pins": {
@@ -27,15 +20,12 @@
     "spi_mosi": null,
     "spi_miso": null,
     "spi_sck": null,
-    "tft_cs": null,
-    "tft_dc": null,
-    "tft_rst": null,
-    "neopixel": null,
+    "sd_cs": null,
     "btn_up": null,
     "btn_down": null,
     "btn_enter": null,
     "btn_back": null
   },
   "build_flags": [],
-  "notes": "Fill M5StickC Plus 2 specific pin map."
+  "notes": "Add peripherals as needed."
 }

@@ -1,5 +1,5 @@
 {
-  "name": "CYD 2432S028",
+  "name": "CYD 2432S028 (2 USB)",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {
     "prefer": "auto"
@@ -19,7 +19,8 @@
     "bluetooth": true,
     "gps": false,
     "neopixel": false,
-    "nrf24": false
+    "nrf24": false,
+    "dual_usb": true
   },
   "pins": {
     "spi_mosi": null,
@@ -32,5 +33,5 @@
     "sd_cs": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Confirm dual-USB variant connections."
 }

@@ -1,18 +1,11 @@
 {
-  "name": "CYD 2432S028",
+  "name": "DOIT DevKit D32",
   "board_fqbn": "esp32:esp32:d32",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
-    "present": true,
-    "controller": "ILI9341/ILI9488",
-    "width": 320,
-    "height": 240,
-    "rotation": 1,
-    "touch": {
-      "present": true
-    }
+    "present": false
   },
   "features": {
     "wifi": true,
@@ -22,6 +15,8 @@
     "nrf24": false
   },
   "pins": {
+    "i2c_sda": null,
+    "i2c_scl": null,
     "spi_mosi": null,
     "spi_miso": null,
     "spi_sck": null,
@@ -29,8 +24,15 @@
     "tft_dc": null,
     "tft_rst": null,
     "touch_cs": null,
-    "sd_cs": null
+    "sd_cs": null,
+    "btn_up": null,
+    "btn_down": null,
+    "btn_enter": null,
+    "btn_back": null,
+    "neopixel": null,
+    "gps_tx": null,
+    "gps_rx": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Classic DOIT pinout; set SPI/I2C pins if you attach a TFT."
 }

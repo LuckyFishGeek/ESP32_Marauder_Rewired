@@ -1,6 +1,6 @@
 {
-  "name": "CYD 2432S028",
-  "board_fqbn": "esp32:esp32:d32",
+  "name": "Marauder Kit",
+  "board_fqbn": "esp32:esp32:esp32",
   "filesystem": {
     "prefer": "auto"
   },
@@ -11,7 +11,7 @@
     "height": 240,
     "rotation": 1,
     "touch": {
-      "present": true
+      "present": false
     }
   },
   "features": {
@@ -27,10 +27,8 @@
     "spi_sck": null,
     "tft_cs": null,
     "tft_dc": null,
-    "tft_rst": null,
-    "touch_cs": null,
-    "sd_cs": null
+    "tft_rst": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Kit variant; confirm your exact shield/PCB."
 }

@@ -1,0 +1,27 @@
+{
+  "name": "FireBeetle2 ESP32-E",
+  "board_fqbn": "esp32:esp32:dfrobot_firebeetle2_esp32e",
+  "filesystem": {
+    "prefer": "auto"
+  },
+  "display": {
+    "present": false
+  },
+  "features": {
+    "wifi": true,
+    "bluetooth": true,
+    "gps": false,
+    "neopixel": false,
+    "nrf24": false
+  },
+  "pins": {
+    "i2c_sda": null,
+    "i2c_scl": null,
+    "spi_mosi": null,
+    "spi_miso": null,
+    "spi_sck": null,
+    "sd_cs": null
+  },
+  "build_flags": [],
+  "notes": "Use board\u2019s docs for pin map."
+}

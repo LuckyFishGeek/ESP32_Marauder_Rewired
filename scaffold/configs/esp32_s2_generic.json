@@ -1,24 +1,17 @@
 {
-  "name": "M5StickC Plus 2",
-  "board_fqbn": "esp32:esp32:m5stick-c",
+  "name": "ESP32-S2 (Generic)",
+  "board_fqbn": "esp32:esp32:esp32s2",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
-    "present": true,
-    "controller": "ST7789",
-    "width": 135,
-    "height": 240,
-    "rotation": 1,
-    "touch": {
-      "present": false
-    }
+    "present": false
   },
   "features": {
     "wifi": true,
-    "bluetooth": true,
+    "bluetooth": false,
     "gps": false,
-    "neopixel": true,
+    "neopixel": false,
     "nrf24": false
   },
   "pins": {
@@ -30,12 +23,16 @@
     "tft_cs": null,
     "tft_dc": null,
     "tft_rst": null,
-    "neopixel": null,
+    "touch_cs": null,
+    "sd_cs": null,
     "btn_up": null,
     "btn_down": null,
     "btn_enter": null,
-    "btn_back": null
+    "btn_back": null,
+    "neopixel": null,
+    "gps_tx": null,
+    "gps_rx": null
   },
   "build_flags": [],
-  "notes": "Fill M5StickC Plus 2 specific pin map."
+  "notes": "ESP32-S2 has Wi-Fi only (no classic BLE)."
 }

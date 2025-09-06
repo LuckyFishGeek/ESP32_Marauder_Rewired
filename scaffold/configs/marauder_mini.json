@@ -1,21 +1,34 @@
 {
-  "board": "MARAUDER_MINI",
-  "display": {
-    "driver": "ILI9341",
-    "size": "320x240",
-    "touch": false
+  "name": "Marauder Mini",
+  "board_fqbn": "esp32:esp32:esp32",
+  "filesystem": {
+    "prefer": "auto"
   },
-  "modules": {
+  "display": {
+    "present": true,
+    "controller": "ST7789",
+    "width": 240,
+    "height": 240,
+    "rotation": 2,
+    "touch": {
+      "present": false
+    }
+  },
+  "features": {
+    "wifi": true,
+    "bluetooth": true,
     "gps": false,
-    "sd": true,
-    "buttons": true
+    "neopixel": false,
+    "nrf24": false
   },
   "pins": {
-    "tft_cs": 5,
-    "tft_dc": 2,
-    "tft_rst": 15,
-    "touch_cs": -1,
-    "gps_rx": -1,
-    "gps_tx": -1
-  }
+    "spi_mosi": null,
+    "spi_miso": null,
+    "spi_sck": null,
+    "tft_cs": null,
+    "tft_dc": null,
+    "tft_rst": null
+  },
+  "build_flags": [],
+  "notes": "Set exact Mini pinout."
 }

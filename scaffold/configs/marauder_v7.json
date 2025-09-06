@@ -1,6 +1,6 @@
 {
-  "name": "CYD 2432S028",
-  "board_fqbn": "esp32:esp32:d32",
+  "name": "Marauder v7",
+  "board_fqbn": "esp32:esp32:esp32",
   "filesystem": {
     "prefer": "auto"
   },
@@ -11,7 +11,7 @@
     "height": 240,
     "rotation": 1,
     "touch": {
-      "present": true
+      "present": false
     }
   },
   "features": {
@@ -19,7 +19,7 @@
     "bluetooth": true,
     "gps": false,
     "neopixel": false,
-    "nrf24": false
+    "nrf24": true
   },
   "pins": {
     "spi_mosi": null,
@@ -28,9 +28,9 @@
     "tft_cs": null,
     "tft_dc": null,
     "tft_rst": null,
-    "touch_cs": null,
-    "sd_cs": null
+    "nrf24_ce": null,
+    "nrf24_csn": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Has nRF24 headers on some variants\u2014set pins if used."
 }

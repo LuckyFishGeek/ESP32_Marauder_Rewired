@@ -1,36 +1,37 @@
 {
-  "name": "CYD 2432S028",
-  "board_fqbn": "esp32:esp32:d32",
+  "name": "Rev Feather (ESP32-S2)",
+  "board_fqbn": "esp32:esp32:esp32s2",
   "filesystem": {
     "prefer": "auto"
   },
   "display": {
     "present": true,
-    "controller": "ILI9341/ILI9488",
-    "width": 320,
-    "height": 240,
+    "controller": "ST7789/ILI9341",
+    "width": 240,
+    "height": 320,
     "rotation": 1,
     "touch": {
-      "present": true
+      "present": false
     }
   },
   "features": {
     "wifi": true,
-    "bluetooth": true,
+    "bluetooth": false,
     "gps": false,
-    "neopixel": false,
+    "neopixel": true,
     "nrf24": false
   },
   "pins": {
+    "i2c_sda": null,
+    "i2c_scl": null,
+    "neopixel": null,
     "spi_mosi": null,
     "spi_miso": null,
     "spi_sck": null,
     "tft_cs": null,
     "tft_dc": null,
-    "tft_rst": null,
-    "touch_cs": null,
-    "sd_cs": null
+    "tft_rst": null
   },
   "build_flags": [],
-  "notes": "Set TFT + touch + SD CS per your board."
+  "notes": "Fill exact TFT and NeoPixel pin."
 }
