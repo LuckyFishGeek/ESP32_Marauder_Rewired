@@ -5,29 +5,35 @@ on:
     inputs:
       board_label:
         type: choice
-        description: 'Select board (from scaffold/configs/manifest.json)'
-        default: 'OG Marauder'
+        description: 'Select a common Arduino-ESP32 board (or choose "Other (enter FQBN)")'
+        default: 'Generic ESP32 Dev Module'
         options:
-          - Flipper Zero WiFi Dev Board
-          - Flipper Zero Multi Board S3
-          - OG Marauder
-          - Marauder v6
-          - Marauder v6.1
-          - Marauder Kit
-          - Marauder Mini
-          - ESP32 LDDB
-          - Marauder Dev Board Pro
-          - M5StickCPlus
-          - M5StickCPlus 2
-          - Rev Feather
-          - Marauder v7
-          - Marauder CYD 2432S028
-          - Marauder CYD 2432S024 GUITION
-          - Marauder CYD 2432S028 2 USB
-          - Marauder v7.1
-          - M5Cardputer
-          - ESP32-C5-DevKitC-1
-          - Generic ESP32
+          - Generic ESP32 Dev Module
+          - DOIT ESP32 DEVKIT V1
+          - NodeMCU-32S
+          - ESP32 DevKitC V4
+          - ESP32 WROOM-DA Module
+          - ESP32 WROVER Module
+          - ESP32 WROVER Kit (all versions)
+          - ESP32 PICO-D4
+          - AI Thinker ESP32-CAM
+          - Lolin D32
+          - Lolin D32 Pro
+          - FireBeetle2 ESP32-E
+          - Heltec WiFi Kit 32 (V3)
+          - ESP32-S2 Dev Module
+          - ESP32-S2 Saola-1
+          - Adafruit Feather ESP32-S2
+          - ESP32-S3 Dev Module
+          - Adafruit Feather ESP32-S3 (2MB PSRAM)
+          - M5StickC / M5StickC-Plus
+          - M5Stamp S3
+          - Other (enter FQBN)
+
+      fqbn_override:
+        description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
+        required: false
+        default: ''
 
       profile_name:
         type: choice
@@ -85,38 +91,62 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install jq & unzip
-        run: sudo apt-get update && sudo apt-get install -y jq unzip
+      - name: Install unzip (jq not required now)
+        run: sudo apt-get update && sudo apt-get install -y unzip
 
-      - name: Load manifest and resolve board
+      # ───────────────────────────────────────────────────────────────────────────
+      # NEW: Resolve FQBN from Top-20 dropdown (with "Other" override).
+      # Also emit placeholders for fields the old manifest step used, so
+      # downstream steps keep working (left blank by default).
+      # ───────────────────────────────────────────────────────────────────────────
+      - name: Resolve FQBN
         id: map
         shell: bash
         run: |
           set -e
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
+          LABEL="${{ github.event.inputs.board_label }}"
+          OVR="${{ github.event.inputs.fqbn_override }}"
 
-          WANT="${{ github.event.inputs.board_label }}"
-          COUNT=$(jq --arg L "$WANT" '[.boards[] | select(.label==$L)] | length' "$MAN")
-          if [ "$COUNT" -eq 0 ]; then
-            echo "::error ::Board label not found in manifest: $WANT"
-            jq -r '.boards[].label' "$MAN" | nl -ba
-            exit 1
-          fi
+          case "$LABEL" in
+            "Generic ESP32 Dev Module")                FQBN="esp32:esp32:esp32" ;;
+            "DOIT ESP32 DEVKIT V1")                    FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
+            "NodeMCU-32S")                              FQBN="esp32:esp32:nodemcu-32s" ;;
+            "ESP32 DevKitC V4")                         FQBN="esp32:esp32:esp32" ;;   # maps to generic dev module
+            "ESP32 WROOM-DA Module")                    FQBN="esp32:esp32:esp32da" ;;
+            "ESP32 WROVER Module")                      FQBN="esp32:esp32:esp32wrover" ;;
+            "ESP32 WROVER Kit (all versions)")          FQBN="esp32:esp32:esp32wroverkit" ;;
+            "ESP32 PICO-D4")                            FQBN="esp32:esp32:pico32" ;;
+            "AI Thinker ESP32-CAM")                     FQBN="esp32:esp32:esp32cam" ;;
+            "Lolin D32")                                 FQBN="esp32:esp32:lolin_d32" ;;
+            "Lolin D32 Pro")                             FQBN="esp32:esp32:lolin_d32_pro" ;;
+            "FireBeetle2 ESP32-E")                      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
+            "Heltec WiFi Kit 32 (V3)")                  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
+            "ESP32-S2 Dev Module")                      FQBN="esp32:esp32:esp32s2" ;;
+            "ESP32-S2 Saola-1")                         FQBN="esp32:esp32:esp32s2-saola-1" ;;
+            "Adafruit Feather ESP32-S2")                FQBN="esp32:esp32:adafruit_feather_esp32s2" ;;
+            "ESP32-S3 Dev Module")                      FQBN="esp32:esp32:esp32s3" ;;
+            "Adafruit Feather ESP32-S3 (2MB PSRAM)")    FQBN="esp32:esp32:adafruit_feather_esp32s3" ;;
+            "M5StickC / M5StickC-Plus")                 FQBN="esp32:esp32:m5stick-c" ;;
+            "M5Stamp S3")                               FQBN="esp32:esp32:m5stack_stampS3" ;;
+            "Other (enter FQBN)")
+              if [ -z "$OVR" ]; then
+                echo "::error ::You chose 'Other' but did not provide 'fqbn_override'"; exit 1
+              fi
+              FQBN="$OVR"
+              ;;
+            *)
+              echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
+          esac
 
-          FQBN=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .fqbn' "$MAN")
-          FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
-          DEF_FS=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.filesystem // ""' "$MAN")
-          DEF_PART=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.partition // ""' "$MAN")
-          TFT_ENABLED=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.enabled // false' "$MAN")
-          TFT_HEADER=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.header // ""' "$MAN")
-
+          # Emit outputs expected later (compat with prior manifest flow)
           echo "fqbn=$FQBN" >> $GITHUB_OUTPUT
-          echo "flag=$FLAG" >> $GITHUB_OUTPUT
-          echo "def_fs=$DEF_FS" >> $GITHUB_OUTPUT
-          echo "def_part=$DEF_PART" >> $GITHUB_OUTPUT
-          echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
-          echo "tft_header=$TFT_HEADER" >> $GITHUB_OUTPUT
+          echo "flag=" >> $GITHUB_OUTPUT
+          echo "def_fs=" >> $GITHUB_OUTPUT
+          echo "def_part=" >> $GITHUB_OUTPUT
+          echo "tft_enabled=" >> $GITHUB_OUTPUT
+          echo "tft_header=" >> $GITHUB_OUTPUT
+
+          echo "Resolved: $LABEL -> $FQBN"
 
       - name: Install Arduino CLI
         run: |
@@ -290,10 +320,11 @@ jobs:
           FLAG="${{ steps.map.outputs.flag }}"
           [ -n "$FLAG" ] && D="$D -D$FLAG"
 
-          CSV="${{ steps.mods.outputs.csv }}"
+          CSV="${{ github.event.inputs.profile_name }}" # name only (for logs)
+          CSV_FLAGS="${{ steps.mods.outputs.csv }}"     # actual resolved CSV
           TFT_D="${{ steps.tft.outputs.tft_define }}"
 
-          add () { echo "$CSV" | grep -qi "\b$1\b" && D="$D -D$2"; }
+          add () { echo "$CSV_FLAGS" | grep -qi "\b$1\b" && D="$D -D$2"; }
           add WIFI       ENABLE_WIFI
           add BLE        ENABLE_BLE
           add WEB        ENABLE_WEB
@@ -308,8 +339,8 @@ jobs:
           add NRF24      ENABLE_NRF24
           add USB_MSC    ENABLE_USB_MSC
 
-          echo "$CSV" | grep -qi '\bTFT_ON\b'  && D="$D -DENABLE_TFT"
-          echo "$CSV" | grep -qi '\bTFT_OFF\b' && D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
+          echo "$CSV_FLAGS" | grep -qi '\bTFT_ON\b'  && D="$D -DENABLE_TFT"
+          echo "$CSV_FLAGS" | grep -qi '\bTFT_OFF\b' && D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
           [ -n "$TFT_D" ] && D="$D $TFT_D"
 
           EXTRA="${{ github.event.inputs.extra_defines }}"
@@ -318,7 +349,7 @@ jobs:
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
 
-      # -------- NEW COMPILE BLOCK --------
+      # -------- COMPILE BLOCK (unchanged, but now uses new FQBN resolver) ------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
@@ -330,14 +361,11 @@ jobs:
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.part }}"
 
-          # Build properties (wrap -D flags inside compiler.*.extra_flags)
           PROPS="--build-property compiler.cpp.extra_flags=\"$EXTRA_INCLUDES $DEFS\" \
                  --build-property compiler.c.extra_flags=\"$EXTRA_INCLUDES $DEFS\""
 
-          # Filesystem override
           [ -n "$FS" ] && PROPS="$PROPS --build-property board_build.filesystem=$FS"
 
-          # Partition override (copy CSV and set build.partitions to basename)
           if [ -n "$PART" ]; then
             mkdir -p "$SKETCH_DIR/partitions"
             if [ -f "partitions/$PART" ]; then
@@ -358,7 +386,7 @@ jobs:
             --warnings none \
             --export-binaries \
             $PROPS
-      # -----------------------------------
+      # ------------------------------------------------------------------------
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
@@ -367,4 +395,3 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
-```0
