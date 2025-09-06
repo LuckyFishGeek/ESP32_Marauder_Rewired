@@ -47,7 +47,7 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Third-party libraries ----------
+      # ---------- Libraries ----------
       - name: Ensure Arduino libraries folder
         run: mkdir -p "$HOME/Arduino/libraries"
 
@@ -128,24 +128,17 @@ jobs:
           set -e
           mkdir -p scaffold/data scaffold/configs
 
-          # If custom JSON provided, write it to configs/custom.json and use that.
           if [ -n "${{ inputs.custom_config_json }}" ]; then
             echo "${{ inputs.custom_config_json }}" > scaffold/configs/custom.json
             CONFIG_FILE="custom.json"
-            echo "Using custom.json from workflow input"
           else
             CONFIG_FILE="${{ inputs.config_name }}"
-            echo "Using named config: $CONFIG_FILE"
           fi
 
-          # Validate presence
           test -f "scaffold/configs/$CONFIG_FILE" || { echo "::error ::Config not found: scaffold/configs/$CONFIG_FILE"; exit 1; }
-
-          # Place active config into SPIFFS data as /config.json (optional for runtime loading)
           cp "scaffold/configs/$CONFIG_FILE" scaffold/data/config.json
 
           echo "config_file=$CONFIG_FILE" >> $GITHUB_OUTPUT
-          echo "Active config copied to scaffold/data/config.json"
 
       # ---------- Prepare Sketch ----------
       - name: Prepare Sketch Folder (from scaffold/)
@@ -156,20 +149,16 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           mkdir -p "$SKETCH_DIR"
 
-          # Use the .ino at scaffold root
           INO_SRC=$(ls scaffold/*.ino | head -n 1)
           [ -n "$INO_SRC" ] || (echo "No .ino found at scaffold/ root"; exit 1)
           cp "$INO_SRC" "$SKETCH_DIR/esp32_marauder_rewired.ino"
 
-          # Copy sources (keep tree), and data/ (for SPIFFS content like config.json)
           pushd scaffold >/dev/null
           find . -type f \( -name "*.h" -o -name "*.hpp" -o -name "*.c" -o -name "*.cpp" -o -name "*.json" \) -print0 \
             | xargs -0 -I {} cp --parents "{}" "$SKETCH_DIR/"
           popd >/dev/null
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch tree (top):"; find "$SKETCH_DIR" -maxdepth 2 -type d | sort
-          echo "Root files:"; ls -la "$SKETCH_DIR"
 
       # ---------- Compile ----------
       - name: Compile (Arduino CLI)
@@ -188,26 +177,47 @@ jobs:
             --build-property compiler.cpp.extra_flags="$EXTRA" \
             --build-property compiler.c.extra_flags="$EXTRA"
 
-      # ---------- Pack all configs into a ZIP (includes custom.json if provided) ----------
-      - name: Create configs bundle
+      # ---------- Sanitize and Upload firmware artifact ----------
+      - name: Sanitize firmware artifact name
+        id: sanitize_fw
         run: |
-          mkdir -p dist
-          zip -r dist/configs_bundle.zip scaffold/configs
-          echo "Created dist/configs_bundle.zip with all JSON configs"
+          NAME="firmware_${{ inputs.fqbn }}_${{ github.sha }}"
+          SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/]/_/g')
+          echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
-      # ---------- Upload artifacts ----------
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: firmware_${{ inputs.fqbn }}_${{ github.sha }}
-          path: |
-            _build/esp32_marauder_rewired/build/*/*.bin
+          name: ${{ steps.sanitize_fw.outputs.safe_name }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
+
+      # ---------- Pack and Upload configs bundle ----------
+      - name: Create configs bundle
+        id: cfgzip
+        run: |
+          mkdir -p dist
+          zip -r dist/configs_bundle.zip scaffold/configs
+          echo "zip_path=dist/configs_bundle.zip" >> $GITHUB_OUTPUT
+
+      - name: Sanitize configs artifact name
+        id: sanitize_cfg
+        run: |
+          CFG="${{ steps.cfg.outputs.config_file || 'unknown_config.json' }}"
+          NAME="configs_${CFG}_${{ github.sha }}"
+          SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/ ]/_/g')
+          echo "safe_cfg_name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
       - name: Upload configs bundle
         uses: actions/upload-artifact@v4
         with:
-          name: configs_bundle_${{ github.sha }}
-          path: dist/configs_bundle.zip
+          name: ${{ steps.sanitize_cfg.outputs.safe_cfg_name }}
+          path: ${{ steps.cfgzip.outputs.zip_path }}
           retention-days: 30
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
