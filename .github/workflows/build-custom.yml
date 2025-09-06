@@ -261,6 +261,9 @@ jobs:
 
           if [ "$CHOICE" = "Custom" ]; then
             RESOLVED="$(echo "$CUSTOM" | norm_csv)"
+            if [ -z "$RESOLVED" ]; then
+              echo "::error ::Custom selected but modules_csv is empty"; exit 1
+            fi
             echo "Using Custom CSV: $RESOLVED"
             echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
             echo "chosen_profile=Custom(CSV)" >> $GITHUB_OUTPUT
@@ -417,7 +420,7 @@ jobs:
 
           [ -n "$FS" ] && PROPS="$PROPS --build-property board_build.filesystem=$FS"
 
-          if [ -n "$PART" ]; then
+          if [ -n "$PART" ] ; then
             mkdir -p "$SKETCH_DIR/partitions"
             if [ -f "partitions/$PART" ]; then
               cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
