@@ -4,9 +4,30 @@ on:
   workflow_dispatch:
     inputs:
       board_label:
-        description: 'Board label (must match a "label" in scaffold/configs/manifest.json)'
-        required: false
+        type: choice
+        description: 'Select board (must match manifest.json)'
         default: 'OG Marauder'
+        options:
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - OG Marauder
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder Mini
+          - ESP32 LDDB
+          - Marauder Dev Board Pro
+          - M5StickCPlus
+          - M5StickCPlus 2
+          - Rev Feather
+          - Marauder v7
+          - Marauder CYD 2432S028
+          - Marauder CYD 2432S024 GUITION
+          - Marauder CYD 2432S028 2 USB
+          - Marauder v7.1
+          - M5Cardputer
+          - ESP32-C5-DevKitC-1
+          - Generic ESP32
       filesystem:
         type: choice
         description: 'Override filesystem (blank = use manifest default)'
@@ -32,7 +53,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -40,7 +60,7 @@ jobs:
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
 
-      # ---------- Verify & preview manifest ----------
+      # Manifest presence + preview
       - name: Load manifest and list available boards
         id: manifest
         shell: bash
@@ -52,7 +72,7 @@ jobs:
           jq -r '.boards[].label' "$MAN" | nl -ba
           echo "man_path=$MAN" >> $GITHUB_OUTPUT
 
-      # ---------- Resolve board entry from manifest ----------
+      # Resolve selected board from manifest
       - name: Resolve board from manifest
         id: map
         shell: bash
@@ -60,12 +80,7 @@ jobs:
           set -e
           MAN="${{ steps.manifest.outputs.man_path }}"
           WANT="${{ github.event.inputs.board_label }}"
-          if [ -z "$WANT" ]; then
-            echo "::warning ::No board_label provided; using the first board in manifest."
-            WANT=$(jq -r '.boards[0].label' "$MAN")
-          fi
 
-          # Does it exist?
           COUNT=$(jq --arg L "$WANT" '[.boards[] | select(.label == $L)] | length' "$MAN")
           if [ "$COUNT" -eq 0 ]; then
             echo "::error ::Board label not found in manifest: $WANT"
@@ -73,24 +88,24 @@ jobs:
             exit 1
           fi
 
-          # Extract fields
           FQBN=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .fqbn' "$MAN")
           TFT_ENABLED=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.enabled // false' "$MAN")
           TFT_HEADER=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.header // ""' "$MAN")
           DEF_FS=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.filesystem // ""' "$MAN")
           DEF_PART=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.partition // ""' "$MAN")
-          # Join defines array into space-separated -D flags
           DEFINES=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | (.defines // []) | map("-D"+.) | join(" ")' "$MAN")
+          FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
+          if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
 
-          echo "board=$WANT"        >> $GITHUB_OUTPUT
-          echo "fqbn=$FQBN"         >> $GITHUB_OUTPUT
+          echo "board=$WANT"           >> $GITHUB_OUTPUT
+          echo "fqbn=$FQBN"            >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
-          echo "def_fs=$DEF_FS"     >> $GITHUB_OUTPUT
-          echo "def_part=$DEF_PART" >> $GITHUB_OUTPUT
-          echo "defines=$DEFINES"   >> $GITHUB_OUTPUT
+          echo "def_fs=$DEF_FS"        >> $GITHUB_OUTPUT
+          echo "def_part=$DEF_PART"    >> $GITHUB_OUTPUT
+          echo "defines=$DEFINES"      >> $GITHUB_OUTPUT
 
-      # ---------- Arduino CLI ----------
+      # Arduino CLI
       - name: Install Arduino CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
@@ -108,7 +123,7 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Libraries (prepacked) ----------
+      # Libraries from lib.tar
       - name: Extract pre-bundled libs (lib.tar)
         run: |
           mkdir -p $HOME/Arduino/libraries
@@ -119,7 +134,7 @@ jobs:
           fi
           ls -1 $HOME/Arduino/libraries || true
 
-      # Local shim so <registry/ToolRegistry.h> resolves
+      # Local registry shim
       - name: Create ESP32MarauderRegistry local library
         run: |
           set -e
@@ -133,7 +148,7 @@ jobs:
           includes=registry/ToolRegistry.h
           PROP
 
-      # Optional: unpack TFT_eSPI user setups (display_settings.zip at repo root)
+      # Optional TFT_eSPI user setups from zip
       - name: Unpack display settings (optional)
         run: |
           if [ -f "display_settings.zip" ]; then
@@ -144,7 +159,7 @@ jobs:
             echo "display_settings.zip not present; skipping"
           fi
 
-      # ---------- Prepare sketch ----------
+      # Prepare sketch
       - name: Prepare Sketch Folder
         id: prep
         run: |
@@ -152,13 +167,10 @@ jobs:
           mkdir -p "$SKETCH_DIR"
           cp scaffold/*.ino "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/"
-          # bring your root configs.h if present
-          if [ -f "configs.h" ]; then
-            cp "configs.h" "$SKETCH_DIR/configs.h"
-          fi
+          if [ -f "configs.h" ]; then cp "configs.h" "$SKETCH_DIR/configs.h"; fi
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      # ---------- Configure TFT_eSPI User_Setup_Select.h if TFT ----------
+      # TFT_eSPI header if TFT is enabled
       - name: Configure TFT_eSPI header (if TFT enabled)
         if: steps.map.outputs.tft_enabled == 'true'
         run: |
@@ -173,7 +185,7 @@ jobs:
             echo "TFT enabled but no header provided in manifest; continuing."
           fi
 
-      # ---------- Resolve filesystem/partition (manifest defaults + UI overrides) ----------
+      # FS/Partition (manifest defaults + UI overrides)
       - name: Resolve FS/Partition and install CSV into core (if provided)
         id: fs
         shell: bash
@@ -184,17 +196,12 @@ jobs:
           FS_OVR="${{ github.event.inputs.filesystem }}"
           PART_OVR="${{ github.event.inputs.partition }}"
 
-          FS_FINAL="$FS_DEF"
-          [ -n "$FS_OVR" ] && FS_FINAL="$FS_OVR"
-
-          PART_FINAL="$PART_DEF"
-          [ -n "$PART_OVR" ] && PART_FINAL="$PART_OVR"
+          FS_FINAL="$FS_DEF";  [ -n "$FS_OVR" ] && FS_FINAL="$FS_OVR"
+          PART_FINAL="$PART_DEF"; [ -n "$PART_OVR" ] && PART_FINAL="$PART_OVR"
 
           echo "fs=$FS_FINAL"   >> $GITHUB_OUTPUT
           echo "part=$PART_FINAL" >> $GITHUB_OUTPUT
-          echo "Resolved -> FS='${FS_FINAL}' PART='${PART_FINAL}'"
 
-          # If PART_FINAL exists in repo /partitions, copy to core so the name resolves
           if [ -n "$PART_FINAL" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART_FINAL"
             if [ -f "$SRC" ]; then
@@ -207,7 +214,7 @@ jobs:
             fi
           fi
 
-      # ---------- Compile ----------
+      # Compile
       - name: Compile (Arduino CLI)
         run: |
           FQBN="${{ steps.map.outputs.fqbn }}"
@@ -216,7 +223,7 @@ jobs:
 
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.part }}"
-          DEFS="${{ steps.map.outputs.defines }}"   # already like: -DXXX -DYYY
+          DEFS="${{ steps.map.outputs.defines }}"   # "-D..." tokens
 
           BUILD_FLAGS=""
           [ -n "$FS" ] && BUILD_FLAGS="$BUILD_FLAGS --build-property board_build.filesystem=$FS"
@@ -235,11 +242,11 @@ jobs:
             --build-property compiler.c.extra_flags="$EXTRA_INCLUDES $DEFS" \
             $BUILD_FLAGS
 
-      # ---------- Artifact ----------
+      # Artifact
       - name: Safe artifact name
         id: art
         run: |
-          NAME="fw_${{ steps.map.outputs.board }}_${{ github.sha }}"
+          NAME="fw_${{ github.event.inputs.board_label }}_${{ github.sha }}"
           SAFE=$(echo "$NAME" | sed 's/[:<>|*?\\\/ ]/_/g')
           echo "safe=$SAFE" >> $GITHUB_OUTPUT
 
