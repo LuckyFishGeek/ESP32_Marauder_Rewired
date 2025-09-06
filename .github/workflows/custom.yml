@@ -1,4 +1,4 @@
-name: Build (Arduino CLI — ESP32 Marauder Rewired w/ Config)
+name: Build (Arduino CLI — ESP32 Marauder Rewired w/ Config + lib.tar)
 
 on:
   push:
@@ -47,45 +47,18 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      # ---------- Libraries from Custom/ ----------
-      - name: Ensure Arduino libraries folder
-        run: mkdir -p "$HOME/Arduino/libraries"
-
-      - name: Install all Custom libs into Arduino/libraries
-        shell: bash
+      # ---------- Libraries from lib.tar ----------
+      - name: Download & Extract lib.tar
         run: |
-          set -e
-          LIBDST="$HOME/Arduino/libraries"
-          CUSTDIR="${GITHUB_WORKSPACE}/Custom"
-
-          if [[ ! -d "$CUSTDIR" ]]; then
-            echo "::error ::Custom/ folder not found. Please add your libraries under ./Custom/<LibName>."
-            exit 1
-          fi
-
-          echo "Installing libraries from: $CUSTDIR -> $LIBDST"
-          shopt -s nullglob
-          for src in "$CUSTDIR"/* ; do
-            [ -d "$src" ] || continue
-            bn="$(basename "$src")"
-            dst="$LIBDST/$bn"
-            rm -rf "$dst"
-            cp -r "$src" "$dst"
-            echo " - Installed $bn"
-          done
-
-          # Ensure ESPAsyncWebServer exists (required)
-          if [[ ! -d "$LIBDST/ESPAsyncWebServer" ]]; then
-            echo "::error ::ESPAsyncWebServer not found in Custom/. Please add Custom/ESPAsyncWebServer."
-            exit 1
-          fi
-
-          echo "Done. Contents of Arduino libraries:"
-          ls -la "$LIBDST"
+          mkdir -p "$HOME/Arduino/libraries"
+          echo "Downloading lib.tar from repo..."
+          curl -L "https://github.com/AirysDark/ESP32_Marauder_Rewired/raw/main/lib.tar" -o lib.tar
+          tar -xf lib.tar -C "$HOME/Arduino/libraries"
+          echo "Libraries installed to $HOME/Arduino/libraries"
+          ls -la "$HOME/Arduino/libraries"
 
       # ---------- Local library for registry ----------
       - name: Create ESP32MarauderRegistry local library
-        shell: bash
         run: |
           set -e
           LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
