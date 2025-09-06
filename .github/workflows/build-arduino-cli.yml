@@ -167,11 +167,17 @@ jobs:
             --export-binaries \
             --verbose
 
+      - name: Set safe artifact name
+        shell: bash
+        run: |
+          FQBN="${{ inputs.fqbn || matrix.fqbn }}"
+          SAFE=$(echo "$FQBN" | sed 's/[^A-Za-z0-9._-]/_/g')
+          echo "ARTIFACT_NAME=rewired_${SAFE}_${GITHUB_SHA}" >> $GITHUB_ENV
+
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rewired_${{ inputs.fqbn || matrix.fqbn }}_${{ github.sha }}
-          path: |
-            _build/esp32_marauder_rewired/build/*/*.bin
+          name: ${{ env.ARTIFACT_NAME }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 7
