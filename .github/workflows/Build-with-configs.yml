@@ -3,6 +3,7 @@ name: Build (Arduino CLI — ESP32 Marauder Rewired)
 on:
   workflow_dispatch:
     inputs:
+      # Friendlier board names → mapped to FQBN later
       board:
         description: 'Select board'
         required: true
@@ -16,36 +17,37 @@ on:
         default: 'ESP32-S3'
 
       core_version:
-        description: 'Arduino-ESP32 core (e.g., 2.0.11)'
+        description: 'Arduino-ESP32 core'
         required: false
         default: '2.0.11'
 
-      # ↓↓↓ Hard-coded dropdown of configs in scaffold/configs ↓↓↓
-      config_name:
-        description: 'Config in scaffold/configs'
+      # Friendlier config names → mapped to JSON filename later
+      config_friendly:
+        description: 'Select device config'
         required: true
         type: choice
         options:
-          - marauder_mini.json
-          - marauder_v6.json
-          - marauder_v6_1.json
-          - marauder_kit.json
-          - marauder_v7.json
-          - m5stickc_plus.json
-          - m5stickc_plus2.json
-          - m5cardputer.json
-          - esp32c5devkitc1.json
-          - old_hardware.json
-          - rev_feather.json
-          - cyd_2432S028.json
-          - cyd_2432S024_guition.json
-          - cyd_2432S028_2usb.json
-          - marauder_dev_board_pro.json
-          - esp32_lddb.json
-        default: 'marauder_mini.json'
+          - Marauder Mini
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder v7
+          - M5StickC Plus
+          - M5StickC Plus 2
+          - M5Cardputer
+          - ESP32-C5 DevKitC-1
+          - OG / Old Hardware
+          - Rev Feather (S2)
+          - CYD 2432S028
+          - CYD 2432S024 Guition
+          - CYD 2432S028 (2 USB)
+          - Dev Board Pro
+          - ESP32 LDDB
+        default: 'Marauder Mini'
 
+      # Optional inline override JSON (kept as before)
       custom_config_json:
-        description: 'Optional JSON to override the selected config (leave blank to use selected file)'
+        description: 'Optional JSON override (leave blank to use selected config)'
         required: false
         default: ''
 
@@ -57,7 +59,7 @@ on:
         default: ''
 
       partition_csv:
-        description: 'Partition CSV under ./partitions (blank = core default)'
+        description: 'Partition CSV (blank = core default)'
         required: false
         type: choice
         options:
@@ -99,7 +101,6 @@ jobs:
           echo "Downloading lib.tar from repo..."
           curl -L "https://github.com/AirysDark/ESP32_Marauder_Rewired/raw/main/lib.tar" -o lib.tar
           tar -xf lib.tar -C "$HOME/Arduino/libraries"
-          echo "Libraries installed to $HOME/Arduino/libraries"
           ls -la "$HOME/Arduino/libraries"
 
       - name: Create ESP32MarauderRegistry local library
@@ -115,17 +116,72 @@ jobs:
           includes=registry/ToolRegistry.h
           PROP
 
+      # Map friendly Board -> FQBN
+      - name: Map board name to FQBN
+        id: boardmap
+        shell: bash
+        run: |
+          set -e
+          case "${{ inputs.board }}" in
+            "Generic ESP32")                          FQBN="esp32:esp32:esp32" ;;
+            "ESP32-S2")                               FQBN="esp32:esp32:esp32s2" ;;
+            "ESP32-S3")                               FQBN="esp32:esp32:esp32s3" ;;
+            "DOIT DevKit D32")                        FQBN="esp32:esp32:d32" ;;
+            "M5StickC / M5StickC-Plus (base)")        FQBN="esp32:esp32:m5stick-c" ;;
+            *) echo "::error ::Unknown board '${{ inputs.board }}'"; exit 1 ;;
+          esac
+          echo "fqbn=$FQBN" >> $GITHUB_OUTPUT
+          echo "Resolved FQBN: $FQBN"
+
+      # Map friendly Config -> file in scaffold/configs
+      - name: Map friendly config to filename
+        id: cfgmap
+        shell: bash
+        run: |
+          set -e
+          # default mapping
+          case "${{ inputs.config_friendly }}" in
+            "Marauder Mini")               CFG="marauder_mini.json" ;;
+            "Marauder v6")                 CFG="marauder_v6.json" ;;
+            "Marauder v6.1")               CFG="marauder_v6_1.json" ;;
+            "Marauder Kit")                CFG="marauder_kit.json" ;;
+            "Marauder v7")                 CFG="marauder_v7.json" ;;
+            "M5StickC Plus")               CFG="m5stickc_plus.json" ;;
+            "M5StickC Plus 2")             CFG="m5stickc_plus2.json" ;;
+            "M5Cardputer")                 CFG="m5cardputer.json" ;;
+            "ESP32-C5 DevKitC-1")          CFG="esp32c5devkitc1.json" ;;
+            "OG / Old Hardware")           CFG="old_hardware.json" ;;
+            "Rev Feather (S2)")            CFG="rev_feather.json" ;;
+            "CYD 2432S028")                CFG="cyd_2432S028.json" ;;
+            "CYD 2432S024 Guition")        CFG="cyd_2432S024_guition.json" ;;
+            "CYD 2432S028 (2 USB)")        CFG="cyd_2432S028_2usb.json" ;;
+            "Dev Board Pro")               CFG="marauder_dev_board_pro.json" ;;
+            "ESP32 LDDB")                  CFG="esp32_lddb.json" ;;
+            *) echo "::error ::Unknown config '${{ inputs.config_friendly }}'"; exit 1 ;;
+          esac
+
+          # Inline override takes precedence
+          if [ -n "${{ inputs.custom_config_json }}" ]; then
+            echo "custom_config=1" >> $GITHUB_OUTPUT
+            echo "cfg_json_name=custom.json" >> $GITHUB_OUTPUT
+          else
+            echo "custom_config=0" >> $GITHUB_OUTPUT
+            echo "cfg_json_name=$CFG" >> $GITHUB_OUTPUT
+          fi
+          echo "Resolved config file: $CFG (custom override: ${{ inputs.custom_config_json != '' }})"
+
+      # Materialize selected config (or custom override) to scaffold/data/config.json
       - name: Select config (file or custom JSON)
         id: cfg
         shell: bash
         run: |
           set -e
           mkdir -p scaffold/data scaffold/configs
-          if [ -n "${{ inputs.custom_config_json }}" ]; then
+          if [ "${{ steps.cfgmap.outputs.custom_config }}" = "1" ]; then
             echo "${{ inputs.custom_config_json }}" > scaffold/configs/custom.json
             CONFIG_FILE="custom.json"
           else
-            CONFIG_FILE="${{ inputs.config_name }}"
+            CONFIG_FILE="${{ steps.cfgmap.outputs.cfg_json_name }}"
           fi
           if [ ! -f "scaffold/configs/$CONFIG_FILE" ]; then
             echo "Configs present:"; ls -1 scaffold/configs || true
@@ -134,7 +190,9 @@ jobs:
           fi
           cp "scaffold/configs/$CONFIG_FILE" scaffold/data/config.json
           echo "config_file=$CONFIG_FILE" >> $GITHUB_OUTPUT
+          echo "Selected config -> scaffold/data/config.json"
 
+      # Prepare sketch (+ optional custom partitions.csv)
       - name: Prepare Sketch Folder (from scaffold/)
         id: prep
         shell: bash
@@ -165,30 +223,12 @@ jobs:
 
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      - name: Map board name to FQBN
-        id: boardmap
-        shell: bash
-        run: |
-          set -e
-          case "${{ inputs.board }}" in
-            "Generic ESP32")                          FQBN="esp32:esp32:esp32" ;;
-            "ESP32-S2")                               FQBN="esp32:esp32:esp32s2" ;;
-            "ESP32-S3")                               FQBN="esp32:esp32:esp32s3" ;;
-            "DOIT DevKit D32")                        FQBN="esp32:esp32:d32" ;;
-            "M5StickC / M5StickC-Plus (base)")        FQBN="esp32:esp32:m5stick-c" ;;
-            *) echo "::error ::Unknown board '${{ inputs.board }}'"; exit 1 ;;
-          esac
-          echo "fqbn=$FQBN" >> $GITHUB_OUTPUT
-          echo "Resolved FQBN: $FQBN"
-
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
           set -e
           FQBN="${{ steps.boardmap.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-
-          # Optional filesystem define (blank -> no define)
           FSDEF=""
           case "${{ inputs.filesystem }}" in
             littlefs|LITTLEFS) FSDEF="-DFS_LITTLEFS=1" ;;
@@ -196,10 +236,10 @@ jobs:
             "")                FSDEF="" ;;
             *) echo "::error ::Unsupported filesystem: ${{ inputs.filesystem }}"; exit 1 ;;
           esac
-
           EXTRA_INCL="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
 
           echo "FQBN: $FQBN"
+          echo "Config file: ${{ steps.cfg.outputs.config_file }}"
           echo "FS define: '$FSDEF'"
 
           arduino-cli compile \
@@ -213,7 +253,7 @@ jobs:
       - name: Sanitize firmware artifact name
         id: sanitize_fw
         run: |
-          NAME="fw_${{ inputs.board }}_${{ inputs.config_name }}_${{ inputs.filesystem || 'defaultfs' }}_${{ inputs.partition_csv || 'defaultpart' }}_${{ github.sha }}"
+          NAME="fw_${{ inputs.board }}_${{ inputs.config_friendly }}_${{ inputs.filesystem || 'defaultfs' }}_${{ inputs.partition_csv || 'defaultpart' }}_${{ github.sha }}"
           SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/]/_/g' | tr ' ' '_')
           echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
 
