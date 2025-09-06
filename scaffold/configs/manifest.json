@@ -2,140 +2,180 @@
   "boards": [
     {
       "label": "Flipper Zero WiFi Dev Board",
+      "flag": "MARAUDER_FLIPPER",
       "fqbn": "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled",
+      "file_name": "flipper",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": false, "header": "" },
-      "defines": ["MARAUDER_FLIPPER"]
+      "defines": []
     },
     {
       "label": "Flipper Zero Multi Board S3",
+      "flag": "MARAUDER_MULTIBOARD_S3",
       "fqbn": "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=4M",
+      "file_name": "multiboardS3",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": false, "header": "" },
-      "defines": ["MARAUDER_MULTIBOARD_S3"]
+      "defines": []
     },
     {
       "label": "OG Marauder",
+      "flag": "MARAUDER_V4",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "old_hardware",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
-      "defines": ["MARAUDER_V4"]
+      "defines": []
     },
     {
       "label": "Marauder v6",
+      "flag": "MARAUDER_V6",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "v6",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
-      "defines": ["MARAUDER_V6"]
+      "defines": []
     },
     {
       "label": "Marauder v6.1",
+      "flag": "MARAUDER_V6_1",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "v6_1",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
-      "defines": ["MARAUDER_V6_1"]
+      "defines": []
     },
     {
       "label": "Marauder Kit",
+      "flag": "MARAUDER_KIT",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "kit",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_og_marauder.h" },
-      "defines": ["MARAUDER_KIT"]
+      "defines": []
     },
     {
       "label": "Marauder Mini",
+      "flag": "MARAUDER_MINI",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "mini",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_marauder_mini.h" },
-      "defines": ["MARAUDER_MINI"]
+      "defines": []
     },
     {
       "label": "ESP32 LDDB",
+      "flag": "ESP32_LDDB",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "esp32_lddb",
       "defaults": { "filesystem": "", "partition": "" },
       "tft": { "enabled": false, "header": "" },
-      "defines": ["ESP32_LDDB"]
+      "defines": []
     },
     {
       "label": "Marauder Dev Board Pro",
+      "flag": "MARAUDER_DEV_BOARD_PRO",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "marauder_dev_board_pro",
       "defaults": { "filesystem": "", "partition": "" },
       "tft": { "enabled": false, "header": "" },
-      "defines": ["MARAUDER_DEV_BOARD_PRO"]
+      "defines": []
     },
     {
       "label": "M5StickCPlus",
+      "flag": "MARAUDER_M5STICKC",
       "fqbn": "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs",
+      "file_name": "m5stickc_plus",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_marauder_m5stickc.h" },
-      "defines": ["MARAUDER_M5STICKC"]
+      "defines": []
     },
     {
       "label": "M5StickCPlus 2",
+      "flag": "MARAUDER_M5STICKCP2",
       "fqbn": "esp32:esp32:m5stick-c:PartitionScheme=min_spiffs",
+      "file_name": "m5stickc_plus2",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_marauder_m5stickcp2.h" },
-      "defines": ["MARAUDER_M5STICKCP2"]
+      "defines": []
     },
     {
       "label": "Rev Feather",
+      "flag": "MARAUDER_REV_FEATHER",
       "fqbn": "esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled",
+      "file_name": "rev_feather",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_marauder_rev_feather.h" },
-      "defines": ["MARAUDER_REV_FEATHER"]
+      "defines": []
     },
     {
       "label": "Marauder v7",
+      "flag": "MARAUDER_V7",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "marauder_v7",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_dual_nrf24.h" },
-      "defines": ["MARAUDER_V7"]
+      "defines": []
     },
     {
       "label": "Marauder CYD 2432S028",
+      "flag": "MARAUDER_CYD_MICRO",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "cyd_2432S028",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_cyd_micro.h" },
-      "defines": ["MARAUDER_CYD_MICRO"]
+      "defines": []
     },
     {
       "label": "Marauder CYD 2432S024 GUITION",
+      "flag": "MARAUDER_CYD_GUITION",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "cyd_2432S024_guition",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_cyd_guition.h" },
-      "defines": ["MARAUDER_CYD_GUITION"]
+      "defines": []
     },
     {
       "label": "Marauder CYD 2432S028 2 USB",
+      "flag": "MARAUDER_CYD_2USB",
       "fqbn": "esp32:esp32:d32:PartitionScheme=min_spiffs",
+      "file_name": "cyd_2432S028_2usb",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_cyd_2usb.h" },
-      "defines": ["MARAUDER_CYD_2USB"]
+      "defines": []
     },
     {
       "label": "Marauder v7.1",
+      "flag": "MARAUDER_V7_1",
       "fqbn": "esp32:esp32:dfrobot_firebeetle2_esp32e:FlashSize=16M,PartitionScheme=min_spiffs,PSRAM=enabled",
+      "file_name": "marauder_v7_1",
       "defaults": { "filesystem": "spiffs", "partition": "marauder_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_dual_nrf24.h" },
-      "defines": ["MARAUDER_V7_1"]
+      "defines": []
     },
     {
       "label": "M5Cardputer",
+      "flag": "MARAUDER_CARDPUTER",
       "fqbn": "esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M,PSRAM=disabled",
+      "file_name": "m5cardputer",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": true, "header": "User_Setup_marauder_m5cardputer.h" },
-      "defines": ["MARAUDER_CARDPUTER"]
+      "defines": []
     },
     {
       "label": "ESP32-C5-DevKitC-1",
+      "flag": "MARAUDER_C5",
       "fqbn": "esp32:esp32:esp32c5:PartitionScheme=min_spiffs",
+      "file_name": "esp32c5devkitc1",
       "defaults": { "filesystem": "spiffs", "partition": "min_spiffs_ota.csv" },
       "tft": { "enabled": false, "header": "" },
-      "defines": ["MARAUDER_C5"]
+      "defines": []
     },
     {
       "label": "Generic ESP32",
+      "flag": "",
       "fqbn": "esp32:esp32:esp32:PartitionScheme=min_spiffs",
+      "file_name": "generic_esp32",
       "defaults": { "filesystem": "", "partition": "" },
       "tft": { "enabled": false, "header": "" },
       "defines": []
