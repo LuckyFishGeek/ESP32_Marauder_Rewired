@@ -37,9 +37,10 @@ on:
 
       profile_name:
         type: choice
-        description: 'Module profile from modules_presets.csv (Custom uses CSV below)'
-        default: 'Standard'
+        description: 'Profile from modules_presets.csv (Auto picks from manifest.json)'
+        default: 'Auto (from board)'
         options:
+          - Auto (from board)
           - Minimal
           - Standard
           - Full
@@ -92,8 +93,8 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install deps
-        run: sudo apt-get update && sudo apt-get install -y unzip
+      - name: Install deps (jq + unzip)
+        run: sudo apt-get update && sudo apt-get install -y jq unzip
 
       # Resolve a working FQBN from the dropdown (or override)
       - name: Resolve FQBN
@@ -114,8 +115,8 @@ jobs:
             "ESP32 WROVER Kit (all versions)")          FQBN="esp32:esp32:esp32wroverkit" ;;
             "ESP32 PICO-D4")                            FQBN="esp32:esp32:pico32" ;;
             "AI Thinker ESP32-CAM")                     FQBN="esp32:esp32:esp32cam" ;;
-            "Lolin D32")                                 FQBN="esp32:esp32:lolin_d32" ;;
-            "Lolin D32 Pro")                             FQBN="esp32:esp32:lolin_d32_pro" ;;
+            "Lolin D32")                                FQBN="esp32:esp32:lolin_d32" ;;
+            "Lolin D32 Pro")                            FQBN="esp32:esp32:lolin_d32_pro" ;;
             "FireBeetle2 ESP32-E")                      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
             "Heltec WiFi Kit 32 (V3)")                  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
             "ESP32-S2 Dev Module")                      FQBN="esp32:esp32:esp32s2" ;;
@@ -244,23 +245,40 @@ jobs:
             echo "tft_define=" >> $GITHUB_OUTPUT
           fi
 
-      # Resolve your module set from modules_presets.csv (or raw Custom CSV)
-      - name: Resolve modules from modules_presets.csv (or Custom CSV)
+      # ✅ NEW: Auto/Named/Custom module resolver (reads manifest.json for Auto)
+      - name: Resolve modules (Auto/Named/Custom)
         id: mods
         shell: bash
         run: |
           set -e
-          NAME="${{ github.event.inputs.profile_name }}"
-          CUSTOM="${{ github.event.inputs.modules_csv }}"
           PRESETS="${GITHUB_WORKSPACE}/modules_presets.csv"
+          MAN="scaffold/configs/manifest.json"
+          BOARD="${{ github.event.inputs.board_label }}"
+          CHOICE="${{ github.event.inputs.profile_name }}"
+          CUSTOM="${{ github.event.inputs.modules_csv }}"
 
           norm_csv () { tr -d '\r' | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[[:space:]]+|[[:space:]]+$//g'; }
 
-          if [ "$NAME" = "Custom" ]; then
+          if [ "$CHOICE" = "Custom" ]; then
             RESOLVED="$(echo "$CUSTOM" | norm_csv)"
             echo "Using Custom CSV: $RESOLVED"
             echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
+            echo "chosen_profile=Custom(CSV)" >> $GITHUB_OUTPUT
             exit 0
+          fi
+
+          if [ "$CHOICE" = "Auto (from board)" ]; then
+            if [ -f "$MAN" ]; then
+              PROFILE=$(jq -r --arg L "$BOARD" \
+                '[.boards[] | select(.label==$L)][0] | (.defaults.profile // .default_profile // "Standard")' "$MAN")
+              [ -n "$PROFILE" ] || PROFILE="Standard"
+              echo "Auto profile for '$BOARD' from manifest: $PROFILE"
+            else
+              PROFILE="Standard"
+              echo "manifest.json not found; falling back to: $PROFILE"
+            fi
+          else
+            PROFILE="$CHOICE"
           fi
 
           if [ ! -f "$PRESETS" ]; then
@@ -268,7 +286,7 @@ jobs:
             exit 1
           fi
 
-          LINE=$(awk -F',' -v want="$NAME" '
+          LINE=$(awk -F',' -v want="$PROFILE" '
             BEGIN{IGNORECASE=1}
             /^[[:space:]]*#/ {next}
             NF>=2 {
@@ -279,13 +297,27 @@ jobs:
             }' "$PRESETS")
 
           if [ -z "$LINE" ]; then
-            echo "::error ::Profile '"$NAME"' not found in modules_presets.csv"
-            exit 1
+            echo "::warning ::Profile '"$PROFILE"' not found; falling back to Standard."
+            PROFILE="Standard"
+            LINE=$(awk -F',' -v want="$PROFILE" '
+              BEGIN{IGNORECASE=1}
+              /^[[:space:]]*#/ {next}
+              NF>=2 {
+                p=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", p);
+                if (p==want) {
+                  out=$2; for (i=3;i<=NF;i++) out=out "," $i; print out; exit
+                }
+              }' "$PRESETS")
+            if [ -z "$LINE" ]; then
+              echo "::error ::Fallback profile 'Standard' missing from modules_presets.csv"
+              exit 1
+            fi
           fi
 
           RESOLVED="$(echo "$LINE" | norm_csv)"
-          echo "Resolved modules for '$NAME': $RESOLVED"
+          echo "Resolved modules for '$PROFILE': $RESOLVED"
           echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
+          echo "chosen_profile=$PROFILE" >> $GITHUB_OUTPUT
 
       # Filesystem/partition overrides (optional)
       - name: Resolve FS/Partition and install CSV into core (if provided)
@@ -345,7 +377,7 @@ jobs:
           echo "Defines => $D"
 
       # ───────────────────────────────────────────────────────────────────────────
-      # COMPILE BLOCK (kept as requested)
+      # COMPILE BLOCK (FS/partition props included)
       # ───────────────────────────────────────────────────────────────────────────
       - name: Compile (Arduino CLI)
         shell: bash
