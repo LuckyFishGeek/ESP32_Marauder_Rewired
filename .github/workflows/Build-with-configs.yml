@@ -39,6 +39,7 @@ on:
         default: ''
         options:
           - ''
+          - marauder_default.csv
           - hugeapp_1m_fs.csv
           - marauder_littlefs.csv
           - marauder_spiffs_ota.csv
