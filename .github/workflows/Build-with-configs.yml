@@ -75,10 +75,7 @@ jobs:
           # Normalize CRLF -> LF
           sed -i 's/\r$//' "$MAN"
           # Validate JSON
-          if ! jq . "$MAN" >/dev/null 2>&1; then
-            echo "::error ::manifest.json is not valid JSON after sanitize"
-            exit 1
-          fi
+          jq . "$MAN" >/dev/null
 
       - name: Load manifest and list available boards
         id: manifest
@@ -115,6 +112,11 @@ jobs:
           FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
           if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
 
+          # 🔧 Sanitize defines to prevent broken quotes leaking into CLI
+          DEFINES="$(printf '%s' "$DEFINES" | tr -d '\r' | sed 's/["\x27]//g' | xargs || true)"
+
+          echo "Resolved FQBN: $FQBN"
+          echo "Resolved defines: $DEFINES"
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
@@ -241,6 +243,8 @@ jobs:
           EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
+
+          echo "DEFS going into compiler.extra_flags: $DEFS"
 
           PROPS="--build-property compiler.cpp.extra_flags=\"$EXTRA_INCLUDES $DEFS\" \
                  --build-property compiler.c.extra_flags=\"$EXTRA_INCLUDES $DEFS\""
