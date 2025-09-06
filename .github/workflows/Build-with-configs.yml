@@ -195,29 +195,3 @@ jobs:
           compression-level: 6
           overwrite: false
           include-hidden-files: false
-
-      # ---------- Pack and Upload configs bundle ----------
-      - name: Create configs bundle
-        id: cfgzip
-        run: |
-          mkdir -p dist
-          zip -r dist/configs_bundle.zip scaffold/configs
-          echo "zip_path=dist/configs_bundle.zip" >> $GITHUB_OUTPUT
-
-      - name: Sanitize configs artifact name
-        id: sanitize_cfg
-        run: |
-          CFG="${{ steps.cfg.outputs.config_file || 'unknown_config.json' }}"
-          NAME="configs_${CFG}_${{ github.sha }}"
-          SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/ ]/_/g')
-          echo "safe_cfg_name=$SAFE_NAME" >> $GITHUB_OUTPUT
-
-      - name: Upload configs bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.sanitize_cfg.outputs.safe_cfg_name }}
-          path: ${{ steps.cfgzip.outputs.zip_path }}
-          retention-days: 30
-          compression-level: 6
-          overwrite: false
-          include-hidden-files: false
