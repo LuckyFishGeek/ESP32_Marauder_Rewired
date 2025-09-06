@@ -96,6 +96,28 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
+      # NEW: sanitize & validate manifest.json to avoid jq parse errors (BOM/CRLF)
+      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAN=./scaffold/configs/manifest.json
+          if [ -f "$MAN" ]; then
+            # Strip UTF-8 BOM if present
+            MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
+            if [ "$MAGIC" = "efbbbf" ]; then
+              tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
+              echo "Removed UTF-8 BOM from manifest.json"
+            fi
+            # Normalize CRLF -> LF
+            sed -i 's/\r$//' "$MAN"
+            # Validate JSON
+            jq . "$MAN" >/dev/null
+            echo "manifest.json OK"
+          else
+            echo "manifest.json not present; continuing (fallback map will be used if needed)"
+          fi
+
       # Resolve a working FQBN from manifest.json (fallback to hard-coded map)
       - name: Resolve FQBN
         id: map
