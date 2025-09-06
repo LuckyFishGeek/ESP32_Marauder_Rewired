@@ -1,5 +1,5 @@
 #include "RegistryInit.h"
-#include <registry/ToolRegistry.h>
+#include "registry/ToolRegistry.h"
 
 // Helper: generate a no-op tool callable that prints a label once
 static std::function<void(void)> stubLaunch(const char* name){
