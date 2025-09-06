@@ -1,0 +1,360 @@
+name: Build (Custom — ESP32 Marauder Rewired)
+
+on:
+  workflow_dispatch:
+    inputs:
+      board_label:
+        type: choice
+        description: 'Select board (matches scaffold/configs/manifest.json)'
+        default: 'OG Marauder'
+        options:
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - OG Marauder
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder Mini
+          - ESP32 LDDB
+          - Marauder Dev Board Pro
+          - M5StickCPlus
+          - M5StickCPlus 2
+          - Rev Feather
+          - Marauder v7
+          - Marauder CYD 2432S028
+          - Marauder CYD 2432S024 GUITION
+          - Marauder CYD 2432S028 2 USB
+          - Marauder v7.1
+          - M5Cardputer
+          - ESP32-C5-DevKitC-1
+          - Generic ESP32
+
+      # ===== Module toggles -> -D flags =====
+      mod_wifi:
+        type: choice
+        description: 'Enable WiFi features -> -DENABLE_WIFI'
+        default: 'yes'
+        options: ['no','yes']
+      mod_ble:
+        type: choice
+        description: 'Enable BLE (NimBLE) -> -DENABLE_BLE'
+        default: 'yes'
+        options: ['no','yes']
+      mod_bt_classic:
+        type: choice
+        description: 'Enable BT Classic -> -DENABLE_BT_CLASSIC'
+        default: 'no'
+        options: ['no','yes']
+      mod_web:
+        type: choice
+        description: 'Enable Web server/portal -> -DENABLE_WEB'
+        default: 'yes'
+        options: ['no','yes']
+      mod_sd:
+        type: choice
+        description: 'SD card (SPI) present -> -DENABLE_SD'
+        default: 'no'
+        options: ['no','yes']
+      mod_gps:
+        type: choice
+        description: 'GPS module (UART/I2C) -> -DENABLE_GPS'
+        default: 'no'
+        options: ['no','yes']
+      mod_tft:
+        type: choice
+        description: 'Display/TFT usage (auto uses board default) -> -DENABLE_TFT if on'
+        default: 'auto'
+        options: ['auto','on','off']
+      mod_touch:
+        type: choice
+        description: 'Touch controller (e.g., XPT2046) -> -DENABLE_TOUCH'
+        default: 'no'
+        options: ['no','yes']
+      mod_lvgl:
+        type: choice
+        description: 'LVGL UI helpers -> -DENABLE_LVGL'
+        default: 'no'
+        options: ['no','yes']
+      mod_neopixel:
+        type: choice
+        description: 'NeoPixel/WS2812 LED -> -DENABLE_NEOPIXEL'
+        default: 'no'
+        options: ['no','yes']
+      mod_buzzer:
+        type: choice
+        description: 'Buzzer -> -DENABLE_BUZZER'
+        default: 'no'
+        options: ['no','yes']
+      mod_buttons:
+        type: choice
+        description: 'Physical buttons -> -DENABLE_BUTTONS'
+        default: 'yes'
+        options: ['no','yes']
+      mod_battery:
+        type: choice
+        description: 'Battery fuel gauge (MAX1704x) -> -DENABLE_BATTERY'
+        default: 'no'
+        options: ['no','yes']
+      mod_nrf24:
+        type: choice
+        description: 'NRF24 radio(s) -> -DENABLE_NRF24'
+        default: 'no'
+        options: ['no','yes']
+      mod_usb_msc:
+        type: choice
+        description: 'USB MSC (S2/S3) -> -DENABLE_USB_MSC'
+        default: 'no'
+        options: ['no','yes']
+
+      # Extra compile-time defines (space-separated, e.g. FOO=1 BAR)
+      extra_defines:
+        description: 'Additional -D flags'
+        required: false
+        default: ''
+
+      # Filesystem & partition (blank = per-board defaults from manifest)
+      filesystem:
+        type: choice
+        description: 'Filesystem override'
+        default: ''
+        options: ['', 'spiffs', 'littlefs']
+      partition:
+        type: choice
+        description: 'Partition CSV override from /partitions'
+        default: ''
+        options:
+          - ''
+          - hugeapp_1m_fs.csv
+          - marauder_littlefs.csv
+          - marauder_spiffs_ota.csv
+          - min_littlefs_ota.csv
+          - min_spiffs_ota.csv
+          - ota_1m_fs.csv
+
+      core_version:
+        description: 'Arduino-ESP32 core'
+        required: false
+        default: '2.0.11'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install jq & unzip
+        run: sudo apt-get update && sudo apt-get install -y jq unzip
+
+      # Manifest -> resolve board
+      - name: Load manifest and resolve board
+        id: map
+        shell: bash
+        run: |
+          set -e
+          MAN=./scaffold/configs/manifest.json
+          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
+          WANT="${{ github.event.inputs.board_label }}"
+          COUNT=$(jq --arg L "$WANT" '[.boards[] | select(.label==$L)] | length' "$MAN")
+          if [ "$COUNT" -eq 0 ]; then
+            echo "::error ::Board label not found in manifest: $WANT"
+            jq -r '.boards[].label' "$MAN" | nl -ba
+            exit 1
+          fi
+          FQBN=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .fqbn' "$MAN")
+          FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
+          DEF_FS=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.filesystem // ""' "$MAN")
+          DEF_PART=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.partition // ""' "$MAN")
+          TFT_ENABLED=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.enabled // false' "$MAN")
+          TFT_HEADER=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.header // ""' "$MAN")
+          echo "fqbn=$FQBN" >> $GITHUB_OUTPUT
+          echo "flag=$FLAG" >> $GITHUB_OUTPUT
+          echo "def_fs=$DEF_FS" >> $GITHUB_OUTPUT
+          echo "def_part=$DEF_PART" >> $GITHUB_OUTPUT
+          echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
+          echo "tft_header=$TFT_HEADER" >> $GITHUB_OUTPUT
+
+      # Arduino CLI + core
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
+          export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
+          arduino-cli version
+      - name: Configure & Install ESP32 Core
+        id: core
+        run: |
+          CORE_VER="${{ github.event.inputs.core_version }}"
+          echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
+          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+          arduino-cli core update-index
+          arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core list
+
+      # Libraries from lib.tar (repo root)
+      - name: Extract pre-bundled libs (lib.tar)
+        run: |
+          mkdir -p $HOME/Arduino/libraries
+          if [ -f lib.tar ]; then
+            tar -xf lib.tar -C $HOME/Arduino/libraries
+          else
+            echo "lib.tar not found; continuing (build may fail without libs)."
+          fi
+          ls -1 $HOME/Arduino/libraries || true
+
+      # Local registry shim
+      - name: Create ESP32MarauderRegistry local library
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+
+      # Optional TFT headers zip at repo root
+      - name: Unpack display settings (optional)
+        run: |
+          if [ -f "display_settings.zip" ]; then
+            mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
+            unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
+            echo "Unpacked TFT_eSPI headers"
+          else
+            echo "display_settings.zip not present; skipping"
+          fi
+
+      # Prepare sketch (single INO)
+      - name: Prepare Sketch Folder
+        id: prep
+        shell: bash
+        run: |
+          set -e
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          rm -rf "$SKETCH_DIR"
+          mkdir -p "$SKETCH_DIR"
+          if [ -f scaffold/esp32_marauder_rewired.ino ]; then
+            SRC_INO="scaffold/esp32_marauder_rewired.ino"
+          else
+            SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+            [ -n "$SRC_INO" ] || (echo "::error ::No .ino found under scaffold/"; exit 1)
+          fi
+          echo "Using INO: $SRC_INO"
+          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+          pushd scaffold >/dev/null
+          find . -type f ! -name '*.ino' -print0 \
+            | xargs -0 -I {} bash -c 'mkdir -p "'"$SKETCH_DIR"'"/$(dirname "{}"); cp "{}" "'"$SKETCH_DIR"'"/"{}"'
+          popd >/dev/null
+          [ -f "configs.h" ] && cp "configs.h" "$SKETCH_DIR/configs.h"
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          find "$SKETCH_DIR" -maxdepth 2 -type f | sort
+
+      # TFT header (board default, unless user forces off)
+      - name: Configure TFT_eSPI header (if applicable)
+        shell: bash
+        run: |
+          USE="${{ steps.map.outputs.tft_enabled }}"
+          HDR="${{ steps.map.outputs.tft_header }}"
+          FORCE="${{ github.event.inputs.mod_tft }}"   # auto/on/off
+          if [ "$FORCE" = "on" ]; then USE=true; elif [ "$FORCE" = "off" ]; then USE=false; fi
+          if [ "$USE" = "true" ] && [ -n "$HDR" ]; then
+            TE="$HOME/Arduino/libraries/TFT_eSPI"
+            mkdir -p "$TE"
+            echo "// Auto-generated by workflow" > "$TE/User_Setup_Select.h"
+            echo "#include <${HDR}>" >> "$TE/User_Setup_Select.h"
+            echo "Applied TFT header: $HDR"
+          else
+            echo "TFT not applied (USE=$USE, HDR='$HDR')."
+          fi
+
+      # FS/Partition
+      - name: Resolve FS/Partition and install CSV into core (if provided)
+        id: fs
+        shell: bash
+        run: |
+          CORE_VER="${{ steps.core.outputs.core_ver }}"
+          FS_DEF="${{ steps.map.outputs.def_fs }}"
+          PART_DEF="${{ steps.map.outputs.def_part }}"
+          FS_OVR="${{ github.event.inputs.filesystem }}"
+          PART_OVR="${{ github.event.inputs.partition }}"
+          FS_FINAL="$FS_DEF";   [ -n "$FS_OVR" ] && FS_FINAL="$FS_OVR"
+          PART_FINAL="$PART_DEF"; [ -n "$PART_OVR" ] && PART_FINAL="$PART_OVR"
+          echo "fs=$FS_FINAL"   >> $GITHUB_OUTPUT
+          echo "part=$PART_FINAL" >> $GITHUB_OUTPUT
+          if [ -n "$PART_FINAL" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART_FINAL"
+            if [ -f "$SRC" ]; then
+              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+              mkdir -p "$DEST"
+              cp "$SRC" "$DEST/$PART_FINAL"
+              echo "Installed custom partition CSV to $DEST/$PART_FINAL"
+            else
+              echo "Partition CSV '$PART_FINAL' not found in repo /partitions; relying on core's copy (if any)."
+            fi
+          fi
+
+      # Compose -D flags from modules + board flag + extra_defines
+      - name: Compose defines
+        id: defs
+        shell: bash
+        run: |
+          set -e
+          D=""
+          FLAG="${{ steps.map.outputs.flag }}"
+          [ -n "$FLAG" ] && D="$D -D$FLAG"
+          add_if_yes () { [ "$1" = "yes" ] && echo -n " -D$2"; }
+          add_if_auto_on () { [ "$1" = "on" ] && echo -n " -D$2"; }
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_wifi }}'       'ENABLE_WIFI')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_ble }}'        'ENABLE_BLE')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_bt_classic }}' 'ENABLE_BT_CLASSIC')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_web }}'        'ENABLE_WEB')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_sd }}'         'ENABLE_SD')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_gps }}'        'ENABLE_GPS')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_touch }}'      'ENABLE_TOUCH')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_lvgl }}'       'ENABLE_LVGL')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_neopixel }}'   'ENABLE_NEOPIXEL')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_buzzer }}'     'ENABLE_BUZZER')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_buttons }}'    'ENABLE_BUTTONS')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_battery }}'    'ENABLE_BATTERY')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_nrf24 }}'      'ENABLE_NRF24')"
+          D="$D$(add_if_yes '${{ github.event.inputs.mod_usb_msc }}'    'ENABLE_USB_MSC')"
+          D="$D$(add_if_auto_on '${{ github.event.inputs.mod_tft }}'    'ENABLE_TFT')"
+          EXTRA="${{ github.event.inputs.extra_defines }}"
+          if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
+          echo "defs=$D" >> $GITHUB_OUTPUT
+          echo "Defines => $D"
+
+      # Compile
+      - name: Compile (Arduino CLI)
+        shell: bash
+        run: |
+          set -e
+          FQBN="${{ steps.map.outputs.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          DEFS="${{ steps.defs.outputs.defs }}"
+          EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          FS="${{ steps.fs.outputs.fs }}"
+          PART="${{ steps.fs.outputs.part }}"
+          PROPS="--build-property compiler.cpp.extra_flags=\"$EXTRA_INCLUDES $DEFS\" \
+                 --build-property compiler.c.extra_flags=\"$EXTRA_INCLUDES $DEFS\""
+          [ -n "$FS" ] && PROPS="$PROPS --build-property board_build.filesystem=$FS"
+          if [ -n "$PART" ]; then
+            mkdir -p "$SKETCH_DIR/partitions"
+            cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" 2>/dev/null || true
+            NAME_ONLY="${PART%.csv}"
+            PROPS="$PROPS --build-property build.partitions=$NAME_ONLY"
+          fi
+          echo "FQBN: $FQBN"
+          echo "Props: $PROPS"
+          arduino-cli compile --fqbn "$FQBN" "$SKETCH_DIR" --warnings none --export-binaries $PROPS
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw_${{ github.event.inputs.board_label }}_${{ github.sha }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
+          if-no-files-found: warn
+          retention-days: 14
