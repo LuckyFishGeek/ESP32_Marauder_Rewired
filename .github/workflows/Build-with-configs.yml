@@ -60,6 +60,34 @@ jobs:
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
+      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
+        shell: bash
+        run: |
+          set -e
+          MAN=./scaffold/configs/manifest.json
+          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
+          python3 - <<'PY'
+import json, pathlib, sys
+p = pathlib.Path("scaffold/configs/manifest.json")
+b = p.read_bytes()
+# Strip UTF-8 BOM if present
+if b.startswith(b'\xEF\xBB\xBF'):
+    b = b[3:]
+# Normalize line endings
+b = b.replace(b'\r\n', b'\n').replace(b'\r', b'\n')
+# Validate JSON
+try:
+    json.loads(b.decode('utf-8'))
+except Exception as e:
+    sys.stderr.write(f"::error ::manifest.json is not valid JSON: {e}\n")
+    sys.stderr.write("First 200 bytes (hex): " + b[:200].hex(" ") + "\n")
+    sys.exit(1)
+# Write back normalized content
+p.write_bytes(b)
+PY
+          echo "First 12 bytes (hex) after sanitize:"
+          xxd -g1 -l 12 "$MAN" || true
+
       - name: Load manifest and list available boards
         id: manifest
         shell: bash
@@ -199,7 +227,6 @@ jobs:
           echo "fs=$FS" >> $GITHUB_OUTPUT
           echo "partition=$PART" >> $GITHUB_OUTPUT
 
-          # If a custom partition CSV is referenced, install it into core as well
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
             DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
@@ -212,7 +239,6 @@ jobs:
             fi
           fi
 
-      # -------------------- COMPILE BLOCK --------------------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
@@ -249,7 +275,6 @@ jobs:
             --warnings none \
             --export-binaries \
             $PROPS
-      # ------------------------------------------------------
 
       - name: Sanitize firmware artifact name
         id: sanitize_fw
@@ -265,3 +290,4 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
+```0
