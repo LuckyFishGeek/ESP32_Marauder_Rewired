@@ -29,15 +29,23 @@ on:
           - ESP32-C5-DevKitC-1
           - Generic ESP32
 
-      # Free-text profile, read from modules_presets.csv (e.g., Minimal, Standard, Full, Wardriver, etc.)
       profile_name:
-        description: 'Profile name from modules_presets.csv (or "Custom")'
-        required: false
+        type: choice
+        description: 'Profile from modules_presets.csv (Custom uses CSV below)'
         default: 'Standard'
+        options:
+          - Minimal
+          - Standard
+          - Full
+          - Wardriver
+          - Scanner
+          - BLE-only
+          - Displayless
+          - Debug
+          - Custom
 
-      # Only used if profile_name=Custom
       modules_csv:
-        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,...,TFT_ON|TFT_OFF'
+        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON'
         required: false
         default: ''
 
@@ -215,19 +223,7 @@ jobs:
           CUSTOM="${{ github.event.inputs.modules_csv }}"
           PRESETS="${GITHUB_WORKSPACE}/modules_presets.csv"
 
-          # list profiles if requested or file missing
-          list_profiles () {
-            if [ -f "$1" ]; then
-              echo "Available profiles in $1:"
-              awk -F',' 'BEGIN{IGNORECASE=1} /^[[:space:]]*#/ {next} NF>=1 {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $1); if($1!="") print "- " $1}' "$1"
-            else
-              echo "modules_presets.csv not found."
-            fi
-          }
-
-          norm_csv () {
-            tr -d '\r' | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[[:space:]]+|[[:space:]]+$//g'
-          }
+          norm_csv () { tr -d '\r' | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[[:space:]]+|[[:space:]]+$//g'; }
 
           if [ "$NAME" = "Custom" ]; then
             RESOLVED="$(echo "$CUSTOM" | norm_csv)"
@@ -238,7 +234,6 @@ jobs:
 
           if [ ! -f "$PRESETS" ]; then
             echo "::error ::modules_presets.csv not found at repo root."
-            list_profiles "$PRESETS"
             exit 1
           fi
 
@@ -248,14 +243,12 @@ jobs:
             NF>=2 {
               p=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", p);
               if (p==want) {
-                out=$2; for (i=3;i<=NF;i++) out=out "," $i;
-                print out; exit
+                out=$2; for (i=3;i<=NF;i++) out=out "," $i; print out; exit
               }
             }' "$PRESETS")
 
           if [ -z "$LINE" ]; then
             echo "::error ::Profile '"$NAME"' not found in modules_presets.csv"
-            list_profiles "$PRESETS"
             exit 1
           fi
 
@@ -267,7 +260,7 @@ jobs:
         id: fs
         shell: bash
         run: |
-          CORE_VER="${{ steps.core.outputs.core_ver }}"
+          CORE_VER="${{ github.event.inputs.core_version }}"
           FS_DEF="${{ steps.map.outputs.def_fs }}"
           PART_DEF="${{ steps.map.outputs.def_part }}"
           FS_OVR="${{ github.event.inputs.filesystem }}"
@@ -279,7 +272,7 @@ jobs:
           if [ -n "$PART_FINAL" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART_FINAL"
             if [ -f "$SRC" ]; then
-              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
               mkdir -p "$DEST"
               cp "$SRC" "$DEST/$PART_FINAL"
               echo "Installed custom partition CSV to $DEST/$PART_FINAL"
@@ -301,7 +294,6 @@ jobs:
           TFT_D="${{ steps.tft.outputs.tft_define }}"
 
           add () { echo "$CSV" | grep -qi "\b$1\b" && D="$D -D$2"; }
-
           add WIFI       ENABLE_WIFI
           add BLE        ENABLE_BLE
           add WEB        ENABLE_WEB
@@ -315,9 +307,9 @@ jobs:
           add BATTERY    ENABLE_BATTERY
           add NRF24      ENABLE_NRF24
           add USB_MSC    ENABLE_USB_MSC
+
           echo "$CSV" | grep -qi '\bTFT_ON\b'  && D="$D -DENABLE_TFT"
           echo "$CSV" | grep -qi '\bTFT_OFF\b' && D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
-
           [ -n "$TFT_D" ] && D="$D $TFT_D"
 
           EXTRA="${{ github.event.inputs.extra_defines }}"
