@@ -1,4 +1,4 @@
-name: Build (Custom — ESP32 Marauder Rewired)
+name: Build (Custom — ESP32 Marauder Rewired, ≤10 inputs)
 
 on:
   workflow_dispatch:
@@ -29,98 +29,26 @@ on:
           - ESP32-C5-DevKitC-1
           - Generic ESP32
 
-      # ===== Module toggles -> -D flags =====
-      mod_wifi:
+      profile:
         type: choice
-        description: 'Enable WiFi features -> -DENABLE_WIFI'
-        default: 'yes'
-        options: ['no','yes']
-      mod_ble:
-        type: choice
-        description: 'Enable BLE (NimBLE) -> -DENABLE_BLE'
-        default: 'yes'
-        options: ['no','yes']
-      mod_bt_classic:
-        type: choice
-        description: 'Enable BT Classic -> -DENABLE_BT_CLASSIC'
-        default: 'no'
-        options: ['no','yes']
-      mod_web:
-        type: choice
-        description: 'Enable Web server/portal -> -DENABLE_WEB'
-        default: 'yes'
-        options: ['no','yes']
-      mod_sd:
-        type: choice
-        description: 'SD card (SPI) present -> -DENABLE_SD'
-        default: 'no'
-        options: ['no','yes']
-      mod_gps:
-        type: choice
-        description: 'GPS module (UART/I2C) -> -DENABLE_GPS'
-        default: 'no'
-        options: ['no','yes']
-      mod_tft:
-        type: choice
-        description: 'Display/TFT usage (auto uses board default) -> -DENABLE_TFT if on'
-        default: 'auto'
-        options: ['auto','on','off']
-      mod_touch:
-        type: choice
-        description: 'Touch controller (e.g., XPT2046) -> -DENABLE_TOUCH'
-        default: 'no'
-        options: ['no','yes']
-      mod_lvgl:
-        type: choice
-        description: 'LVGL UI helpers -> -DENABLE_LVGL'
-        default: 'no'
-        options: ['no','yes']
-      mod_neopixel:
-        type: choice
-        description: 'NeoPixel/WS2812 LED -> -DENABLE_NEOPIXEL'
-        default: 'no'
-        options: ['no','yes']
-      mod_buzzer:
-        type: choice
-        description: 'Buzzer -> -DENABLE_BUZZER'
-        default: 'no'
-        options: ['no','yes']
-      mod_buttons:
-        type: choice
-        description: 'Physical buttons -> -DENABLE_BUTTONS'
-        default: 'yes'
-        options: ['no','yes']
-      mod_battery:
-        type: choice
-        description: 'Battery fuel gauge (MAX1704x) -> -DENABLE_BATTERY'
-        default: 'no'
-        options: ['no','yes']
-      mod_nrf24:
-        type: choice
-        description: 'NRF24 radio(s) -> -DENABLE_NRF24'
-        default: 'no'
-        options: ['no','yes']
-      mod_usb_msc:
-        type: choice
-        description: 'USB MSC (S2/S3) -> -DENABLE_USB_MSC'
-        default: 'no'
-        options: ['no','yes']
+        description: 'Modules profile (choose "Custom" to specify below)'
+        default: 'Standard'
+        options: ['Minimal','Standard','Full','Custom']
 
-      # Extra compile-time defines (space-separated, e.g. FOO=1 BAR)
-      extra_defines:
-        description: 'Additional -D flags'
+      modules_csv:
+        description: 'Only used if profile=Custom. CSV like: WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON or TFT_OFF'
         required: false
         default: ''
 
-      # Filesystem & partition (blank = per-board defaults from manifest)
       filesystem:
         type: choice
-        description: 'Filesystem override'
+        description: 'Filesystem override (blank=board default)'
         default: ''
         options: ['', 'spiffs', 'littlefs']
+
       partition:
         type: choice
-        description: 'Partition CSV override from /partitions'
+        description: 'Partition CSV override from /partitions (blank=board default)'
         default: ''
         options:
           - ''
@@ -130,6 +58,11 @@ on:
           - min_littlefs_ota.csv
           - min_spiffs_ota.csv
           - ota_1m_fs.csv
+
+      extra_defines:
+        description: 'Additional -D flags (space-separated, e.g. FOO=1 BAR)'
+        required: false
+        default: ''
 
       core_version:
         description: 'Arduino-ESP32 core'
@@ -181,6 +114,7 @@ jobs:
           echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
           export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
           arduino-cli version
+
       - name: Configure & Install ESP32 Core
         id: core
         run: |
@@ -227,7 +161,7 @@ jobs:
             echo "display_settings.zip not present; skipping"
           fi
 
-      # Prepare sketch (single INO)
+      # Prepare sketch (single INO), fixes your cp error
       - name: Prepare Sketch Folder
         id: prep
         shell: bash
@@ -252,22 +186,27 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
-      # TFT header (board default, unless user forces off)
-      - name: Configure TFT_eSPI header (if applicable)
+      # Display header (board default; Custom can force ON/OFF with TFT_ON/TFT_OFF)
+      - name: Configure TFT_eSPI header (board default or custom override)
+        id: tft
         shell: bash
         run: |
           USE="${{ steps.map.outputs.tft_enabled }}"
           HDR="${{ steps.map.outputs.tft_header }}"
-          FORCE="${{ github.event.inputs.mod_tft }}"   # auto/on/off
-          if [ "$FORCE" = "on" ]; then USE=true; elif [ "$FORCE" = "off" ]; then USE=false; fi
+          MODS="${{ github.event.inputs.modules_csv }}"
+          # Custom can force
+          if echo "$MODS" | grep -qi 'TFT_ON';  then USE=true;  fi
+          if echo "$MODS" | grep -qi 'TFT_OFF'; then USE=false; fi
           if [ "$USE" = "true" ] && [ -n "$HDR" ]; then
             TE="$HOME/Arduino/libraries/TFT_eSPI"
             mkdir -p "$TE"
             echo "// Auto-generated by workflow" > "$TE/User_Setup_Select.h"
             echo "#include <${HDR}>" >> "$TE/User_Setup_Select.h"
             echo "Applied TFT header: $HDR"
+            echo "tft_define=-DENABLE_TFT" >> $GITHUB_OUTPUT
           else
             echo "TFT not applied (USE=$USE, HDR='$HDR')."
+            echo "tft_define=" >> $GITHUB_OUTPUT
           fi
 
       # FS/Partition
@@ -296,7 +235,7 @@ jobs:
             fi
           fi
 
-      # Compose -D flags from modules + board flag + extra_defines
+      # Compose -D flags from profile/custom + board flag + extra_defines
       - name: Compose defines
         id: defs
         shell: bash
@@ -305,25 +244,44 @@ jobs:
           D=""
           FLAG="${{ steps.map.outputs.flag }}"
           [ -n "$FLAG" ] && D="$D -D$FLAG"
-          add_if_yes () { [ "$1" = "yes" ] && echo -n " -D$2"; }
-          add_if_auto_on () { [ "$1" = "on" ] && echo -n " -D$2"; }
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_wifi }}'       'ENABLE_WIFI')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_ble }}'        'ENABLE_BLE')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_bt_classic }}' 'ENABLE_BT_CLASSIC')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_web }}'        'ENABLE_WEB')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_sd }}'         'ENABLE_SD')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_gps }}'        'ENABLE_GPS')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_touch }}'      'ENABLE_TOUCH')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_lvgl }}'       'ENABLE_LVGL')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_neopixel }}'   'ENABLE_NEOPIXEL')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_buzzer }}'     'ENABLE_BUZZER')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_buttons }}'    'ENABLE_BUTTONS')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_battery }}'    'ENABLE_BATTERY')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_nrf24 }}'      'ENABLE_NRF24')"
-          D="$D$(add_if_yes '${{ github.event.inputs.mod_usb_msc }}'    'ENABLE_USB_MSC')"
-          D="$D$(add_if_auto_on '${{ github.event.inputs.mod_tft }}'    'ENABLE_TFT')"
+
+          PROFILE="${{ github.event.inputs.profile }}"
+          MODS_CSV="${{ github.event.inputs.modules_csv }}"
+          TFT_D="${{ steps.tft.outputs.tft_define }}"
+
+          # helper: add module if present in list
+          add_mod () { echo "$1" | grep -qi "\b$2\b" && echo -n " -D$3"; }
+
+          if [ "$PROFILE" = "Minimal" ]; then
+            D="$D -DENABLE_BUTTONS"
+          elif [ "$PROFILE" = "Standard" ]; then
+            D="$D -DENABLE_WIFI -DENABLE_BLE -DENABLE_WEB -DENABLE_BUTTONS"
+          elif [ "$PROFILE" = "Full" ]; then
+            D="$D -DENABLE_WIFI -DENABLE_BLE -DENABLE_WEB -DENABLE_SD -DENABLE_GPS -DENABLE_TOUCH -DENABLE_LVGL -DENABLE_NEOPIXEL -DENABLE_BUZZER -DENABLE_BUTTONS -DENABLE_BATTERY -DENABLE_NRF24 -DENABLE_USB_MSC"
+          elif [ "$PROFILE" = "Custom" ]; then
+            D="$D$(add_mod "$MODS_CSV" WIFI       ENABLE_WIFI)"
+            D="$D$(add_mod "$MODS_CSV" BLE        ENABLE_BLE)"
+            D="$D$(add_mod "$MODS_CSV" WEB        ENABLE_WEB)"
+            D="$D$(add_mod "$MODS_CSV" SD         ENABLE_SD)"
+            D="$D$(add_mod "$MODS_CSV" GPS        ENABLE_GPS)"
+            D="$D$(add_mod "$MODS_CSV" TOUCH      ENABLE_TOUCH)"
+            D="$D$(add_mod "$MODS_CSV" LVGL       ENABLE_LVGL)"
+            D="$D$(add_mod "$MODS_CSV" NEOPIXEL   ENABLE_NEOPIXEL)"
+            D="$D$(add_mod "$MODS_CSV" BUZZER     ENABLE_BUZZER)"
+            D="$D$(add_mod "$MODS_CSV" BUTTONS    ENABLE_BUTTONS)"
+            D="$D$(add_mod "$MODS_CSV" BATTERY    ENABLE_BATTERY)"
+            D="$D$(add_mod "$MODS_CSV" NRF24      ENABLE_NRF24)"
+            D="$D$(add_mod "$MODS_CSV" USB_MSC    ENABLE_USB_MSC)"
+            # TFT handling via tft step; still allow explicit TFT_ON to add define too:
+            echo "$MODS_CSV" | grep -qi 'TFT_ON' && D="$D -DENABLE_TFT"
+          fi
+
+          # Add board-default/forced TFT define
+          [ -n "$TFT_D" ] && D="$D $TFT_D"
+
           EXTRA="${{ github.event.inputs.extra_defines }}"
           if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
+
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
 
