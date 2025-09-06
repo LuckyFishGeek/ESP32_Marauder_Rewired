@@ -1,0 +1,247 @@
+name: Build (Arduino CLI — ESP32 Marauder Rewired Full)
+
+on:
+  workflow_dispatch:
+    inputs:
+      board:
+        type: choice
+        description: "Select target board"
+        default: "Generic ESP32"
+        options:
+          - Generic ESP32
+          - ESP32-S2
+          - ESP32-S3
+          - DOIT DevKit D32
+          - M5StickC / M5StickC-Plus (base)
+          - M5StickC Plus 2
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - OG / Old Hardware
+          - Marauder Mini
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder v7
+          - Marauder v7.1
+          - FireBeetle2 ESP32-E
+          - Rev Feather (ESP32-S2)
+          - M5Cardputer
+          - ESP32-C5 DevKitC-1
+          - CYD 2432S028
+          - CYD 2432S024 Guition
+          - CYD 2432S028 (2 USB)
+          - Dev Board Pro
+          - ESP32 LDDB
+
+      config:
+        type: choice
+        description: "Select config"
+        default: "Marauder Mini"
+        options:
+          - Generic ESP32
+          - ESP32-S2 Generic
+          - ESP32-S3 Generic
+          - DOIT DevKit D32
+          - M5StickC Base
+          - M5StickC Plus 2
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - Old Hardware
+          - Marauder Mini
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder v7
+          - Marauder v7.1
+          - FireBeetle2 ESP32-E
+          - Rev Feather (ESP32-S2)
+          - M5Cardputer
+          - ESP32-C5 DevKitC-1
+          - CYD 2432S028
+          - CYD 2432S024 Guition
+          - CYD 2432S028 (2 USB)
+          - Dev Board Pro
+          - ESP32 LDDB
+
+      filesystem:
+        type: choice
+        description: "Filesystem (blank = default)"
+        default: ""
+        options: ["", spiffs, littlefs]
+
+      partition:
+        type: choice
+        description: "Partition CSV (blank = default)"
+        default: ""
+        options:
+          - ""
+          - hugeapp_1m_fs.csv
+          - marauder_littlefs.csv
+          - marauder_spiffs_ota.csv
+          - min_littlefs_ota.csv
+          - min_spiffs_ota.csv
+          - ota_1m_fs.csv
+
+      core_version:
+        description: "Arduino-ESP32 core version"
+        required: false
+        default: "2.0.11"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      # ---------------- Arduino CLI ----------------
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
+          export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
+          arduino-cli version
+
+      - name: Configure & Install ESP32 Core
+        run: |
+          CORE_VER="${{ github.event.inputs.core_version }}"
+          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+          arduino-cli core update-index
+          arduino-cli core install "esp32:esp32@${CORE_VER}"
+
+      # ---------------- Libraries ----------------
+      - name: Extract pre-bundled libs (lib.tar)
+        run: |
+          mkdir -p $HOME/Arduino/libraries
+          tar -xf lib.tar -C $HOME/Arduino/libraries
+
+      - name: Create ESP32MarauderRegistry local library
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+
+      # ---------------- Map configs ----------------
+      - name: Map config name → file
+        id: cfgmap
+        run: |
+          declare -A CFG=(
+            ["Generic ESP32"]="generic_esp32.json"
+            ["ESP32-S2 Generic"]="esp32_s2_generic.json"
+            ["ESP32-S3 Generic"]="esp32_s3_generic.json"
+            ["DOIT DevKit D32"]="doit_devkit_d32.json"
+            ["M5StickC Base"]="m5stickc_base.json"
+            ["M5StickC Plus 2"]="m5stickc_plus2.json"
+            ["Flipper Zero WiFi Dev Board"]="flipper_zero_wifi_dev_board.json"
+            ["Flipper Zero Multi Board S3"]="flipper_zero_multi_board_s3.json"
+            ["Old Hardware"]="old_hardware.json"
+            ["Marauder Mini"]="marauder_mini.json"
+            ["Marauder v6"]="marauder_v6.json"
+            ["Marauder v6.1"]="marauder_v6_1.json"
+            ["Marauder Kit"]="marauder_kit.json"
+            ["Marauder v7"]="marauder_v7.json"
+            ["Marauder v7.1"]="marauder_v7_1.json"
+            ["FireBeetle2 ESP32-E"]="firebeetle2_esp32e.json"
+            ["Rev Feather (ESP32-S2)"]="rev_feather_s2.json"
+            ["M5Cardputer"]="m5cardputer.json"
+            ["ESP32-C5 DevKitC-1"]="esp32_c5_devkitc1.json"
+            ["CYD 2432S028"]="cyd_2432s028.json"
+            ["CYD 2432S024 Guition"]="cyd_2432s024_guition.json"
+            ["CYD 2432S028 (2 USB)"]="cyd_2432s028_2usb.json"
+            ["Dev Board Pro"]="marauder_dev_board_pro.json"
+            ["ESP32 LDDB"]="esp32_lddb.json"
+          )
+          echo "config_file=${CFG[\"${{ github.event.inputs.config }}\"]}" >> $GITHUB_OUTPUT
+
+      - name: Copy config file
+        run: |
+          mkdir -p scaffold/data
+          cp "scaffold/configs/${{ steps.cfgmap.outputs.config_file }}" scaffold/data/config.json
+
+      # ---------------- Sketch Prep ----------------
+      - name: Prepare Sketch Folder
+        id: prep
+        run: |
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          mkdir -p "$SKETCH_DIR"
+          cp scaffold/*.ino "$SKETCH_DIR/esp32_marauder_rewired.ino"
+          cp -r scaffold/* "$SKETCH_DIR/"
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+
+      # ---------------- Map board → fqbn ----------------
+      - name: Map board to FQBN
+        id: fqbn
+        run: |
+          declare -A MAP=(
+            ["Generic ESP32"]="esp32:esp32:esp32"
+            ["ESP32-S2"]="esp32:esp32:esp32s2"
+            ["ESP32-S3"]="esp32:esp32:esp32s3"
+            ["DOIT DevKit D32"]="esp32:esp32:d32"
+            ["M5StickC / M5StickC-Plus (base)"]="esp32:esp32:m5stick-c"
+            ["M5StickC Plus 2"]="esp32:esp32:m5stick-c"
+            ["Flipper Zero WiFi Dev Board"]="esp32:esp32:esp32s2"
+            ["Flipper Zero Multi Board S3"]="esp32:esp32:esp32s3"
+            ["OG / Old Hardware"]="esp32:esp32:esp32"
+            ["Marauder Mini"]="esp32:esp32:esp32"
+            ["Marauder v6"]="esp32:esp32:esp32"
+            ["Marauder v6.1"]="esp32:esp32:esp32"
+            ["Marauder Kit"]="esp32:esp32:esp32"
+            ["Marauder v7"]="esp32:esp32:esp32"
+            ["Marauder v7.1"]="esp32:esp32:dfrobot_firebeetle2_esp32e"
+            ["FireBeetle2 ESP32-E"]="esp32:esp32:dfrobot_firebeetle2_esp32e"
+            ["Rev Feather (ESP32-S2)"]="esp32:esp32:esp32s2"
+            ["M5Cardputer"]="esp32:esp32:esp32s3"
+            ["ESP32-C5 DevKitC-1"]="esp32:esp32:esp32c5"
+            ["CYD 2432S028"]="esp32:esp32:d32"
+            ["CYD 2432S024 Guition"]="esp32:esp32:d32"
+            ["CYD 2432S028 (2 USB)"]="esp32:esp32:d32"
+            ["Dev Board Pro"]="esp32:esp32:d32"
+            ["ESP32 LDDB"]="esp32:esp32:d32"
+          )
+          echo "fqbn=${MAP[\"${{ github.event.inputs.board }}\"]}" >> $GITHUB_OUTPUT
+
+      # ---------------- Compile ----------------
+      - name: Compile (Arduino CLI)
+        run: |
+          FQBN="${{ steps.fqbn.outputs.fqbn }}"
+          FS="${{ github.event.inputs.filesystem }}"
+          PART="${{ github.event.inputs.partition }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+
+          EXTRA="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          BUILD_FLAGS=""
+          [ -n "$FS" ] && BUILD_FLAGS="$BUILD_FLAGS --build-property board_build.filesystem=$FS"
+          [ -n "$PART" ] && BUILD_FLAGS="$BUILD_FLAGS --build-property board_build.partitions=$PART"
+
+          echo "Compiling for $FQBN with FS=$FS PART=$PART CONFIG=${{ steps.cfgmap.outputs.config_file }}"
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            "$SKETCH_DIR" \
+            --warnings none \
+            --export-binaries \
+            --build-property compiler.cpp.extra_flags="$EXTRA" \
+            --build-property compiler.c.extra_flags="$EXTRA" \
+            $BUILD_FLAGS
+
+      # ---------------- Artifacts ----------------
+      - name: Sanitize firmware artifact name
+        id: sanitize_fw
+        run: |
+          NAME="fw_${{ github.event.inputs.board }}_${{ github.event.inputs.config }}_${{ github.sha }}"
+          SAFE_NAME=$(echo "$NAME" | sed 's/[:<>|*?\\\/ ]/_/g')
+          echo "safe_name=$SAFE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.sanitize_fw.outputs.safe_name }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
+          if-no-files-found: warn
+          retention-days: 14
