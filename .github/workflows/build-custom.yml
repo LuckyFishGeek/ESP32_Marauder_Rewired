@@ -58,13 +58,13 @@ on:
 
       filesystem:
         type: choice
-        description: 'Filesystem override (blank = default)'
+        description: 'Filesystem override (blank = default/manifest)'
         default: ''
         options: ['', 'spiffs', 'littlefs']
 
       partition:
         type: choice
-        description: 'Partition CSV override from /partitions (blank = default)'
+        description: 'Partition CSV override from /partitions (blank = default/manifest)'
         default: ''
         options:
           - ''
@@ -96,7 +96,7 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      # Resolve a working FQBN from the dropdown (or override)
+      # Resolve a working FQBN from manifest.json (fallback to hard-coded map)
       - name: Resolve FQBN
         id: map
         shell: bash
@@ -104,45 +104,83 @@ jobs:
           set -e
           LABEL="${{ github.event.inputs.board_label }}"
           OVR="${{ github.event.inputs.fqbn_override }}"
+          MAN="scaffold/configs/manifest.json"
 
-          case "$LABEL" in
-            "Generic ESP32 Dev Module")                FQBN="esp32:esp32:esp32" ;;
-            "DOIT ESP32 DEVKIT V1")                    FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
-            "NodeMCU-32S")                              FQBN="esp32:esp32:nodemcu-32s" ;;
-            "ESP32 DevKitC V4")                         FQBN="esp32:esp32:esp32" ;;
-            "ESP32 WROOM-DA Module")                    FQBN="esp32:esp32:esp32da" ;;
-            "ESP32 WROVER Module")                      FQBN="esp32:esp32:esp32wrover" ;;
-            "ESP32 WROVER Kit (all versions)")          FQBN="esp32:esp32:esp32wroverkit" ;;
-            "ESP32 PICO-D4")                            FQBN="esp32:esp32:pico32" ;;
-            "AI Thinker ESP32-CAM")                     FQBN="esp32:esp32:esp32cam" ;;
-            "Lolin D32")                                FQBN="esp32:esp32:lolin_d32" ;;
-            "Lolin D32 Pro")                            FQBN="esp32:esp32:lolin_d32_pro" ;;
-            "FireBeetle2 ESP32-E")                      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
-            "Heltec WiFi Kit 32 (V3)")                  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
-            "ESP32-S2 Dev Module")                      FQBN="esp32:esp32:esp32s2" ;;
-            "ESP32-S2 Saola-1")                         FQBN="esp32:esp32:esp32s2-saola-1" ;;
-            "Adafruit Feather ESP32-S2")                FQBN="esp32:esp32:adafruit_feather_esp32s2" ;;
-            "ESP32-S3 Dev Module")                      FQBN="esp32:esp32:esp32s3" ;;
-            "Adafruit Feather ESP32-S3 (2MB PSRAM)")    FQBN="esp32:esp32:adafruit_feather_esp32s3" ;;
-            "M5StickC / M5StickC-Plus")                 FQBN="esp32:esp32:m5stick-c" ;;
-            "M5Stamp S3")                               FQBN="esp32:esp32:m5stack_stampS3" ;;
-            "Other (enter FQBN)")
-              if [ -z "$OVR" ]; then
-                echo "::error ::You chose 'Other' but did not provide 'fqbn_override'"; exit 1
-              fi
-              FQBN="$OVR"
-              ;;
-            *) echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
-          esac
+          # Helper to echo outputs
+          set_out() {
+            echo "$1=$2" >> $GITHUB_OUTPUT
+          }
 
-          # Keep compatibility with rest of pipeline
-          echo "fqbn=$FQBN"       >> $GITHUB_OUTPUT
-          echo "flag="            >> $GITHUB_OUTPUT
-          echo "def_fs="          >> $GITHUB_OUTPUT
-          echo "def_part="        >> $GITHUB_OUTPUT
-          echo "tft_enabled="     >> $GITHUB_OUTPUT
-          echo "tft_header="      >> $GITHUB_OUTPUT
-          echo "Resolved: $LABEL -> $FQBN"
+          if [ "$LABEL" = "Other (enter FQBN)" ]; then
+            if [ -z "$OVR" ]; then
+              echo "::error ::You chose 'Other' but did not provide 'fqbn_override'"; exit 1
+            fi
+            set_out fqbn "$OVR"
+            set_out flag ""
+            set_out def_fs ""
+            set_out def_part ""
+            set_out tft_enabled ""
+            set_out tft_header ""
+            echo "Resolved: $LABEL -> $OVR (override)"
+            exit 0
+          fi
+
+          FOUND=""
+          if [ -f "$MAN" ]; then
+            # Try to resolve from manifest.json
+            FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
+            FLAG=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].flag // empty' "$MAN")
+            DEF_FS=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.filesystem // empty' "$MAN")
+            DEF_PART=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.partition // empty' "$MAN")
+            TFT_EN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.enabled // empty' "$MAN")
+            TFT_HDR=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.header // empty' "$MAN")
+
+            if [ -n "$FQBN" ]; then
+              FOUND="yes"
+              set_out fqbn "$FQBN"
+              set_out flag "$FLAG"
+              set_out def_fs "$DEF_FS"
+              set_out def_part "$DEF_PART"
+              set_out tft_enabled "$TFT_EN"
+              set_out tft_header "$TFT_HDR"
+              echo "Resolved (manifest): $LABEL -> $FQBN (fs=${DEF_FS:-<none>}, part=${DEF_PART:-<none>}, tft_enabled=${TFT_EN:-false}, tft_header=${TFT_HDR})"
+            fi
+          fi
+
+          if [ -z "$FOUND" ]; then
+            # Fallback hard-coded map
+            case "$LABEL" in
+              "Generic ESP32 Dev Module")                FQBN="esp32:esp32:esp32" ;;
+              "DOIT ESP32 DEVKIT V1")                    FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
+              "NodeMCU-32S")                              FQBN="esp32:esp32:nodemcu-32s" ;;
+              "ESP32 DevKitC V4")                         FQBN="esp32:esp32:esp32" ;;
+              "ESP32 WROOM-DA Module")                    FQBN="esp32:esp32:esp32da" ;;
+              "ESP32 WROVER Module")                      FQBN="esp32:esp32:esp32wrover" ;;
+              "ESP32 WROVER Kit (all versions)")          FQBN="esp32:esp32:esp32wroverkit" ;;
+              "ESP32 PICO-D4")                            FQBN="esp32:esp32:pico32" ;;
+              "AI Thinker ESP32-CAM")                     FQBN="esp32:esp32:esp32cam" ;;
+              "Lolin D32")                                FQBN="esp32:esp32:lolin_d32" ;;
+              "Lolin D32 Pro")                            FQBN="esp32:esp32:lolin_d32_pro" ;;
+              "FireBeetle2 ESP32-E")                      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
+              "Heltec WiFi Kit 32 (V3)")                  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
+              "ESP32-S2 Dev Module")                      FQBN="esp32:esp32:esp32s2" ;;
+              "ESP32-S2 Saola-1")                         FQBN="esp32:esp32:esp32s2-saola-1" ;;
+              "Adafruit Feather ESP32-S2")                FQBN="esp32:esp32:adafruit_feather_esp32s2" ;;
+              "ESP32-S3 Dev Module")                      FQBN="esp32:esp32:esp32s3" ;;
+              "Adafruit Feather ESP32-S3 (2MB PSRAM)")    FQBN="esp32:esp32:adafruit_feather_esp32s3" ;;
+              "M5StickC / M5StickC-Plus")                 FQBN="esp32:esp32:m5stick-c" ;;
+              "M5Stamp S3")                               FQBN="esp32:esp32:m5stack_stampS3" ;;
+              *) echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
+            esac
+
+            set_out fqbn "$FQBN"
+            set_out flag ""
+            set_out def_fs ""
+            set_out def_part ""
+            set_out tft_enabled ""
+            set_out tft_header ""
+            echo "Resolved (fallback map): $LABEL -> $FQBN"
+          fi
 
       - name: Install Arduino CLI
         run: |
@@ -245,7 +283,7 @@ jobs:
             echo "tft_define=" >> $GITHUB_OUTPUT
           fi
 
-      # ✅ NEW: Auto/Named/Custom module resolver (reads manifest.json for Auto)
+      # ✅ Auto/Named/Custom module resolver (reads manifest.json for Auto)
       - name: Resolve modules (Auto/Named/Custom)
         id: mods
         shell: bash
@@ -322,25 +360,33 @@ jobs:
           echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
           echo "chosen_profile=$PROFILE" >> $GITHUB_OUTPUT
 
-      # Filesystem/partition overrides (optional)
+      # Filesystem/partition overrides (optional) — uses manifest defaults if inputs blank
       - name: Resolve FS/Partition and install CSV into core (if provided)
         id: fs
         shell: bash
         run: |
           CORE_VER="${{ github.event.inputs.core_version }}"
+          # prefer user inputs, else manifest defaults from Resolve FQBN
           FS_OVR="${{ github.event.inputs.filesystem }}"
           PART_OVR="${{ github.event.inputs.partition }}"
-          echo "fs=$FS_OVR"     >> $GITHUB_OUTPUT
-          echo "part=$PART_OVR" >> $GITHUB_OUTPUT
-          if [ -n "$PART_OVR" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART_OVR"
+          DEF_FS="${{ steps.map.outputs.def_fs }}"
+          DEF_PART="${{ steps.map.outputs.def_part }}"
+
+          FS_CHOSEN="${FS_OVR:-$DEF_FS}"
+          PART_CHOSEN="${PART_OVR:-$DEF_PART}"
+
+          echo "fs=${FS_CHOSEN}"     >> $GITHUB_OUTPUT
+          echo "part=${PART_CHOSEN}" >> $GITHUB_OUTPUT
+
+          if [ -n "$PART_CHOSEN" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART_CHOSEN"
             if [ -f "$SRC" ]; then
-              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
+              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
               mkdir -p "$DEST"
-              cp "$SRC" "$DEST/$PART_OVR"
-              echo "Installed custom partition CSV to $DEST/$PART_OVR"
+              cp "$SRC" "$DEST/$PART_CHOSEN"
+              echo "Installed custom partition CSV to $DEST/$PART_CHOSEN"
             else
-              echo "Partition CSV '$PART_OVR' not found in repo /partitions; relying on core's copy (if any)."
+              echo "Partition CSV '$PART_CHOSEN' not found in repo /partitions; relying on core's copy (if any)."
             fi
           fi
 
@@ -365,11 +411,7 @@ jobs:
               }' <<<"$CSV_FLAGS"
           }
 
-          add () {
-            if [ "$(has_flag "$1")" = "YES" ]; then
-              D="$D -D$2"
-            fi
-          }
+          add () { if [ "$(has_flag "$1")" = "YES" ]; then D="$D -D$2"; fi; }
 
           add WIFI       ENABLE_WIFI
           add BLE        ENABLE_BLE
@@ -394,9 +436,7 @@ jobs:
 
           # user extras
           EXTRA="${{ github.event.inputs.extra_defines }}"
-          if [ -n "$EXTRA" ]; then
-            for t in $EXTRA; do D="$D -D$t"; done
-          fi
+          if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
 
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
@@ -448,4 +488,3 @@ jobs:
           path: _build/esp32_marauder_rewired/build/*/*.bin
           if-no-files-found: warn
           retention-days: 14
-```0
