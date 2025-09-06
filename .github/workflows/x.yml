@@ -24,15 +24,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      # Where Arduino keeps cores/toolchains
-      ARD15: ${{ runner.temp }}/arduino15
-      # Where user libraries live
-      ARDLIBS: ${{ runner.temp }}/Arduino/libraries
-
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
+
+      - name: Set build paths (ARD15, ARDLIBS) using RUNNER_TEMP
+        run: |
+          echo "ARD15=$RUNNER_TEMP/arduino15" >> "$GITHUB_ENV"
+          echo "ARDLIBS=$RUNNER_TEMP/Arduino/libraries" >> "$GITHUB_ENV"
+          mkdir -p "$ARD15" "$ARDLIBS"
 
       - name: Install Arduino CLI
         run: |
@@ -45,9 +45,8 @@ jobs:
         env:
           CORE_VER: ${{ inputs.core_version }}
         run: |
-          mkdir -p "$ARD15" "$ARDLIBS"
           arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
-          # Force use of our temp ARD15 dir so it’s easy to bundle
+          # Force use of our temp dirs so they are easy to bundle
           arduino-cli config set directories.data "$ARD15"
           arduino-cli config set directories.user "$ARDLIBS/.."
           arduino-cli core update-index
@@ -207,29 +206,51 @@ jobs:
         id: bundle
         shell: bash
         run: |
-          set -e
-          BDIR="${PWD}/toolchain_bundle"
-          mkdir -p "$BDIR"
+          set -euo pipefail
+
+          BDIR="${GITHUB_WORKSPACE}/toolchain_bundle"
+          OUTDIR="${GITHUB_WORKSPACE}/dist"
+          mkdir -p "$BDIR" "$OUTDIR"
+
+          echo "== Collecting pieces =="
 
           # 1) Arduino CLI binary
-          mkdir -p "$BDIR/bin"
-          cp -r "${GITHUB_WORKSPACE}/bin" "$BDIR/"
+          if [ -d "${GITHUB_WORKSPACE}/bin" ]; then
+            mkdir -p "$BDIR/bin"
+            cp -a "${GITHUB_WORKSPACE}/bin/." "$BDIR/bin/"
+          else
+            echo "WARN: ${GITHUB_WORKSPACE}/bin not found (CLI still in PATH)."
+          fi
 
           # 2) Arduino15 data (cores/toolchains + config)
-          mkdir -p "$BDIR/arduino15"
-          cp -r "$ARD15"/* "$BDIR/arduino15/" || true
+          if [ -d "${ARD15}" ]; then
+            mkdir -p "$BDIR/arduino15"
+            cp -a "${ARD15}/." "$BDIR/arduino15/"
+          else
+            echo "WARN: ARD15 (${ARD15}) not found."
+          fi
 
           # 3) Libraries (all)
-          mkdir -p "$BDIR/Arduino/libraries"
-          cp -r "$ARDLIBS"/* "$BDIR/Arduino/libraries/" || true
+          if [ -d "${ARDLIBS}" ]; then
+            mkdir -p "$BDIR/Arduino/libraries"
+            cp -a "${ARDLIBS}/." "$BDIR/Arduino/libraries/"
+          else
+            echo "WARN: ARDLIBS (${ARDLIBS}) not found."
+          fi
 
           # 4) Prepared sketch (what was compiled)
-          mkdir -p "$BDIR/sketch"
-          cp -r "_build/esp32_marauder_rewired" "$BDIR/sketch/"
+          if [ -d "_build/esp32_marauder_rewired" ]; then
+            mkdir -p "$BDIR/sketch"
+            cp -a "_build/esp32_marauder_rewired/." "$BDIR/sketch/"
+          else
+            echo "::error ::Prepared sketch folder missing"; exit 1
+          fi
 
           # 5) Repo configs folder (including custom.json if used)
-          mkdir -p "$BDIR/configs"
-          cp -r "scaffold/configs"/* "$BDIR/configs/" || true
+          if [ -d "scaffold/configs" ]; then
+            mkdir -p "$BDIR/configs"
+            cp -a "scaffold/configs/." "$BDIR/configs/"
+          fi
 
           # 6) Manifest with versions and metadata
           {
@@ -246,16 +267,19 @@ jobs:
             arduino-cli core list || true
             echo
             echo "Installed libraries (user):"
-            ls -la "$ARDLIBS" || true
+            ls -la "${ARDLIBS}" || true
           } > "$BDIR/MANIFEST.txt"
 
-          # Exclude the Arduino compile cache to reduce size, but keep cores/toolchains.
-          # Bundle as tar.gz (more size-friendly than zip).
-          TAR="toolchain_${GITHUB_SHA}.tar.gz"
-          tar -C "$BDIR/.." -czf "$TAR" "$(basename "$BDIR")"
+          echo "== Bundle tree =="
+          du -sh "$BDIR" || true
+          find "$BDIR" -maxdepth 2 -type d | sort
+
+          TAR="${OUTDIR}/toolchain_${GITHUB_SHA}.tar.gz"
+          echo "== Creating archive =="
+          tar -C "${GITHUB_WORKSPACE}" -czhf "$TAR" "$(basename "$BDIR")"
 
           echo "bundle=$TAR" >> $GITHUB_OUTPUT
-          echo "Created bundle: $TAR"
+          echo "Archive created:"; ls -lh "$TAR"
 
       - name: Sanitize bundle artifact name
         id: sanitize_bundle
