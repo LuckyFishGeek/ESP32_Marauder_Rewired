@@ -1,4 +1,4 @@
-name: Build (Custom CSV Profiles — ESP32 Marauder Rewired)
+name: Build (Custom CSV Profiles ? ESP32 Marauder Rewired)
 
 on:
   workflow_dispatch:
@@ -29,11 +29,11 @@ on:
           - M5StickC / M5StickC-Plus
           - M5Stamp S3
           - Other (enter FQBN)
-
       fqbn_override:
         description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
         required: false
         default: ''
+      # ? keep the rest of your inputs here ?
 
       profile_name:
         type: choice
