@@ -1,1 +1,68 @@
-t
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ESP32 Marauder Rewired Web Flasher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      margin: 0;
+      padding: 2rem;
+    }
+    h1 {
+      color: #00e0ff;
+    }
+    .card {
+      background: #1b1b1b;
+      padding: 2rem;
+      margin: 2rem auto;
+      border-radius: 12px;
+      max-width: 600px;
+      box-shadow: 0 0 12px rgba(0, 224, 255, 0.3);
+    }
+    esp-web-install-button {
+      --esp-tools-button-color: #00e0ff;
+      --esp-tools-button-text-color: #000;
+      --esp-tools-button-border-radius: 8px;
+      --esp-tools-button-padding: 12px 24px;
+      --esp-tools-button-font-size: 16px;
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.9em;
+      color: #888;
+    }
+    a {
+      color: #00e0ff;
+      text-decoration: none;
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js"></script>
+</head>
+<body>
+  <h1>? ESP32 Marauder Rewired v1.0.0</h1>
+  <div class="card">
+    <p>
+      Flash the latest <strong>ESP32 Marauder Rewired</strong> firmware directly from your browser.<br>
+      Works in <b>Chrome</b>, <b>Edge</b>, and other WebSerial-enabled browsers.
+    </p>
+    <esp-web-install-button manifest="firmware/manifest.json">
+      <button slot="unsupported">? Browser not supported (use Chrome/Edge)</button>
+      <button slot="not-allowed">? Connect a board via USB</button>
+      <button slot="installing">? Flashing?</button>
+      <button slot="done">? Done ? Restart your ESP32</button>
+    </esp-web-install-button>
+  </div>
+
+  <footer>
+    <p>
+      Source: <a href="https://github.com/AirysDark/ESP32_Marauder_Rewired" target="_blank">
+      ESP32 Marauder Rewired on GitHub</a>
+    </p>
+  </footer>
+</body>
+</html>
