@@ -2,9 +2,9 @@
 **Official Release v1.0.0**  
 
 ---
-## ? Quick Start
 
-? [**CLICK ME to open the Quick Start Guide**](./QuickStart.md)
+## 🚀 Quick Start
+👉 [**CLICK ME to open the Quick Start Guide**](./QuickStart.md)
 
 This guide walks you step-by-step:
 - Fork this repo
@@ -13,8 +13,8 @@ This guide walks you step-by-step:
 - Flash it with `esptool.py`
 
 ---
- 
-## 🔥 Overview  
+
+## 📝 Overview  
 This is the **first official release** of **ESP32 Marauder Rewired (v1.0.0)** — a complete rebuild of the Marauder firmware system with modern GitHub Actions automation, manifest-driven board definitions, and modular CSV-based feature profiles.  
 
 This project started as an attempt to adapt the **original Marauder source code**, but after many dead ends (compile errors, outdated libs, unsupported boards, messy defines), we took the radical decision to **strip it down and rebuild from scratch**.  
@@ -23,7 +23,7 @@ Now, everything is driven by clean manifests and profiles — no more hard-coded
 
 ---
 
-## 🧪 The Journey (Trials & Errors)  
+## 🛠️ The Journey (Trials & Errors)  
 
 - **Tried direct porting of the original source** → too many legacy issues.  
 - **Attempted partial rebuilds** → hit endless compiler errors, missing defines, and broken TFT headers.  
@@ -72,7 +72,7 @@ Now, everything is driven by clean manifests and profiles — no more hard-coded
 
 ---
 
-## 🚀 What’s Coming Next  
+## 🔮 What’s Coming Next  
 
 - Full **feature parity with legacy Marauder** (all menus & modules).  
 - Additional **partition profiles** (bigger FS, OTA dual-bank layouts).  
@@ -84,7 +84,7 @@ Now, everything is driven by clean manifests and profiles — no more hard-coded
 
 ---
 
-## 🏆 Advantages of This Rewired Build  
+## 💡 Advantages of This Rewired Build  
 
 - **Cleaner structure** → no more mystery macros; every board is defined in JSON.  
 - **Portable** → easily add new boards or profiles without hacking C++ headers.  
@@ -98,28 +98,29 @@ Now, everything is driven by clean manifests and profiles — no more hard-coded
 
 ```
 /scaffold
- +-- configs/
- ¦    +-- manifest.json         # All board definitions
- +-- registry/                  # Registry library sources
- +-- *.ino                      # Main sketch entry points
+ ├── configs/
+ │   ├── manifest.json           # All board definitions
+ │   ├── modules_presets.csv     # Feature profiles
+ │   ├── displays/               # Display presets (ILI9341, ST7735, etc)
+ │   └── pins/                   # Pin presets per board
+ ├── registry/                   # Registry library sources
+ ├── *.ino                       # Main sketch entry points
 
 /partitions
- +-- marauder_default.csv       # NEW standard partition
- +-- marauder_spiffs_ota.csv
- +-- marauder_littlefs.csv
- +-- min_spiffs_ota.csv
- +-- min_littlefs_ota.csv
- +-- hugeapp_1m_fs.csv
- +-- ota_1m_fs.csv
+ ├── marauder_default.csv
+ ├── marauder_spiffs_ota.csv
+ ├── marauder_littlefs.csv
+ ├── min_spiffs_ota.csv
+ ├── min_littlefs_ota.csv
+ ├── hugeapp_1m_fs.csv
+ └── ota_1m_fs.csv
 
-/modules_presets.csv            # Feature profiles
-
-/.github/workflows              # Build workflows (premade + custom modes)
+/.github/workflows/              # Build workflows (premade + custom modes)
 ```
 
 ---
 
-## 🛠 Build Modes  
+## 🛠️ Build Modes  
 
 There are now **two build paths** supported:  
 
@@ -138,7 +139,7 @@ There are now **two build paths** supported:
 
 ---
 
-## 📌 Versioning  
+## 🏷️ Versioning  
 
 This release is tagged as:  
 **`v1.0.0` — The Manifest Era**  
@@ -147,5 +148,5 @@ The next milestone will be **`v1.1.0`** once feature parity and testing expand a
 
 ---
 
-✅ This README marks the official start of the **rewired Marauder firmware project**.  
+🚀 This README marks the official start of the **rewired Marauder firmware project**.  
 We went from **“impossible to build”** → to a **clean, extensible, automated system**.  
