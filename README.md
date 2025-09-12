@@ -2,6 +2,17 @@
 **Official Release v1.0.0**  
 
 ---
+## ? Quick Start
+
+? [**CLICK ME to open the Quick Start Guide**](./QuickStart.md)
+
+This guide walks you step-by-step:
+- Fork this repo
+- Run the GitHub Actions build
+- Download your firmware artifact
+- Flash it with `esptool.py`
+
+---
  
 ## 🔥 Overview  
 This is the **first official release** of **ESP32 Marauder Rewired (v1.0.0)** — a complete rebuild of the Marauder firmware system with modern GitHub Actions automation, manifest-driven board definitions, and modular CSV-based feature profiles.  
