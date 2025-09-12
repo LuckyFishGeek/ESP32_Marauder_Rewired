@@ -60,6 +60,16 @@ on:
         description: 'Optional: Custom pins CSV (maps PIN_NAME=VALUE into -D defs)'
         required: false
         default: ''
+        
+      custom_pins:
+        description: >
+          Free-form pin overrides. Examples:
+          "gps_pin=34,33"
+          "tft_pin=19,23,18,5,21,22"
+          "wifi_pin=19,23,18,5"
+          (space-separated key=value lists)
+        required: false
+        default: ''
 
       tft_model:
         type: choice
@@ -349,51 +359,148 @@ jobs:
       # ---------------------------------------------------------------------------
       # Resolve pins (Custom CSV)
       # ---------------------------------------------------------------------------
-      - name: Resolve pins (Custom CSV)
-        id: pins
+      - name: Parse custom_pins input
+        id: custompins
         shell: bash
         run: |
-          PINS_IN="${{ github.event.inputs.pins_csv }}"
+          set -euo pipefail
+          RAW="${{ github.event.inputs.custom_pins }}"
           OUT=""
-          if [ -n "$PINS_IN" ]; then
-            FILE="scaffold/configs/pins/$PINS_IN"
-            if [ ! -f "$FILE" ]; then
-              echo "::error ::Pins CSV '$FILE' not found"; exit 1
+
+          # helper: trim
+          trim() { awk '{$1=$1;print}' <<<"$1"; }
+
+          # Emit helper (append a -D pair if value present)
+          emit_kv() {
+            local key="$1"; local val="$2"
+            [ -n "$(trim "$val")" ] && OUT="$OUT -D${key}=$(trim "$val")"
+          }
+
+          # Parse tokens like: key=1,2,3
+          # Tokens are separated by spaces or semicolons.
+          IFS=' ' read -r -a TOKS <<<"$(echo "$RAW" | tr ';' ' ')"
+
+          for tok in "${TOKS[@]}"; do
+            [ -z "$tok" ] && continue
+            # must have '='
+            if [[ "$tok" != *"="* ]]; then
+              echo "Skipping token without '=': $tok"
+              continue
             fi
-            while IFS=',' read -r k v; do
-              # skip empty lines or comments
-              [[ -z "$k" || "$k" =~ ^# ]] && continue
-              [ -n "$v" ] && OUT="$OUT -D$k=$v"
-            done < "$FILE"
-          fi
-          echo "pins_defs=$OUT" >> $GITHUB_OUTPUT
-          echo "Pin defines => $OUT"
+            KEY="$(echo "${tok%%=*}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]\+//g')"
+            VALS_RAW="${tok#*=}"
+            # split values by comma
+            IFS=',' read -r -a V <<<"$VALS_RAW"
+
+            case "$KEY" in
+              gps_pin)
+                # ORDER: RX,TX,(optional PPS),(optional EN)
+                emit_kv GPS_RX "${V[0]:-}"
+                emit_kv GPS_TX "${V[1]:-}"
+                emit_kv GPS_PPS "${V[2]:-}"
+                emit_kv GPS_EN  "${V[3]:-}"
+                ;;
+              i2c_pin)
+                # ORDER: SDA,SCL
+                emit_kv I2C_SDA "${V[0]:-}"
+                emit_kv I2C_SCL "${V[1]:-}"
+                ;;
+              tft_pin)
+                # ORDER: MISO,MOSI,SCK,CS,DC,RST  (6 values)
+                emit_kv TFT_MISO "${V[0]:-}"
+                emit_kv TFT_MOSI "${V[1]:-}"
+                emit_kv TFT_SCK  "${V[2]:-}"
+                emit_kv TFT_CS   "${V[3]:-}"
+                emit_kv TFT_DC   "${V[4]:-}"
+                emit_kv TFT_RST  "${V[5]:-}"
+                ;;
+              sd_pin)
+                # ORDER: MISO,MOSI,SCK,CS
+                emit_kv SD_MISO "${V[0]:-}"
+                emit_kv SD_MOSI "${V[1]:-}"
+                emit_kv SD_SCK  "${V[2]:-}"
+                emit_kv SD_CS   "${V[3]:-}"
+                ;;
+              neopixel_pin)
+                # ORDER: DATA
+                emit_kv NEOPIXEL "${V[0]:-}"
+                ;;
+              buzzer_pin)
+                # ORDER: PIN
+                emit_kv BUZZER "${V[0]:-}"
+                ;;
+              buttons_pin)
+                # ORDER: BTN1,BTN2,BTN3
+                emit_kv BTN1 "${V[0]:-}"
+                emit_kv BTN2 "${V[1]:-}"
+                emit_kv BTN3 "${V[2]:-}"
+                ;;
+              wifi_pin)
+                # ORDER (assumed SPI): MISO,MOSI,SCK,CS  (4 values)
+                # If your WiFi device uses a different order, change here.
+                emit_kv WIFI_MISO "${V[0]:-}"
+                emit_kv WIFI_MOSI "${V[1]:-}"
+                emit_kv WIFI_SCK  "${V[2]:-}"
+                emit_kv WIFI_CS   "${V[3]:-}"
+                ;;
+              *)
+                # Fallback: turn key and ALL commas into a single macro (if you want per-value, customize here)
+                # Example: custom=12,34 -> -DCUSTOM=12,34
+                UKEY="$(echo "$KEY" | tr '[:lower:]' '[:upper:]')"
+                emit_kv "$UKEY" "$VALS_RAW"
+                ;;
+            esac
+          done
+
+          echo "custom_pin_defs=$OUT" >> "$GITHUB_OUTPUT"
+          echo "Custom pin defines: $OUT"
 
       # Compose defines
       - name: Compose defines
         id: defs
+        shell: bash
         run: |
-          D=""; CSV_FLAGS="${{ steps.mods.outputs.csv }}"
+          set -euo pipefail
+          D=""
+          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
+
           add () { [[ "$CSV_FLAGS" == *"$1"* ]] && D="$D -D$2"; }
-          add WIFI ENABLE_WIFI
-          add BLE ENABLE_BLE
-          add WEB ENABLE_WEB
-          add SD ENABLE_SD
-          add GPS ENABLE_GPS
-          add TOUCH ENABLE_TOUCH
-          add LVGL ENABLE_LVGL
-          add NEOPIXEL ENABLE_NEOPIXEL
-          add BUZZER ENABLE_BUZZER
-          add BUTTONS ENABLE_BUTTONS
-          add BATTERY ENABLE_BATTERY
-          add NRF24 ENABLE_NRF24
-          add USB_MSC ENABLE_USB_MSC
+
+          add WIFI      ENABLE_WIFI
+          add BLE       ENABLE_BLE
+          add WEB       ENABLE_WEB
+          add SD        ENABLE_SD
+          add GPS       ENABLE_GPS
+          add TOUCH     ENABLE_TOUCH
+          add LVGL      ENABLE_LVGL
+          add NEOPIXEL  ENABLE_NEOPIXEL
+          add BUZZER    ENABLE_BUZZER
+          add BUTTONS   ENABLE_BUTTONS
+          add BATTERY   ENABLE_BATTERY
+          add NRF24     ENABLE_NRF24
+          add USB_MSC   ENABLE_USB_MSC
           add DUAL_WIFI ENABLE_DUAL_WIFI
-          add 2WIFI ENABLE_2WIFI
+          add 2WIFI     ENABLE_2WIFI
+
+          # From pins CSV resolver (if you still use it)
           PIN_DEFS="${{ steps.pins.outputs.pins_defs }}"
           [ -n "$PIN_DEFS" ] && D="$D $PIN_DEFS"
+
+          # ? From free-text custom_pins parser step
+          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
+          [ -n "$CUST" ] && D="$D $CUST"
+
+          # ? From display resolver
+          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
+          [ -n "$DISP_DEF" ] && D="$D -D$DISP_DEF"
+
+          # Extra manual -D defines
           EXTRA="${{ github.event.inputs.extra_defines }}"
-          [ -n "$EXTRA" ] && for t in $EXTRA; do D="$D -D$t"; done
+          if [ -n "$EXTRA" ]; then
+            for t in $EXTRA; do D="$D -D$t"; done
+          fi
+
+          echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
           
           DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
