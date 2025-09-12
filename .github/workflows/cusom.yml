@@ -309,7 +309,7 @@ jobs:
         run: |
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          DEFS="${{ steps.defs.outputs.defs }}"
+          DEFS="${{ steps.defs.outputs.defs }} ${{ steps.pins.outputs.pins_defs }}"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.part }}"
           CPP_FLAGS="$DEFS"
