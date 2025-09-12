@@ -502,11 +502,6 @@ jobs:
 
           echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
-          
-          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
-          if [ -n "$DISP_DEF" ]; then
-            D="$D -D$DISP_DEF"
-          fi
 
       # Compile
       - name: Compile (Arduino CLI)
