@@ -55,11 +55,6 @@ on:
         description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
         required: false
         default: ''
-
-      pins_csv:
-        description: 'Optional: Custom pins CSV (maps PIN_NAME=VALUE into -D defs)'
-        required: false
-        default: ''
         
       custom_pins:
         description: >
