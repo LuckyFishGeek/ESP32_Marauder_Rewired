@@ -492,7 +492,6 @@ jobs:
 
           echo "custom_pin_defs=$OUT" >> "$GITHUB_OUTPUT"
           echo "Custom pin defines: $OUT"
-
 - name: Compose defines
   id: defs
   shell: bash
