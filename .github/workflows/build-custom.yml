@@ -337,6 +337,49 @@ jobs:
             echo "No TFT header from presets (Auto/None selected)."
           fi
           
+      # Resolve board pin preset (pins_presets.csv)
+      - name: Resolve board pin preset (pins_presets.csv)
+        id: pinpreset
+        shell: bash
+        run: |
+          set -euo pipefail
+          CSV="scaffold/configs/pins/pins_presets.csv"
+          BOARD="${{ github.event.inputs.board_label }}"
+
+          out(){ echo "$1=$2" >> "$GITHUB_OUTPUT"; }
+
+          if [ ! -f "$CSV" ]; then
+            echo "pins_presets.csv not found at $CSV (skipping)."
+            out pins_defs ""
+            exit 0
+          fi
+
+          # Find row for the board and grab the 2nd column ("pins")
+          LINE=$(awk -F',' -v want="$BOARD" '
+            BEGIN{IGNORECASE=1}
+            NR==1{next}
+            $1==want {print $2; exit}
+          ' "$CSV")
+
+          if [ -z "$LINE" ]; then
+            echo "No preset pins for board: $BOARD (ok)."
+            out pins_defs ""
+            exit 0
+          fi
+
+          # Turn "K=V;K=V;..." into "-DK=V -DK=V ..."
+          OUT=""
+          IFS=';' read -ra PAIRS <<< "$LINE"
+          for kv in "${PAIRS[@]}"; do
+            k="${kv%%=*}"; v="${kv#*=}"
+            k="$(echo "$k" | xargs)"
+            v="$(echo "$v" | xargs)"
+            [ -n "$k" ] && [ -n "$v" ] && OUT="$OUT -D${k}=${v}"
+          done
+
+          echo "Preset pin defines: $OUT"
+          out pins_defs "$OUT"
+          
       # Resolve FS/Partition
       - name: Resolve FS/Partition
         id: fs
@@ -477,9 +520,9 @@ jobs:
           add DUAL_WIFI ENABLE_DUAL_WIFI
           add 2WIFI     ENABLE_2WIFI
 
-          # From pins CSV resolver (may be empty)
-          PIN_DEFS="${{ steps.pins.outputs.pins_defs }}"
-          [ -n "$PIN_DEFS" ] && D="$D $PIN_DEFS"
+          # From board pin presets
+          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
+          [ -n "$PRESET_PINS" ] && D="$D $PRESET_PINS"
 
           # From free-text custom_pins parser
           CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
@@ -498,12 +541,12 @@ jobs:
           echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
 
-      # Compile
+      # Compile          
       - name: Compile (Arduino CLI)
         run: |
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          DEFS="${{ steps.defs.outputs.defs }} ${{ steps.pins.outputs.pins_defs }}"
+          DEFS="${{ steps.defs.outputs.defs }}"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.part }}"
           CPP_FLAGS="$DEFS"
