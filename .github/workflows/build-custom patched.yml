@@ -1,0 +1,523 @@
+name: Build (Custom CSV Profiles — ESP32 Marauder Rewired)
+
+on:
+  workflow_dispatch:
+    inputs:
+      board_label:
+        type: choice
+        description: 'Select a common Arduino-ESP32 board (or choose "Other (enter FQBN)")'
+        default: 'Generic ESP32 Dev Module'
+        options:
+          - Generic ESP32 Dev Module
+          - DOIT ESP32 DEVKIT V1
+          - NodeMCU-32S
+          - ESP32 DevKitC V4
+          - ESP32 WROOM-DA Module
+          - ESP32 WROVER Module
+          - ESP32 WROVER Kit (all versions)
+          - ESP32 PICO-D4
+          - AI Thinker ESP32-CAM
+          - Lolin D32
+          - Lolin D32 Pro
+          - FireBeetle2 ESP32-E
+          - Heltec WiFi Kit 32 (V3)
+          - ESP32-S2 Dev Module
+          - ESP32-S2 Saola-1
+          - Adafruit Feather ESP32-S2
+          - ESP32-S3 Dev Module
+          - Adafruit Feather ESP32-S3 (2MB PSRAM)
+          - M5StickC / M5StickC-Plus
+          - M5Stamp S3
+          - Other (enter FQBN)
+
+      fqbn_override:
+        description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
+        required: false
+        default: ''
+
+      profile_name:
+        type: choice
+        description: 'Profile from modules_presets.csv (Auto picks from manifest.json)'
+        default: 'Auto (from board)'
+        options:
+          - Auto (from board)
+          - Minimal
+          - Standard
+          - Full
+          - Wardriver
+          - Scanner
+          - BLE-only
+          - Displayless
+          - Debug
+          - Custom
+
+      modules_csv:
+        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
+        required: false
+        default: ''
+
+      filesystem:
+        type: choice
+        description: 'Filesystem override (blank = default/manifest)'
+        default: ''
+        options: ['', 'spiffs', 'littlefs']
+
+      partition:
+        type: choice
+        description: 'Partition CSV (pretty names) ? blank uses manifest/default'
+        default: 'Default (use manifest/default)'
+        options:
+          - 'Default (use manifest/default)'
+          - 'Huge App + 1MB FS (hugeapp_1m_fs.csv)'
+          - 'Marauder (LittleFS OTA) (marauder_littlefs.csv)'
+          - 'Marauder (SPIFFS OTA) (marauder_spiffs_ota.csv)'
+          - 'Minimal (LittleFS OTA) (min_littlefs_ota.csv)'
+          - 'Minimal (SPIFFS OTA) (min_spiffs_ota.csv)'
+          - 'OTA + 1MB FS (ota_1m_fs.csv)'
+          - 'Marauder Default (marauder_default.csv)'
+
+      extra_defines:
+        description: 'Additional -D flags (space-separated, e.g. FOO=1 BAR)'
+        required: false
+        default: ''
+
+      core_version:
+        description: 'Arduino-ESP32 core'
+        required: false
+        default: '2.0.11'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install deps (jq + unzip)
+        run: sudo apt-get update && sudo apt-get install -y jq unzip
+
+      - name: Sanitize manifest.json (strip BOM/CRLF and validate if present)
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAN=./scaffold/configs/manifest.json
+          if [ -f "$MAN" ]; then
+            MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
+            if [ "$MAGIC" = "efbbbf" ]; then
+              tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
+              echo "Removed UTF-8 BOM from manifest.json"
+            fi
+            sed -i 's/\r$//' "$MAN"
+            jq . "$MAN" >/dev/null
+            echo "manifest.json OK"
+          else
+            echo "manifest.json not present; continuing (fallback map will be used if needed)"
+          fi
+
+      # Resolve a working FQBN from manifest.json (fallback to hard-coded map)
+      - name: Resolve FQBN
+        id: map
+        shell: bash
+        run: |
+          set -e
+          LABEL="${{ github.event.inputs.board_label }}"
+          OVR="${{ github.event.inputs.fqbn_override }}"
+          MAN="scaffold/configs/manifest.json"
+
+          set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
+
+          if [ "$LABEL" = "Other (enter FQBN)" ]; then
+            if [ -z "$OVR" ]; then
+              echo "::error ::You chose 'Other' but did not provide 'fqbn_override'"; exit 1
+            fi
+            set_out fqbn "$OVR"
+            set_out flag ""
+            set_out def_fs ""
+            set_out def_part ""
+            set_out tft_enabled ""
+            set_out tft_header ""
+            echo "Resolved: $LABEL -> $OVR (override)"
+            exit 0
+          fi
+
+          FOUND=""
+          if [ -f "$MAN" ]; then
+            FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
+            FLAG=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].flag // empty' "$MAN")
+            DEF_FS=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.filesystem // empty' "$MAN")
+            DEF_PART=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].defaults.partition // empty' "$MAN")
+            TFT_EN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.enabled // empty' "$MAN")
+            TFT_HDR=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].tft.header // empty' "$MAN")
+            if [ -n "$FQBN" ]; then
+              FOUND="yes"
+              set_out fqbn "$FQBN"
+              set_out flag "$FLAG"
+              set_out def_fs "$DEF_FS"
+              set_out def_part "$DEF_PART"
+              set_out tft_enabled "$TFT_EN"
+              set_out tft_header "$TFT_HDR"
+              echo "Resolved (manifest): $LABEL -> $FQBN (fs=${DEF_FS:-<none>}, part=${DEF_PART:-<none>}, tft_enabled=${TFT_EN:-false}, tft_header=${TFT_HDR})"
+            fi
+          fi
+
+          if [ -z "$FOUND" ]; then
+            case "$LABEL" in
+              "Generic ESP32 Dev Module")                FQBN="esp32:esp32:esp32" ;;
+              "DOIT ESP32 DEVKIT V1")                    FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
+              "NodeMCU-32S")                              FQBN="esp32:esp32:nodemcu-32s" ;;
+              "ESP32 DevKitC V4")                         FQBN="esp32:esp32:esp32" ;;
+              "ESP32 WROOM-DA Module")                    FQBN="esp32:esp32:esp32da" ;;
+              "ESP32 WROVER Module")                      FQBN="esp32:esp32:esp32wrover" ;;
+              "ESP32 WROVER Kit (all versions)")          FQBN="esp32:esp32:esp32wroverkit" ;;
+              "ESP32 PICO-D4")                            FQBN="esp32:esp32:pico32" ;;
+              "AI Thinker ESP32-CAM")                     FQBN="esp32:esp32:esp32cam" ;;
+              "Lolin D32")                                FQBN="esp32:esp32:lolin_d32" ;;
+              "Lolin D32 Pro")                            FQBN="esp32:esp32:lolin_d32_pro" ;;
+              "FireBeetle2 ESP32-E")                      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
+              "Heltec WiFi Kit 32 (V3)")                  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
+              "ESP32-S2 Dev Module")                      FQBN="esp32:esp32:esp32s2" ;;
+              "ESP32-S2 Saola-1")                         FQBN="esp32:esp32:esp32s2-saola-1" ;;
+              "Adafruit Feather ESP32-S2")                FQBN="esp32:esp32:adafruit_feather_esp32s2" ;;
+              "ESP32-S3 Dev Module")                      FQBN="esp32:esp32:esp32s3" ;;
+              "Adafruit Feather ESP32-S3 (2MB PSRAM)")    FQBN="esp32:esp32:adafruit_feather_esp32s3" ;;
+              "M5StickC / M5StickC-Plus")                 FQBN="esp32:esp32:m5stick-c" ;;
+              "M5Stamp S3")                               FQBN="esp32:esp32:m5stack_stampS3" ;;
+              *) echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
+            esac
+            set_out fqbn "$FQBN"
+            set_out flag ""
+            set_out def_fs ""
+            set_out def_part ""
+            set_out tft_enabled ""
+            set_out tft_header ""
+            echo "Resolved (fallback map): $LABEL -> $FQBN"
+          fi
+
+      - name: Install Arduino CLI
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "${GITHUB_WORKSPACE}/bin" >> $GITHUB_PATH
+          export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
+          arduino-cli version
+
+      - name: Configure & Install ESP32 Core
+        id: core
+        run: |
+          CORE_VER="${{ github.event.inputs.core_version }}"
+          echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
+          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+          arduino-cli core update-index
+          arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core list
+
+      # Use your pre-bundled libraries tar (optional)
+      - name: Extract pre-bundled libs (lib.tar)
+        run: |
+          mkdir -p $HOME/Arduino/libraries
+          if [ -f lib.tar ]; then
+            tar -xf lib.tar -C $HOME/Arduino/libraries
+          else
+            echo "lib.tar not found; continuing (build may fail without libs)."
+          fi
+          ls -1 $HOME/Arduino/libraries || true
+
+      # Local registry lib so includes resolve nicely
+      - name: Create ESP32MarauderRegistry local library
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+
+      # Optional TFT header pack
+      - name: Unpack display settings (optional)
+        run: |
+          if [ -f "display_settings.zip" ]; then
+            mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
+            unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
+            echo "Unpacked TFT_eSPI headers"
+          else
+            echo "display_settings.zip not present; skipping"
+          fi
+
+      # Prepare sketch from scaffold/
+      - name: Prepare Sketch Folder
+        id: prep
+        shell: bash
+        run: |
+          set -e
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          rm -rf "$SKETCH_DIR"
+          mkdir -p "$SKETCH_DIR"
+
+          if [ -f scaffold/esp32_marauder_rewired.ino ]; then
+            SRC_INO="scaffold/esp32_marauder_rewired.ino"
+          else
+            SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+            [ -n "$SRC_INO" ] || (echo "::error ::No .ino found under scaffold/"; exit 1)
+          fi
+          echo "Using INO: $SRC_INO"
+          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+
+          pushd scaffold >/dev/null
+          find . -type f ! -name '*.ino' -print0 \
+            | xargs -0 -I {} bash -c 'mkdir -p "'"$SKETCH_DIR"'"/$(dirname "{}"); cp "{}" "'"$SKETCH_DIR"'"/"{}"'
+          popd >/dev/null
+
+          [ -f "configs.h" ] && cp "configs.h" "$SKETCH_DIR/configs.h"
+
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          find "$SKETCH_DIR" -maxdepth 2 -type f | sort
+
+      # Apply TFT header if you decide to set one later (kept for compatibility)
+      - name: Configure TFT_eSPI header (board default; CSV may force)
+        id: tft
+        shell: bash
+        run: |
+          USE="${{ steps.map.outputs.tft_enabled }}"
+          HDR="${{ steps.map.outputs.tft_header }}"
+          if [ "$USE" = "true" ] && [ -n "$HDR" ]; then
+            TE="$HOME/Arduino/libraries/TFT_eSPI"
+            mkdir -p "$TE"
+            echo "// Auto-generated by workflow" > "$TE/User_Setup_Select.h"
+            echo "#include <${HDR}>" >> "$TE/User_Setup_Select.h"
+            echo "Applied TFT header: $HDR"
+            echo "tft_define=-DENABLE_TFT" >> $GITHUB_OUTPUT
+          else
+            echo "TFT not applied (USE=$USE, HDR='$HDR')."
+            echo "tft_define=" >> $GITHUB_OUTPUT
+          fi
+
+      # ✅ Auto/Named/Custom module resolver (reads manifest.json for Auto)
+      - name: Resolve modules (Auto/Named/Custom)
+        id: mods
+        shell: bash
+        run: |
+          set -e
+          PRESETS="${GITHUB_WORKSPACE}/modules_presets.csv"
+          MAN="scaffold/configs/manifest.json"
+          BOARD="${{ github.event.inputs.board_label }}"
+          CHOICE="${{ github.event.inputs.profile_name }}"
+          CUSTOM="${{ github.event.inputs.modules_csv }}"
+
+          norm_csv () { tr -d '\r' | sed -E 's/[[:space:]]*,[[:space:]]*/,/g; s/^[[:space:]]+|[[:space:]]+$//g'; }
+
+          if [ "$CHOICE" = "Custom" ]; then
+            RESOLVED="$(echo "$CUSTOM" | norm_csv)"
+            if [ -z "$RESOLVED" ]; then
+              echo "::error ::Custom selected but modules_csv is empty"; exit 1
+            fi
+            echo "Using Custom CSV: $RESOLVED"
+            echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
+            echo "chosen_profile=Custom(CSV)" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          if [ "$CHOICE" = "Auto (from board)" ]; then
+            if [ -f "$MAN" ]; then
+              PROFILE=$(jq -r --arg L "$BOARD" \
+                '[.boards[] | select(.label==$L)][0] | (.defaults.profile // .default_profile // "Standard")' "$MAN")
+              [ -n "$PROFILE" ] || PROFILE="Standard"
+              echo "Auto profile for '$BOARD' from manifest: $PROFILE"
+            else
+              PROFILE="Standard"
+              echo "manifest.json not found; falling back to: $PROFILE"
+            fi
+          else
+            PROFILE="$CHOICE"
+          fi
+
+          if [ ! -f "$PRESETS" ]; then
+            echo "::error ::modules_presets.csv not found at repo root."
+            exit 1
+          fi
+
+          LINE=$(awk -F',' -v want="$PROFILE" '
+            BEGIN{IGNORECASE=1}
+            /^[[:space:]]*#/ {next}
+            NF>=2 {
+              p=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", p);
+              if (p==want) {
+                out=$2; for (i=3;i<=NF;i++) out=out "," $i; print out; exit
+              }
+            }' "$PRESETS")
+
+          if [ -z "$LINE" ]; then
+            echo "::warning ::Profile '"$PROFILE"' not found; falling back to Standard."
+            PROFILE="Standard"
+            LINE=$(awk -F',' -v want="$PROFILE" '
+              BEGIN{IGNORECASE=1}
+              /^[[:space:]]*#/ {next}
+              NF>=2 {
+                p=$1; gsub(/^[[:space:]]+|[[:space:]]+$/, "", p);
+                if (p==want) {
+                  out=$2; for (i=3;i<=NF;i++) out=out "," $i; print out; exit
+                }
+              }' "$PRESETS")
+            if [ -z "$LINE" ]; then
+              echo "::error ::Fallback profile 'Standard' missing from modules_presets.csv"
+              exit 1
+            fi
+          fi
+
+          RESOLVED="$(echo "$LINE" | norm_csv)"
+          echo "Resolved modules for '$PROFILE': $RESOLVED"
+          echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
+          echo "chosen_profile=$PROFILE" >> $GITHUB_OUTPUT
+
+      # Filesystem/partition overrides (optional) — uses manifest defaults if inputs blank
+      - name: Resolve FS/Partition and install CSV into core (if provided)
+        id: fs
+        shell: bash
+        run: |
+          set -euo pipefail
+          CORE_VER="${{ github.event.inputs.core_version }}"
+          FS_OVR="${{ github.event.inputs.filesystem }}"
+          PART_PRETTY="${{ github.event.inputs.partition }}"
+          DEF_FS="${{ steps.map.outputs.def_fs }}"
+          DEF_PART="${{ steps.map.outputs.def_part }}"
+
+          part_from_pretty () {
+            local s="$1"
+            if [ -z "$s" ] || [ "$s" = "Default (use manifest/default)" ]; then
+              echo ""; return
+            fi
+            if [[ "$s" =~ \(([^)]+\.csv)\)$ ]]; then
+              echo "${BASH_REMATCH[1]}"; return
+            fi
+            echo "$s"
+          }
+
+          PART_OVR="$(part_from_pretty "$PART_PRETTY")"
+
+          FS_CHOSEN="${FS_OVR:-$DEF_FS}"
+          if [ -n "$PART_OVR" ]; then
+            PART_CHOSEN="$PART_OVR"
+          else
+            PART_CHOSEN="$DEF_PART"
+          fi
+
+          echo "fs=${FS_CHOSEN}"     >> $GITHUB_OUTPUT
+          echo "part=${PART_CHOSEN}" >> $GITHUB_OUTPUT
+
+          if [ -n "$PART_CHOSEN" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART_CHOSEN"
+            if [ -f "$SRC" ]; then
+              DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+              mkdir -p "$DEST"
+              cp "$SRC" "$DEST/$PART_CHOSEN"
+              echo "Installed custom partition CSV to $DEST/$PART_CHOSEN"
+            else
+              echo "Partition CSV '$PART_CHOSEN' not found in repo /partitions; relying on core's copy (if any)."
+            fi
+          fi
+
+      # 🔧 Patched: robust CSV token matching (no PCRE word-boundaries)
+      - name: Compose defines
+        id: defs
+        shell: bash
+        run: |
+          set -e
+          D=""
+          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
+          TFT_D="${{ steps.tft.outputs.tft_define }}"
+
+          has_flag () {
+            awk -v FS=',' -v want="$1" '
+              BEGIN{IGNORECASE=1}
+              { for(i=1;i<=NF;i++){ gsub(/^[[:space:]]+|[[:space:]]+$/, "", $i); if ($i==want) { print "YES"; exit } } }' <<<"$CSV_FLAGS"
+          }
+
+          add () { if [ "$(has_flag "$1")" = "YES" ]; then D="$D -D$2"; fi; }
+
+          add WIFI       ENABLE_WIFI
+          add BLE        ENABLE_BLE
+          add WEB        ENABLE_WEB
+          add SD         ENABLE_SD
+          add GPS        ENABLE_GPS
+          add TOUCH      ENABLE_TOUCH
+          add LVGL       ENABLE_LVGL
+          add NEOPIXEL   ENABLE_NEOPIXEL
+          add BUZZER     ENABLE_BUZZER
+          add BUTTONS    ENABLE_BUTTONS
+          add BATTERY    ENABLE_BATTERY
+          add NRF24      ENABLE_NRF24
+          add USB_MSC    ENABLE_USB_MSC
+          # New dual/two WiFi flags
+          add DUAL_WIFI  ENABLE_DUAL_WIFI
+          add 2WIFI      ENABLE_2WIFI
+
+          [ "$(has_flag TFT_ON)"  = "YES" ] && D="$D -DENABLE_TFT"
+          if [ "$(has_flag TFT_OFF)" = "YES" ]; then
+            D="$(echo "$D" | sed 's/ -DENABLE_TFT//g')"
+          fi
+          [ -n "$TFT_D" ] && D="$D $TFT_D"
+
+          EXTRA="${{ github.event.inputs.extra_defines }}"
+          if [ -n "$EXTRA" ]; then for t in $EXTRA; do D="$D -D$t"; done; fi
+
+          echo "defs=$D" >> $GITHUB_OUTPUT
+          echo "Defines => $D"
+
+      # ───────────────────────────────────────────────────────────────────────────
+      # COMPILE BLOCK (array-based args to preserve -D flags)
+      # ───────────────────────────────────────────────────────────────────────────
+      - name: Compile (Arduino CLI)
+        shell: bash
+        run: |
+          set -euo pipefail
+          FQBN="${{ steps.map.outputs.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          DEFS="${{ steps.defs.outputs.defs }}"
+          EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          FS="${{ steps.fs.outputs.fs }}"
+          PART="${{ steps.fs.outputs.part }}"
+
+          echo "FQBN: $FQBN"
+          echo "Filesystem: ${FS:-<default>}"
+          echo "Partition:  ${PART:-<default>}"
+          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
+          echo "DEFINES: $DEFS"
+
+          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
+          C_FLAGS="$EXTRA_INCLUDES $DEFS"
+
+          ARGS=()
+          ARGS+=(--fqbn "$FQBN")
+          ARGS+=(--warnings none)
+          ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
+          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
+
+          if [ -n "$FS" ] ; then
+            ARGS+=(--build-property "board_build.filesystem=$FS")
+          fi
+
+          if [ -n "$PART" ] ; then
+            mkdir -p "$SKETCH_DIR/partitions"
+            if [ -f "partitions/$PART" ]; then
+              cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
+            fi
+            NAME_ONLY="${PART%.csv}"
+            ARGS+=(--build-property "build.partitions=$NAME_ONLY")
+          fi
+
+          echo "arduino-cli compile args:"
+          printf '  %q\n' "${ARGS[@]}"
+
+          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw_${{ github.event.inputs.board_label }}_${{ github.sha }}
+          path: _build/esp32_marauder_rewired/build/*/*.bin
+          if-no-files-found: warn
+          retention-days: 14
