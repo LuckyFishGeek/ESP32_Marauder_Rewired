@@ -456,7 +456,7 @@ jobs:
           echo "Custom pin defines: $OUT"
 
       # Compose defines
-      - name: Compose defines
+- name: Compose defines
         id: defs
         shell: bash
         run: |
@@ -482,19 +482,19 @@ jobs:
           add DUAL_WIFI ENABLE_DUAL_WIFI
           add 2WIFI     ENABLE_2WIFI
 
-          # From pins CSV resolver (if you still use it)
+          # From pins CSV resolver (may be empty)
           PIN_DEFS="${{ steps.pins.outputs.pins_defs }}"
           [ -n "$PIN_DEFS" ] && D="$D $PIN_DEFS"
 
-          # ? From free-text custom_pins parser step
+          # From free-text custom_pins parser
           CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
           [ -n "$CUST" ] && D="$D $CUST"
 
-          # ? From display resolver
+          # From display resolver
           DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
           [ -n "$DISP_DEF" ] && D="$D -D$DISP_DEF"
 
-          # Extra manual -D defines
+          # Extra manual -D flags
           EXTRA="${{ github.event.inputs.extra_defines }}"
           if [ -n "$EXTRA" ]; then
             for t in $EXTRA; do D="$D -D$t"; done
