@@ -29,7 +29,6 @@ on:
           - M5StickC / M5StickC-Plus
           - M5Stamp S3
           - Other (enter FQBN)
-
       fqbn_override:
         description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
         required: false
