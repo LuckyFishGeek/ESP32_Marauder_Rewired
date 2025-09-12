@@ -1,4 +1,4 @@
-name: Build (Custom CSV Profiles — ESP32 Marauder Rewired)
+name: Build (Custom CSV Profiles  ESP32 Marauder Rewired)
 
 on:
   workflow_dispatch:
@@ -295,7 +295,7 @@ jobs:
             echo "tft_define=" >> $GITHUB_OUTPUT
           fi
 
-      # ✅ Auto/Named/Custom module resolver (reads manifest.json for Auto)
+      # ? Auto/Named/Custom module resolver (reads manifest.json for Auto)
       - name: Resolve modules (Auto/Named/Custom)
         id: mods
         shell: bash
@@ -372,7 +372,7 @@ jobs:
           echo "csv=$RESOLVED" >> $GITHUB_OUTPUT
           echo "chosen_profile=$PROFILE" >> $GITHUB_OUTPUT
 
-      # Filesystem/partition overrides (optional) — uses manifest defaults if inputs blank
+      # Filesystem/partition overrides (optional)  uses manifest defaults if inputs blank
       - name: Resolve FS/Partition and install CSV into core (if provided)
         id: fs
         shell: bash
@@ -419,7 +419,7 @@ jobs:
             fi
           fi
 
-      # 🔧 Patched: robust CSV token matching (no PCRE word-boundaries)
+      # ?? Patched: robust CSV token matching (no PCRE word-boundaries)
       - name: Compose defines
         id: defs
         shell: bash
@@ -466,9 +466,9 @@ jobs:
           echo "defs=$D" >> $GITHUB_OUTPUT
           echo "Defines => $D"
 
-      # ───────────────────────────────────────────────────────────────────────────
+      # ---------------------------------------------------------------------------
       # COMPILE BLOCK (array-based args to preserve -D flags)
-      # ───────────────────────────────────────────────────────────────────────────
+      # ---------------------------------------------------------------------------
       - name: Compile (Arduino CLI)
         shell: bash
         run: |
