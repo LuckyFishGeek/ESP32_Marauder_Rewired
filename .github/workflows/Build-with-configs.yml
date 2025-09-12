@@ -140,13 +140,13 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
 
-      - name: Extract pre-bundled libs (lib.tar)
+      - name: Extract pre-bundled libs (lib.zip)
         run: |
           mkdir -p $HOME/Arduino/libraries
-          if [ -f lib.tar ]; then
-            tar -xf lib.tar -C $HOME/Arduino/libraries
+          if [ -f lib.zip ]; then
+            zip -xf lib.zip -C $HOME/Arduino/libraries
           else
-            echo "lib.tar not found; continuing (build may fail without libs)."
+            echo "lib.zip not found; continuing (build may fail without libs)."
           fi
           ls -1 $HOME/Arduino/libraries || true
 
