@@ -44,17 +44,17 @@
   <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js"></script>
 </head>
 <body>
-  <h1> ESP32 Marauder Rewired v1.0.0</h1>
+  <h1>ESP32 Marauder Rewired v1.0.0</h1>
   <div class="card">
     <p>
       Flash the latest <strong>ESP32 Marauder Rewired</strong> firmware directly from your browser.<br>
       Works in <b>Chrome</b>, <b>Edge</b>, and other WebSerial-enabled browsers.
     </p>
     <esp-web-install-button manifest="firmware/manifest.json">
-      <button slot="unsupported">? Browser not supported (use Chrome/Edge)</button>
-      <button slot="not-allowed">? Connect a board via USB</button>
-      <button slot="installing">? Flashing?</button>
-      <button slot="done">? Done ? Restart your ESP32</button>
+      <button slot="unsupported">Browser not supported (use Chrome/Edge)</button>
+      <button slot="not-allowed">Connect a board via USB</button>
+      <button slot="installing">Flashing?</button>
+      <button slot="done">Done ? Restart your ESP32</button>
     </esp-web-install-button>
   </div>
 
