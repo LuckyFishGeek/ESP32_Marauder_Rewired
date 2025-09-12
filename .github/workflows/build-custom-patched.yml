@@ -1,4 +1,4 @@
-name: Build (Custom CSV Profiles  ESP32 Marauder Rewired)
+name: Test
 
 on:
   workflow_dispatch:
