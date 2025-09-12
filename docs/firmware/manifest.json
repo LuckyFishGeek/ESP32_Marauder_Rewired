@@ -1,0 +1,12 @@
+{
+  "name": "ESP32 Marauder Rewired",
+  "version": "1.0.0",
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        { "path": "fw_Generic_ESP32_Dev_Module_xxxxx.bin", "offset": 4096 }
+      ]
+    }
+  ]
+}
