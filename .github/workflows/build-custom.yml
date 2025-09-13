@@ -123,15 +123,15 @@ on:
         required: false
         default: '2.0.11'
 
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repo (with LFS)
         uses: actions/checkout@v4
         with:
-        lfs: true
+          lfs: true
 
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
