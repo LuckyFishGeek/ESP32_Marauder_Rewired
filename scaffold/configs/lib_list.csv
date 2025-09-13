@@ -1,6 +1,8 @@
 # zip_file,description
-lib-core.zip,Core Arduino/ESP32 support libs
-lib-display.zip,TFT_eSPI + display drivers
-lib-touch.zip,XPT2046 touch drivers
-lib-gps.zip,GPS drivers
-lib-net.zip,Networking extras
+lib-Gfxcore1.zip,split GFX
+lib-Gfxcore2.zip,split GFX
+lib-Gfxcore3.zip,split GFX
+lib-Gfxcore4.zip,split GFX
+lib-Adafruitcore.zip,Adafruit lib
+lib-espcore.zip,esp lib
+lib-etccore.zip,etc cores
