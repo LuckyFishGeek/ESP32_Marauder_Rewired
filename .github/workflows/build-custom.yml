@@ -228,21 +228,37 @@ jobs:
           rm -rf "$HOME/Arduino/libraries/XPT2046_Touchscreen" || true
           rm -rf "$HOME/Arduino/libraries/TFT_eSPI" || true
           echo "Removed conflicting TFT/Touch libraries"
-          
       
-      - name: Extract pre-bundled libs (lib.zip)
+      - name: Extract pre-bundled libs (CSV-driven from scaffold/lib)
+        shell: bash
         run: |
           set -euo pipefail
-          git lfs install
-          # sanity check: show size (should be big, not a tiny pointer)
-          ls -l lib.zip || true
-          mkdir -p "$HOME/Arduino/libraries"
-          if [ -f lib.zip ]; then
-            unzip -o lib.zip -d "$HOME/Arduino/libraries"
-          else
-            echo "lib.zip not found ? skipping"
+          CSV="scaffold/configs/lib_list.csv"
+          ZIPROOT="scaffold/lib"
+          LIBDIR="$HOME/Arduino/libraries"
+          mkdir -p "$LIBDIR"
+
+          if [ ! -f "$CSV" ]; then
+            echo "::error ::$CSV not found"; exit 1
           fi
-          ls -la "$HOME/Arduino/libraries" || true
+
+          while IFS=',' read -r ZIP DESC; do
+            [[ "$ZIP" =~ ^# ]] && continue
+            ZIP=$(echo "$ZIP" | xargs)   # trim
+            DESC=$(echo "$DESC" | xargs)
+            [ -z "$ZIP" ] && continue
+
+            FILE="$ZIPROOT/$ZIP"
+            if [ -f "$FILE" ]; then
+              echo "Unpacking $ZIP ($DESC)"
+              unzip -o "$FILE" -d "$LIBDIR" >/dev/null
+            else
+              echo "WARNING: $ZIP not found in $ZIPROOT, skipping ($DESC)"
+            fi
+          done < "$CSV"
+
+          echo "Installed libs in $LIBDIR:"
+          ls -lh "$LIBDIR"
       
       - name: Create ESP32MarauderRegistry local library
         run: |
