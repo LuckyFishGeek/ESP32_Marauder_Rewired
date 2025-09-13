@@ -222,6 +222,13 @@ jobs:
           arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
           arduino-cli core update-index
           arduino-cli core install "esp32:esp32@${CORE_VER}"
+          
+      - name: Clean conflicting libs
+        run: |
+          rm -rf "$HOME/Arduino/libraries/XPT2046_Touchscreen" || true
+          rm -rf "$HOME/Arduino/libraries/TFT_eSPI" || true
+          echo "Removed conflicting TFT/Touch libraries"
+          
       
       - name: Extract pre-bundled libs (lib.zip)
         run: |

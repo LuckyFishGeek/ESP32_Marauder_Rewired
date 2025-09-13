@@ -143,6 +143,12 @@ jobs:
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
       
+      - name: Clean conflicting libs
+        run: |
+          rm -rf "$HOME/Arduino/libraries/XPT2046_Touchscreen" || true
+          rm -rf "$HOME/Arduino/libraries/TFT_eSPI" || true
+          echo "Removed conflicting TFT/Touch libraries"
+      
       - name: Extract pre-bundled libs (lib.zip)
         run: |
           set -euo pipefail
