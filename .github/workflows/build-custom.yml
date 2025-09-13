@@ -126,10 +126,12 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (with LFS)
         uses: actions/checkout@v4
+        with:
+        lfs: true
 
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
@@ -223,12 +225,18 @@ jobs:
       
       - name: Extract pre-bundled libs (lib.zip)
         run: |
+          set -euo pipefail
+          git lfs install
+          # sanity check: show size (should be big, not a tiny pointer)
+          ls -l lib.zip || true
           mkdir -p "$HOME/Arduino/libraries"
           if [ -f lib.zip ]; then
             unzip -o lib.zip -d "$HOME/Arduino/libraries"
+          else
+            echo "lib.zip not found ? skipping"
           fi
-          ls -1 "$HOME/Arduino/libraries" || true
-
+          ls -la "$HOME/Arduino/libraries" || true
+      
       - name: Create ESP32MarauderRegistry local library
         run: |
           LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
