@@ -386,73 +386,41 @@ jobs:
           OUT=""
 
           trim() { awk '{$1=$1;print}' <<<"$1"; }
-
-          emit_kv() {
-            local key="$1"; local val="$2"
-            [ -n "$(trim "$val")" ] && OUT="$OUT -D${key}=$(trim "$val")"
-          }
+          emit_kv(){ local k="$1"; local v="$2"; [ -n "$(trim "$v")" ] && OUT="$OUT -D${k}=$(trim "$v")"; }
 
           IFS=' ' read -r -a TOKS <<<"$(echo "$RAW" | tr ';' ' ')"
-
           for tok in "${TOKS[@]}"; do
             [ -z "$tok" ] && continue
-            if [[ "$tok" != *"="* ]]; then
-              echo "Skipping token without '=': $tok"
-              continue
-            fi
+            [[ "$tok" != *"="* ]] && { echo "Skipping token without '=': $tok"; continue; }
             KEY="$(echo "${tok%%=*}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]\+//g')"
             VALS_RAW="${tok#*=}"
             IFS=',' read -r -a V <<<"$VALS_RAW"
 
             case "$KEY" in
               gps_pin)
-                emit_kv GPS_RX "${V[0]:-}"
-                emit_kv GPS_TX "${V[1]:-}"
-                emit_kv GPS_PPS "${V[2]:-}"
-                emit_kv GPS_EN  "${V[3]:-}"
-                ;;
+                emit_kv GPS_RX "${V[0]:-}"; emit_kv GPS_TX "${V[1]:-}"
+                emit_kv GPS_PPS "${V[2]:-}"; emit_kv GPS_EN "${V[3]:-}" ;;
               i2c_pin)
-                emit_kv I2C_SDA "${V[0]:-}"
-                emit_kv I2C_SCL "${V[1]:-}"
-                ;;
+                emit_kv I2C_SDA "${V[0]:-}"; emit_kv I2C_SCL "${V[1]:-}" ;;
               tft_pin)
-                # ORDER: MISO,MOSI,SCK,CS,DC,RST
-                emit_kv TFT_MISO "${V[0]:-}"
-                emit_kv TFT_MOSI "${V[1]:-}"
-                emit_kv TFT_SCK  "${V[2]:-}"
-                emit_kv TFT_CS   "${V[3]:-}"
-                emit_kv TFT_DC   "${V[4]:-}"
-                emit_kv TFT_RST  "${V[5]:-}"
-                ;;
+                # MISO,MOSI,SCK,CS,DC,RST
+                emit_kv TFT_MISO "${V[0]:-}"; emit_kv TFT_MOSI "${V[1]:-}"; emit_kv TFT_SCK "${V[2]:-}"
+                emit_kv TFT_CS "${V[3]:-}";  emit_kv TFT_DC "${V[4]:-}";  emit_kv TFT_RST "${V[5]:-}" ;;
               sd_pin)
-                # ORDER: MISO,MOSI,SCK,CS
-                emit_kv SD_MISO "${V[0]:-}"
-                emit_kv SD_MOSI "${V[1]:-}"
-                emit_kv SD_SCK  "${V[2]:-}"
-                emit_kv SD_CS   "${V[3]:-}"
-                ;;
-              neopixel_pin)
-                emit_kv NEOPIXEL "${V[0]:-}"
-                ;;
-              buzzer_pin)
-                emit_kv BUZZER "${V[0]:-}"
-                ;;
-              buttons_pin)
-                emit_kv BTN1 "${V[0]:-}"
-                emit_kv BTN2 "${V[1]:-}"
-                emit_kv BTN3 "${V[2]:-}"
-                ;;
+                # MISO,MOSI,SCK,CS
+                emit_kv SD_MISO "${V[0]:-}"; emit_kv SD_MOSI "${V[1]:-}"; emit_kv SD_SCK "${V[2]:-}"; emit_kv SD_CS "${V[3]:-}" ;;
+              neopixel_pin) emit_kv NEOPIXEL "${V[0]:-}" ;;
+              buzzer_pin)   emit_kv BUZZER   "${V[0]:-}" ;;
+              buttons_pin)  emit_kv BTN1 "${V[0]:-}"; emit_kv BTN2 "${V[1]:-}"; emit_kv BTN3 "${V[2]:-}" ;;
               wifi_pin)
-                # ORDER (assumed SPI): MISO,MOSI,SCK,CS
-                emit_kv WIFI_MISO "${V[0]:-}"
-                emit_kv WIFI_MOSI "${V[1]:-}"
-                emit_kv WIFI_SCK  "${V[2]:-}"
-                emit_kv WIFI_CS   "${V[3]:-}"
-                ;;
+                # MISO,MOSI,SCK,CS
+                emit_kv WIFI_MISO "${V[0]:-}"; emit_kv WIFI_MOSI "${V[1]:-}"; emit_kv WIFI_SCK "${V[2]:-}"; emit_kv WIFI_CS "${V[3]:-}" ;;
+              wifi2_pin)
+                # MISO,MOSI,SCK,CS  (second Wi-Fi module)
+                emit_kv WIFI2_MISO "${V[0]:-}"; emit_kv WIFI2_MOSI "${V[1]:-}"; emit_kv WIFI2_SCK "${V[2]:-}"; emit_kv WIFI2_CS "${V[3]:-}" ;;
               *)
                 UKEY="$(echo "$KEY" | tr '[:lower:]' '[:upper:]')"
-                emit_kv "$UKEY" "$VALS_RAW"
-                ;;
+                emit_kv "$UKEY" "$VALS_RAW" ;;
             esac
           done
 
