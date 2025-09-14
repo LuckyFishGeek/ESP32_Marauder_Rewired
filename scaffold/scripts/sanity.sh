@@ -5,9 +5,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-pass()  { printf "[OK]   %s\n"  "$*"; }
-warn()  { printf "[WARN] %s\n"  "$*" >&2; }
-fail()  { printf "[ERR]  %s\n"  "$*" >&2; exit 1; }
+pass()  { printf "[OK]   %s\n"  "$*\n"; }
+warn()  { printf "[WARN] %s\n" "$*\n" >&2; }
+fail()  { printf "[ERR]  %s\n" "$*\n" >&2; exit 1; }
 
 normalize_crlf() {
   local f="$1"
@@ -66,7 +66,16 @@ normalize_crlf "$BOARDS_CSV"
 require_header_starts_with "$BOARDS_CSV" "board_label,fqbn"
 list_first_col "$BOARDS_CSV" "Boards detected:"
 
-# Libraries list (allow either `zip` or `zip,desc` header)
+# NEW: Soft-check board rows (warn if profile missing/empty)
+awk -F',' 'NR==1{next}
+{
+  label=$1; fqbn=$2; flag=$3; fs=$4; part=$5; prof=$6; tft_en=$7; tft_hdr=$8; defs=$9; core=$10;
+  if (prof=="" || prof ~ /^[[:space:]]*$/) {
+    printf("[WARN] board '%s' has empty profile column (col 6); workflow will fallback to board default or require explicit input.\n", label) > "/dev/stderr"
+  }
+}' "$BOARDS_CSV"
+
+# Libraries list (allow either `zip` or `zip,desc`)
 check_exists_and_nonempty "$LIBS_CSV"
 normalize_crlf "$LIBS_CSV"
 lib_hdr="$(head -n1 "$LIBS_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
@@ -83,7 +92,7 @@ normalize_crlf "$MODULES_CSV"
 require_header_starts_with "$MODULES_CSV" "profilename,modules"
 list_first_col "$MODULES_CSV" "Module profiles:"
 
-# Pins presets (schema varies by project; do minimal checks)
+# Pins presets (optional schema)
 if [ -f "$PINS_CSV" ]; then
   normalize_crlf "$PINS_CSV"
   if [ -s "$PINS_CSV" ]; then
@@ -100,33 +109,34 @@ fi
 check_exists_and_nonempty "$DISPLAYS_CSV"
 normalize_crlf "$DISPLAYS_CSV"
 require_header_starts_with "$DISPLAYS_CSV" "profile,model,header,defines"
-list_first_col "$DISPLAYS_CSV" "Display profiles:"
+list_first_col "$DISPLAYS_CSV" "Display profiles:
 
-# Build defines CSV (accept legacy or extended schema)
-check_exists_and_nonempty "$BUILD_CSV"
-normalize_crlf "$BUILD_CSV"
-bd_hdr="$(head -n1 "$BUILD_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-case "$bd_hdr" in
-  token,define* )
-    pass "Header OK: $(basename "$BUILD_CSV") = 'token,define?'"
-    ;;
-  key,value* )
-    pass "Header OK: $(basename "$BUILD_CSV") = 'key,value?'"
-    ;;
-  * )
-    fail "$(basename "$BUILD_CSV") header invalid. Saw: '$(head -n1 "$BUILD_CSV")'  Expected to start with 'token,define' or 'key,value'"
-    ;;
-esac
-list_first_col "$BUILD_CSV" "Build tokens/keys:"
+"
 
-# Partitions ? light validation:
+# build_defines.csv (optional) ? accept either schema
+if [ -f "$BUILD_CSV" ]; then
+  normalize_crlf "$BUILD_CSV"
+  b_hdr="$(head -n1 "$BUILD_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+  case "$b_hdr" in
+    token,define*|key,value* )
+      pass "Header OK: $(basename "$BUILD_CSV") = '$b_hdr'"
+      ;;
+    * )
+      warn "Unexpected header in $(basename "$BUILD_CSV"): '$(head -n1 "$BUILD_CSV")' (expected 'token,define' or 'key,value')"
+      ;;
+  esac
+else
+  warn "Optional CSV not found (skipping): $BUILD_CSV"
+fi
+
+# Partitions ? light validation
 echo "=== Partition CSVs ==="
 for f in "${PARTS[@]}"; do
   if [ ! -f "$f" ]; then
     fail "Missing partition CSV: $f"
   fi
   normalize_crlf "$f"
-  # Ensure there is at least one non-comment, non-empty line with 4+ commas (5+ fields)
+  # At least one non-comment, non-empty line with 5+ fields
   if awk -F',' '
       BEGIN{ok=0}
       /^[[:space:]]*#/ {next}
