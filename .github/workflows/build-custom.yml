@@ -729,16 +729,25 @@ jobs:
       - name: Build Marauder firmware
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
+          # Point to the prepared sketch in _build/
           sketch-names-find-start: _build/esp32_marauder_rewired
           sketch-names: esp32_marauder_rewired.ino
+      
+          # Toolchain
           arduino-board-fqbn: ${{ steps.flags.outputs.fqbn }}
           arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
+      
+          # Let the action pass properties safely (no leaking -D to top level)
+          build-properties: |
+            compiler.cpp.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}
+            compiler.c.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}${{ '' }}
+            board_build.filesystem=${{ steps.fs.outputs.fs }}
+            build.partitions=${{ steps.fs.outputs.partition_base }}
+
+          # Keep this minimal; no -D here!
           extra-arduino-cli-args: >
             --verbose
             --warnings all
-            --build-property "compiler.cpp.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}"
-            --build-property "compiler.c.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}"
-            ${{ steps.flags.outputs.extra_cli }}
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
