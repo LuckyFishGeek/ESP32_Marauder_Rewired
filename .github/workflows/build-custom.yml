@@ -312,6 +312,10 @@ jobs:
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
+      - name: Sanity check boards CSV
+        shell: bash
+        run: scaffold/scripts/sanity.sh
+
       - name: Resolve modules
         id: mods
         shell: bash
@@ -634,14 +638,73 @@ jobs:
           echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
 
-      - name: Compile (Arduino CLI)
+      - name: Generate configs.h from CSV
+        shell: bash
+        run: |
+          set -euo pipefail
+      
+          CSV_BOARDS="scaffold/configs/boards_manifest.csv"
+          CSV_MODS="scaffold/configs/modules_presets.csv"
+          CSV_PINS="scaffold/configs/pins/pins_presets.csv"
+          CSV_DISP="scaffold/configs/displays/display_presets.csv"
+          SCRIPT="scaffold/scripts/gen_configs_h.sh"
+          SKETCH_DIR="_build/esp32_marauder_rewired"
+      
+          # Ensure generator exists
+          [[ -f "$SCRIPT" ]] || { echo "::error ::Generator script missing: $SCRIPT"; exit 1; }
+          chmod +x "$SCRIPT"
+      
+          # Ensure CSVs exist
+          for f in "$CSV_BOARDS" "$CSV_MODS" "$CSV_PINS" "$CSV_DISP"; do
+            [[ -f "$f" ]] || { echo "::error ::Missing CSV: $f"; exit 1; }
+            sed -i 's/\r$//' "$f" || true
+          done
+      
+          BOARD="${{ github.event.inputs.board_label }}"
+          PROFILE="${{ github.event.inputs.profile_name }}"
+          MODULES_INPUT="${{ github.event.inputs.modules_csv || '' }}"
+      
+          [[ -n "${BOARD// /}" ]]   || { echo "::error ::board_label is empty"; exit 1; }
+          [[ -n "${PROFILE// /}" ]] || { echo "::error ::profile_name is empty"; exit 1; }
+      
+          # If Custom, require modules (fail fast)
+          if [[ "${PROFILE,,}" == "custom" && -z "${MODULES_INPUT// /}" ]]; then
+            echo "::error ::profile=Custom requires 'modules_csv' (e.g., WIFI,BLE,SD,TFT_ON)"
+            exit 1
+          fi
+      
+          mkdir -p "$SKETCH_DIR"
+      
+          # Build command; pass --modules only when provided
+          CMD=( "$SCRIPT"
+                --board "$BOARD"
+                --profile "$PROFILE"
+                --boards "$CSV_BOARDS"
+                --mods "$CSV_MODS"
+                --pins "$CSV_PINS"
+                --disp "$CSV_DISP"
+                --out "$SKETCH_DIR/configs.h" )
+      
+          if [[ -n "${MODULES_INPUT// /}" ]]; then
+            CMD+=( --modules "$MODULES_INPUT" )
+          fi
+      
+          echo "Generating configs.h for board: $BOARD (profile: $PROFILE)"
+          echo "Running: ${CMD[*]}"
+          "${CMD[@]}"
+      
+          echo "Generated configs.h (head):"
+          sed -n '1,40p' "$SKETCH_DIR/configs.h" || true
+
+# 1) Assemble flags (keeps all your old logic)
+      - name: Assemble compile flags
+        id: flags
         shell: bash
         run: |
           set -euo pipefail
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
           RAW_DEFS="${{ steps.map.outputs.defines }}"
-          EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
       
@@ -654,34 +717,41 @@ jobs:
           done
           DEFS="$(echo "$DEFS" | xargs || true)"
       
-          echo "FQBN: $FQBN"
-          echo "Filesystem: ${FS:-<default>}"
-          echo "Partition:  ${PART:-<default>}"
-          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
-          echo "DEFINES: ${DEFS:-<none>}"
+          INC="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          echo "cpp_c_flags=$INC $DEFS" >> $GITHUB_OUTPUT
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          echo "fqbn=$FQBN" >> $GITHUB_OUTPUT
       
-          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
-          C_FLAGS="$EXTRA_INCLUDES $DEFS"
-      
-          ARGS=()
-          ARGS+=(--fqbn "$FQBN")
-          ARGS+=(--warnings none)
-          ARGS+=(--export-binaries)
-          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
-          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
-      
-          [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
-      
+          EXTRA=""
+          [ -n "$FS" ] && EXTRA="$EXTRA --build-property board_build.filesystem=$FS"
           if [ -n "$PART" ]; then
+            NAME="${PART%.csv}"
+            # (Optional) stage partition CSV into sketch folder (kept from your old logic)
             mkdir -p "$SKETCH_DIR/partitions"
-            # copy from repo if present (optional convenience for debugging)
             [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
-            # CLI wants the *name without .csv*
-            ARGS+=(--build-property "build.partitions=${PART%.csv}")
+            EXTRA="$EXTRA --build-property build.partitions=$NAME"
           fi
+          echo "extra_cli=$EXTRA" >> $GITHUB_OUTPUT
       
-          printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
-          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
+          echo "---- FLAGS ----"
+          echo "FQBN:        $FQBN"
+          echo "Sketch dir:  $SKETCH_DIR"
+          echo "CPP/C flags: $INC $DEFS"
+          echo "Extra CLI:   $EXTRA"
+          echo "--------------"
+      
+      # 2) Compile using the action (more robust than raw CLI)
+      - name: Build Marauder firmware
+        uses: ArminJo/arduino-test-compile@v3.3.0
+        with:
+          sketch-names: ${{ steps.flags.outputs.sketch_dir }}/esp32_marauder_rewired.ino
+          arduino-board-fqbn: ${{ steps.flags.outputs.fqbn }}
+          arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
+          extra-arduino-cli-args: >
+            --warnings none
+            --build-property compiler.cpp.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
+            --build-property compiler.c.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
+            ${{ steps.flags.outputs.extra_cli }}
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
