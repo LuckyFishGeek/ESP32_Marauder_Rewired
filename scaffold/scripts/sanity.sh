@@ -5,9 +5,9 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-pass()  { printf "[OK]   %s\n"  "$*\n"; }
-warn()  { printf "[WARN] %s\n" "$*\n" >&2; }
-fail()  { printf "[ERR]  %s\n" "$*\n" >&2; exit 1; }
+pass()  { printf "[OK]   %s\n"  "$*"; }
+warn()  { printf "[WARN] %s\n" "$*" >&2; }
+fail()  { printf "[ERR]  %s\n" "$*" >&2; exit 1; }
 
 normalize_crlf() {
   local f="$1"
@@ -56,6 +56,10 @@ PARTS=(
   "$PART_DIR/min_littlefs_ota.csv"
   "$PART_DIR/min_spiffs_ota.csv"
   "$PART_DIR/ota_1m_fs.csv"
+  # --- new additions ---
+  "$PART_DIR/app_2m_fs_2m.csv"
+  "$PART_DIR/ota_dual_1m_1m.csv"
+  "$PART_DIR/wifi_capture_bigfs.csv"
 )
 
 echo "=== CSV Sanity ==="
@@ -66,12 +70,12 @@ normalize_crlf "$BOARDS_CSV"
 require_header_starts_with "$BOARDS_CSV" "board_label,fqbn"
 list_first_col "$BOARDS_CSV" "Boards detected:"
 
-# NEW: Soft-check board rows (warn if profile missing/empty)
+# Soft-check board rows (warn if profile missing/empty)
 awk -F',' 'NR==1{next}
 {
-  label=$1; fqbn=$2; flag=$3; fs=$4; part=$5; prof=$6; tft_en=$7; tft_hdr=$8; defs=$9; core=$10;
+  label=$1; prof=$6;
   if (prof=="" || prof ~ /^[[:space:]]*$/) {
-    printf("[WARN] board '%s' has empty profile column (col 6); workflow will fallback to board default or require explicit input.\n", label) > "/dev/stderr"
+    printf("[WARN] board \"%s\" has empty profile column (col 6); workflow may fallback.\n", label) > "/dev/stderr"
   }
 }' "$BOARDS_CSV"
 
@@ -92,7 +96,7 @@ normalize_crlf "$MODULES_CSV"
 require_header_starts_with "$MODULES_CSV" "profilename,modules"
 list_first_col "$MODULES_CSV" "Module profiles:"
 
-# Pins presets (optional schema)
+# Pins presets (optional)
 if [ -f "$PINS_CSV" ]; then
   normalize_crlf "$PINS_CSV"
   if [ -s "$PINS_CSV" ]; then
@@ -109,9 +113,7 @@ fi
 check_exists_and_nonempty "$DISPLAYS_CSV"
 normalize_crlf "$DISPLAYS_CSV"
 require_header_starts_with "$DISPLAYS_CSV" "profile,model,header,defines"
-list_first_col "$DISPLAYS_CSV" "Display profiles:
-
-"
+list_first_col "$DISPLAYS_CSV" "Display profiles:"
 
 # build_defines.csv (optional) ? accept either schema
 if [ -f "$BUILD_CSV" ]; then
@@ -129,14 +131,14 @@ else
   warn "Optional CSV not found (skipping): $BUILD_CSV"
 fi
 
-# Partitions ? light validation
+# Partition CSVs ? light validation
 echo "=== Partition CSVs ==="
 for f in "${PARTS[@]}"; do
   if [ ! -f "$f" ]; then
     fail "Missing partition CSV: $f"
   fi
   normalize_crlf "$f"
-  # At least one non-comment, non-empty line with 5+ fields
+  # Require at least one non-comment, non-empty line with 5+ fields
   if awk -F',' '
       BEGIN{ok=0}
       /^[[:space:]]*#/ {next}
