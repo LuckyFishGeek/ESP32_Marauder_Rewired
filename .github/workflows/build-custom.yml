@@ -141,13 +141,13 @@ jobs:
         run: |
           set -euo pipefail
           MAN=./scaffold/configs/boards_manifest.csv
-      
+
           test -f "$MAN" || { echo "::error ::boards_manifest.csv not found at $MAN"; exit 1; }
-      
+
           # Normalize CRLF -> LF
           sed -i 's/\r$//' "$MAN"
-      
-          # Header must start with board_label,fqbn
+
+          # Validate header
           HDR="$(head -n1 "$MAN" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
           case "$HDR" in
             board_label,fqbn* ) ;;
@@ -157,67 +157,45 @@ jobs:
               exit 1
               ;;
           esac
-      
+
           echo "Found CSV manifest: $MAN"
           echo "Detected boards:"
           tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba | sed -e 's/^/  /'
-      
+
           echo "man_path=$MAN" >> $GITHUB_OUTPUT
           echo "man_type=csv"  >> $GITHUB_OUTPUT
-      
-            - name: Resolve FQBN
-              id: map
-              shell: bash
-              run: |
-                set -e
-                LABEL="${{ github.event.inputs.board_label }}"
-                OVR="${{ github.event.inputs.fqbn_override }}"
-                MAN="scaffold/configs/manifest.json"
-                set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
-      
-                if [ "$LABEL" = "Other (enter FQBN)" ]; then
-                  if [ -z "$OVR" ]; then
-                    echo "::error ::You chose 'Other' but did not provide fqbn_override"; exit 1
-                  fi
-                  set_out fqbn "$OVR"
-                  exit 0
-                fi
-      
-                FOUND=""
-                if [ -f "$MAN" ]; then
-                  FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
-                  if [ -n "$FQBN" ]; then
-                    FOUND="yes"; set_out fqbn "$FQBN"; echo "Resolved (manifest): $LABEL -> $FQBN"
-                  fi
-                fi
 
-          if [ -z "$FOUND" ]; then
-            case "$LABEL" in
-              "Generic ESP32 Dev Module") FQBN="esp32:esp32:esp32" ;;
-              "DOIT ESP32 DEVKIT V1")     FQBN="esp32:esp32:esp32doit-devkit-v1" ;;
-              "NodeMCU-32S")              FQBN="esp32:esp32:nodemcu-32s" ;;
-              "ESP32 DevKitC V4")         FQBN="esp32:esp32:esp32" ;;
-              "ESP32 WROOM-DA Module")    FQBN="esp32:esp32:esp32da" ;;
-              "ESP32 WROVER Module")      FQBN="esp32:esp32:esp32wrover" ;;
-              "ESP32 WROVER Kit (all versions)") FQBN="esp32:esp32:esp32wroverkit" ;;
-              "ESP32 PICO-D4")            FQBN="esp32:esp32:pico32" ;;
-              "AI Thinker ESP32-CAM")     FQBN="esp32:esp32:esp32cam" ;;
-              "Lolin D32")                FQBN="esp32:esp32:lolin_d32" ;;
-              "Lolin D32 Pro")            FQBN="esp32:esp32:lolin_d32_pro" ;;
-              "FireBeetle2 ESP32-E")      FQBN="esp32:esp32:dfrobot_firebeetle2_esp32e" ;;
-              "Heltec WiFi Kit 32 (V3)")  FQBN="esp32:esp32:heltec_wifi_kit_32_V3" ;;
-              "ESP32-S2 Dev Module")      FQBN="esp32:esp32:esp32s2" ;;
-              "ESP32-S2 Saola-1")         FQBN="esp32:esp32:esp32s2-saola-1" ;;
-              "Adafruit Feather ESP32-S2") FQBN="esp32:esp32:adafruit_feather_esp32s2" ;;
-              "ESP32-S3 Dev Module")      FQBN="esp32:esp32:esp32s3" ;;
-              "Adafruit Feather ESP32-S3 (2MB PSRAM)") FQBN="esp32:esp32:adafruit_feather_esp32s3" ;;
-              "M5StickC / M5StickC-Plus") FQBN="esp32:esp32:m5stick-c" ;;
-              "M5Stamp S3")               FQBN="esp32:esp32:m5stack_stampS3" ;;
-              *) echo "::error ::Unknown board label: $LABEL"; exit 1 ;;
-            esac
-            set_out fqbn "$FQBN"
-            echo "Resolved (fallback map): $LABEL -> $FQBN"
+      - name: Resolve board from manifest (CSV only)
+        id: map
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAN="${{ steps.manifest.outputs.man_path }}"
+          WANT="${{ github.event.inputs.board_label }}"
+
+          # Find row matching board_label
+          LINE=$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")
+
+          if [ -z "$LINE" ]; then
+            echo "::error ::Board label not found in manifest: $WANT"
+            echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
+            exit 1
           fi
+
+          # Extract fields (CSV: board_label,fqbn,flag,def_fs,def_part,profile,tft_enabled,tft_header,core_ver,defines)
+          IFS=',' read -r LABEL FQBN FLAG DEF_FS DEF_PART PROFILE TFT_ENABLED TFT_HEADER CORE_VER DEFINES <<<"$LINE"
+
+          # Sanitize defines
+          DEFINES="$(printf '%s' "$DEFINES" | tr -d '\r' | sed 's/["\x27]//g' | xargs || true)"
+          [ -n "$FLAG" ] && DEFINES="$DEFINES -D$FLAG"
+
+          echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
+          echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
+          echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
+          echo "def_fs=$DEF_FS"           >> $GITHUB_OUTPUT
+          echo "def_part=$DEF_PART"       >> $GITHUB_OUTPUT
+          echo "core_ver=$CORE_VER"       >> $GITHUB_OUTPUT
+          echo "defines=$DEFINES"         >> $GITHUB_OUTPUT
 
       - name: Install Arduino CLI
         run: |
@@ -229,11 +207,12 @@ jobs:
       - name: Configure & Install ESP32 Core
         id: core
         run: |
-          CORE_VER="${{ github.event.inputs.core_version }}"
+          CORE_VER="${{ steps.map.outputs.core_ver }}"
           echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
           arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
           arduino-cli core update-index
           arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core list
           
       - name: Clean conflicting libs
         run: |
