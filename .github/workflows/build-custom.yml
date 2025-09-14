@@ -322,7 +322,7 @@ jobs:
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"
           mkdir -p "$SKETCH_DIR"
-
+      
           if [ -f scaffold/esp32_marauder_rewired.ino ]; then
             SRC_INO="scaffold/esp32_marauder_rewired.ino"
           else
@@ -331,16 +331,19 @@ jobs:
           fi
           echo "Using INO: $SRC_INO"
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
-
+      
           pushd scaffold >/dev/null
           find . -type f ! -name '*.ino' -print0 \
             | xargs -0 -I {} bash -c 'mkdir -p "'"$SKETCH_DIR"'"/$(dirname "{}"); cp "{}" "'"$SKETCH_DIR"'"/"{}"'
           popd >/dev/null
-
+      
           [ -f "configs.h" ] && cp "configs.h" "$SKETCH_DIR/configs.h"
-
+      
+          # debug: prove the sketch exists
+          ls -l "_build/esp32_marauder_rewired/esp32_marauder_rewired.ino"
+      
+          # output absolute dir if you still need it elsewhere
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
       - name: Make sanity.sh executable
         shell: bash
@@ -728,7 +731,9 @@ jobs:
       - name: Build Marauder firmware
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
-          sketch-names: ${{ steps.flags.outputs.sketch_dir }}/esp32_marauder_rewired.ino
+          # Use a RELATIVE path from repo root, not absolute
+          sketch-names: _build/esp32_marauder_rewired/esp32_marauder_rewired.ino
+      
           arduino-board-fqbn: ${{ steps.flags.outputs.fqbn }}
           arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
           extra-arduino-cli-args: >
