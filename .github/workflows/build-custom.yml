@@ -569,78 +569,58 @@ jobs:
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
-      - name: Compose defines (safe)
+      - name: Compose defines (final, safe)
         id: defs
         shell: bash
         run: |
           set -euo pipefail
+          set -f  # no globbing
       
-          # Raw CSV from modules step (e.g., "WIFI,BLE SD;USB_MSC")
-          CSV_FLAGS_RAW="${{ steps.mods.outputs.csv }}"
-          echo "CSV_FLAGS_RAW='${CSV_FLAGS_RAW}'"
-      
-          # Normalize: uppercase, treat comma/semicolon/space as separators
-          TOKENS=()
-          while IFS= read -r tok; do
-            [ -z "$tok" ] && continue
-            TOKENS+=("$tok")
-          done < <(echo "$CSV_FLAGS_RAW" | tr 'a-z' 'A-Z' | tr ',;' '  ')
-      
-          have() { 
-            local seek="$1"
-            for t in "${TOKENS[@]}"; do
-              [[ "$t" == "$seek" ]] && return 0
-            done
-            return 1
-          }
-      
-          add() {
-            local key="$1" def="$2"
-            if have "$key"; then
-              D="${D:-} -D${def}"
-            fi
-          }
-      
+          # Normalize modules list (from previous step) to space-separated tokens
+          TOKENS="$(echo "${{ steps.mods.outputs.csv || '' }}" | tr ',;' '  ' | xargs)"
           D=""
       
-          # Module ? define map
-          add WIFI        ENABLE_WIFI
-          add BLE         ENABLE_BLE
-          add WEB         ENABLE_WEB
-          add SD          ENABLE_SD
-          add GPS         ENABLE_GPS
-          add TOUCH       ENABLE_TOUCH
-          add LVGL        ENABLE_LVGL
-          add NEOPIXEL    ENABLE_NEOPIXEL
-          add BUZZER      ENABLE_BUZZER
-          add BUTTONS     ENABLE_BUTTONS
-          add BATTERY     ENABLE_BATTERY
-          add NRF24       ENABLE_NRF24
-          add USB_MSC     ENABLE_USB_MSC
-          add DUAL_WIFI   ENABLE_DUAL_WIFI
-          add 2WIFI       ENABLE_2WIFI
+          for tok in $TOKENS; do
+            case "$tok" in
+              WIFI)      D+=" -DENABLE_WIFI" ;;
+              BLE)       D+=" -DENABLE_BLE" ;;
+              WEB)       D+=" -DENABLE_WEB" ;;
+              SD)        D+=" -DENABLE_SD" ;;
+              GPS)       D+=" -DENABLE_GPS" ;;
+              TOUCH)     D+=" -DENABLE_TOUCH" ;;
+              LVGL)      D+=" -DENABLE_LVGL" ;;
+              NEOPIXEL)  D+=" -DENABLE_NEOPIXEL" ;;
+              BUZZER)    D+=" -DENABLE_BUZZER" ;;
+              BUTTONS)   D+=" -DENABLE_BUTTONS" ;;
+              BATTERY)   D+=" -DENABLE_BATTERY" ;;
+              NRF24)     D+=" -DENABLE_NRF24" ;;
+              USB_MSC)   D+=" -DENABLE_USB_MSC" ;;
+              DUAL_WIFI) D+=" -DENABLE_DUAL_WIFI" ;;
+              2WIFI)     D+=" -DENABLE_2WIFI" ;;
+              TFT_ON)    D+=" -DTFT_ON" ;;
+              TFT_OFF)   D+=" -DTFT_OFF" ;;
+              DEBUG)     D+=" -DENABLE_DEBUG" ;;
+              *) echo "Ignoring unknown flag: $tok" ;;
+            esac
+          done
       
-          # Board pin presets
-          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
-          [ -n "${PRESET_PINS// /}" ] && D="$D $PRESET_PINS"
+          # Merge in pin presets, custom pins, display define, and extra -D from inputs
+          PIN_PRESET="${{ steps.pinpreset.outputs.pins_defs || '' }}"
+          [ -n "$PIN_PRESET" ] && D+=" $PIN_PRESET"
       
-          # Custom free-form pins
-          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
-          [ -n "${CUST// /}" ] && D="$D $CUST"
+          CUSTOM_PINS="${{ steps.custompins.outputs.custom_pin_defs || '' }}"
+          [ -n "$CUSTOM_PINS" ] && D+=" $CUSTOM_PINS"
       
-          # Display resolver define (e.g., TFT_ILI9341)
-          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
-          [ -n "${DISP_DEF// /}" ] && D="$D -D$DISP_DEF"
+          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define || '' }}"
+          [ -n "$DISP_DEF" ] && D+=" -D$DISP_DEF"
       
-          # Extra manual -D flags from input
-          EXTRA="${{ github.event.inputs.extra_defines }}"
-          if [ -n "${EXTRA// /}" ]; then
-            for t in $EXTRA; do D="$D -D$t"; done
+          EXTRA="${{ github.event.inputs.extra_defines || '' }}"
+          if [ -n "$EXTRA" ]; then
+            for t in $EXTRA; do D+=" -D$t"; done
           fi
       
-          D="$(echo "$D" | xargs || true)"
           echo "Defines => $D"
-          echo "defs=$D" >> "$GITHUB_OUTPUT"
+          echo "defs=$D" >> $GITHUB_OUTPUT
 
       - name: Generate configs.h from CSV
         shell: bash
