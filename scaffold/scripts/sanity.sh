@@ -1,21 +1,17 @@
 #!/usr/bin/env bash
 # Sanity checks for CSV configs and partitions
 # Usage: ./scaffold/scripts/sanity.sh
-set -Eeuo pipefail
-
-# Nice errors with line numbers
-trap 'ec=$?; echo "[ERR]  Failed at line $LINENO (exit $ec)"; exit $ec' ERR
+set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
-pass()  { printf "[OK]   %s\n"  "$*"; }
-warn()  { printf "[WARN] %s\n" "$*" >&2; }
-fail()  { printf "[ERR]  %s\n" "$*" >&2; exit 1; }
+pass()  { printf "[OK]   %s\n"  "$*\n"; }
+warn()  { printf "[WARN] %s\n" "$*\n" >&2; }
+fail()  { printf "[ERR]  %s\n" "$*\n" >&2; exit 1; }
 
 normalize_crlf() {
   local f="$1"
   [ -f "$f" ] || fail "Missing file: $f"
-  # Normalize CRLF -> LF
   sed -i 's/\r$//' "$f" || true
 }
 
@@ -23,10 +19,10 @@ require_header_starts_with() {
   local f="$1" expect="$2"
   local hdr
   hdr="$(head -n1 "$f" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-  if [[ "$hdr" == "${expect}"* ]]; then
-    pass "Header OK: $(basename "$f") starts with '${expect}'"
+  if [[ "$hdr" == $expect* ]]; then
+    pass "Header OK: $(basename "$f") starts with '$expect'"
   else
-    fail "$(basename "$f") header invalid. Saw: '$(head -n1 "$f")' | Expected to start with: '${expect}'"
+    fail "$(basename "$f") header invalid. Saw: '$(head -n1 "$f")'  Expected to start with: '$expect'"
   fi
 }
 
@@ -60,14 +56,12 @@ PARTS=(
   "$PART_DIR/min_littlefs_ota.csv"
   "$PART_DIR/min_spiffs_ota.csv"
   "$PART_DIR/ota_1m_fs.csv"
-  # --- new additions ---
   "$PART_DIR/app_2m_fs_2m.csv"
   "$PART_DIR/ota_dual_1m_1m.csv"
   "$PART_DIR/wifi_capture_bigfs.csv"
 )
 
 echo "=== CSV Sanity ==="
-echo "ROOT: $ROOT"
 
 # Boards manifest
 check_exists_and_nonempty "$BOARDS_CSV"
@@ -84,7 +78,27 @@ awk -F',' 'NR==1{next}
   }
 }' "$BOARDS_CSV"
 
-# Libraries list (allow either `zip` or `zip,desc`)
+# ? Assert the new ESP32-3248S035 LCD board row exists and has a tft_header
+awk -F',' '
+  BEGIN{found=0}
+  NR==1{next}
+  $1=="ESP32-3248S035 LCD" {
+    found=1;
+    if ($8=="" || $8 ~ /^[[:space:]]*$/) {
+      printf("[ERR]  boards_manifest.csv: board \"%s\" has empty tft_header (col 8)\n",$1) > "/dev/stderr";
+      exit 2
+    }
+  }
+  END{
+    if (!found) {
+      printf("[ERR]  boards_manifest.csv: missing board label \"ESP32-3248S035 LCD\"\n") > "/dev/stderr";
+      exit 2
+    }
+  }
+' "$BOARDS_CSV" || exit 1
+pass "ESP32-3248S035 LCD present with non-empty tft_header"
+
+# Libraries list
 check_exists_and_nonempty "$LIBS_CSV"
 normalize_crlf "$LIBS_CSV"
 lib_hdr="$(head -n1 "$LIBS_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
@@ -120,6 +134,27 @@ normalize_crlf "$DISPLAYS_CSV"
 require_header_starts_with "$DISPLAYS_CSV" "profile,model,header,defines"
 list_first_col "$DISPLAYS_CSV" "Display profiles:"
 
+# ? Assert Profile 30 exists and uses TFT_ILI9488 in defines
+awk -F',' '
+  BEGIN{found=0}
+  NR==1{next}
+  $1=="Profile 30" {
+    found=1;
+    defs=tolower($4);
+    if (defs !~ /tft_ili9488/) {
+      printf("[ERR]  display_presets.csv: \"Profile 30\" does not define TFT_ILI9488 in column 4\n") > "/dev/stderr";
+      exit 2
+    }
+  }
+  END{
+    if (!found) {
+      printf("[ERR]  display_presets.csv: missing row with profile \"Profile 30\"\n") > "/dev/stderr";
+      exit 2
+    }
+  }
+' "$DISPLAYS_CSV" || exit 1
+pass "Display preset \"Profile 30\" present with TFT_ILI9488"
+
 # build_defines.csv (optional) ? accept either schema
 if [ -f "$BUILD_CSV" ]; then
   normalize_crlf "$BUILD_CSV"
@@ -143,7 +178,6 @@ for f in "${PARTS[@]}"; do
     fail "Missing partition CSV: $f"
   fi
   normalize_crlf "$f"
-  # Require at least one non-comment, non-empty line with 5+ fields
   if awk -F',' '
       BEGIN{ok=0}
       /^[[:space:]]*#/ {next}
