@@ -6,7 +6,7 @@ on:
       board_label:
         type: choice
         description: 'Select board (must match manifest.json)'
-        default: 'OG Marauder'
+        default: 'Marauder v6.1'
         options:
           - Flipper Zero WiFi Dev Board
           - Flipper Zero Multi Board S3
@@ -49,80 +49,79 @@ on:
       core_version:
         description: 'Arduino-ESP32 core version'
         required: false
-        default: '2.0.11'
+        default: 'Auto'
+
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (with LFS)
         uses: actions/checkout@v4
-
+        with:
+          lfs: true
+          
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
-        shell: bash
-        run: |
-          set -euo pipefail
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
-          # Strip UTF-8 BOM if present
-          MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
-          if [ "$MAGIC" = "efbbbf" ]; then
-            tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
-            echo "Removed UTF-8 BOM from manifest.json"
-          fi
-          # Normalize CRLF -> LF
-          sed -i 's/\r$//' "$MAN"
-          # Validate JSON
-          jq . "$MAN" >/dev/null
-
-      - name: Load manifest and list available boards
-        id: manifest
-        shell: bash
-        run: |
-          set -e
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
-          echo "Detected boards in manifest:"
-          jq -r '.boards[].label' "$MAN" | nl -ba
-          echo "man_path=$MAN" >> $GITHUB_OUTPUT
-
-      - name: Resolve board from manifest
+      - name: Resolve board from manifest (CSV)
         id: map
         shell: bash
         run: |
-          set -e
-          MAN="${{ steps.manifest.outputs.man_path }}"
+          set -euo pipefail
+          MAN="./scaffold/configs/boards_manifest.csv"
           WANT="${{ github.event.inputs.board_label }}"
-
-          COUNT=$(jq --arg L "$WANT" '[.boards[] | select(.label == $L)] | length' "$MAN")
-          if [ "$COUNT" -eq 0 ]; then
+      
+          # exact row
+          LINE="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")"
+          if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
-            echo "Available labels:"; jq -r '.boards[].label' "$MAN" | nl -ba
+            echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
             exit 1
           fi
-
-          FQBN=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .fqbn' "$MAN")
-          TFT_ENABLED=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.enabled // false' "$MAN")
-          TFT_HEADER=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.header // ""' "$MAN")
-          DEF_FS=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.filesystem // ""' "$MAN")
-          DEF_PART=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.partition // ""' "$MAN")
-          DEFINES=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | (.defines // []) | map("-D"+.) | join(" ")' "$MAN")
-          FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
-          if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
-
-          # Sanitize defines (remove stray quotes/CRs)
-          DEFINES="$(printf '%s' "$DEFINES" | tr -d '\r' | sed 's/["\x27]//g' | xargs || true)"
-
+      
+          NFIELDS="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print NF; exit}' "$MAN")"
+      
+          FQBN=$(echo "$LINE"       | cut -d',' -f2)
+          FLAG=$(echo "$LINE"       | cut -d',' -f3)
+          DEF_FS=$(echo "$LINE"     | cut -d',' -f4)
+          DEF_PART=$(echo "$LINE"   | cut -d',' -f5)
+          PROFILE=$(echo "$LINE"    | cut -d',' -f6)
+          TFT_ENABLED=$(echo "$LINE"| cut -d',' -f7)
+          TFT_HEADER=$(echo "$LINE" | cut -d',' -f8)
+      
+          if [ "$NFIELDS" -ge 10 ]; then
+            RAW_DEFINES=$(echo "$LINE" | cut -d',' -f9)
+            CORE_VER=$(echo "$LINE"    | cut -d',' -f10)
+          else
+            RAW_DEFINES=""
+            CORE_VER=$(echo "$LINE" | cut -d',' -f9)
+          fi
+      
+          # clean defines (semicolon-separated in CSV)
+          DEFINES="$(printf '%s' "$RAW_DEFINES" | tr ';' ' ' | tr -d '\r' | xargs || true)"
+          [ -n "$FLAG" ] && DEFINES="$DEFINES -D$FLAG"
+          DEFINES="$(printf '%s' "$DEFINES" | xargs || true)"
+      
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
           echo "def_fs=$DEF_FS"           >> $GITHUB_OUTPUT
           echo "def_part=$DEF_PART"       >> $GITHUB_OUTPUT
           echo "defines=$DEFINES"         >> $GITHUB_OUTPUT
-
+          echo "core_ver=$CORE_VER"       >> $GITHUB_OUTPUT
+      
+          echo "---- RESOLVED BOARD ----"
+          echo "Board:        $WANT"
+          echo "FQBN:         $FQBN"
+          echo "Core Ver:     $CORE_VER"
+          echo "TFT Enabled:  $TFT_ENABLED"
+          echo "TFT Header:   $TFT_HEADER"
+          echo "Default FS:   ${DEF_FS:-<core default>}"
+          echo "Default Part: ${DEF_PART:-<core default>}"
+          echo "Defines:      ${DEFINES:-<none>}"
+          echo "------------------------"
+      
       - name: Install Arduino CLI
         run: |
           curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
@@ -132,23 +131,67 @@ jobs:
 
       - name: Configure & Install ESP32 Core
         id: core
+        shell: bash
         run: |
-          CORE_VER="${{ github.event.inputs.core_version }}"
+          set -euo pipefail
+      
+          # Pick version: user input (unless 'Auto') -> CSV-provided -> fallback
+          INPUT="${{ github.event.inputs.core_version }}"
+          CSV_VER="${{ steps.map.outputs.core_ver }}"
+          CORE_VER="$([ -n "$INPUT" ] && [ "$INPUT" != "Auto" ] && echo "$INPUT" || echo "${CSV_VER:-2.0.11}")"
           echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
-          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
-          arduino-cli core update-index
+          echo "Using Arduino-ESP32 core: $CORE_VER"
+      
+          # Use Espressif's stable index (works for 2.x and 3.x)
+          URL="https://espressif.github.io/arduino-esp32/package_esp32_index.json"
+      
+          # Fresh config + set additional URL
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls "$URL"
+      
+          # Update index (with a simple retry)
+          arduino-cli core update-index || { echo "Retrying index update..."; sleep 2; arduino-cli core update-index; }
+      
+          # Install requested core version
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
-
-      - name: Extract pre-bundled libs (lib.tar)
+      
+      - name: Clean conflicting libs
         run: |
-          mkdir -p $HOME/Arduino/libraries
-          if [ -f lib.tar ]; then
-            tar -xf lib.tar -C $HOME/Arduino/libraries
-          else
-            echo "lib.tar not found; continuing (build may fail without libs)."
+          rm -rf "$HOME/Arduino/libraries/XPT2046_Touchscreen" || true
+          rm -rf "$HOME/Arduino/libraries/TFT_eSPI" || true
+          echo "Removed conflicting TFT/Touch libraries"
+          
+      - name: Extract pre-bundled libs (CSV-driven from scaffold/lib)
+        shell: bash
+        run: |
+          set -euo pipefail
+          CSV="scaffold/configs/lib_list.csv"
+          ZIPROOT="scaffold/lib"
+          LIBDIR="$HOME/Arduino/libraries"
+          mkdir -p "$LIBDIR"
+
+          if [ ! -f "$CSV" ]; then
+            echo "::error ::$CSV not found"; exit 1
           fi
-          ls -1 $HOME/Arduino/libraries || true
+
+          while IFS=',' read -r ZIP DESC; do
+            [[ "$ZIP" =~ ^# ]] && continue
+            ZIP=$(echo "$ZIP" | xargs)   # trim
+            DESC=$(echo "$DESC" | xargs)
+            [ -z "$ZIP" ] && continue
+
+            FILE="$ZIPROOT/$ZIP"
+            if [ -f "$FILE" ]; then
+              echo "Unpacking $ZIP ($DESC)"
+              unzip -o "$FILE" -d "$LIBDIR" >/dev/null
+            else
+              echo "WARNING: $ZIP not found in $ZIPROOT, skipping ($DESC)"
+            fi
+          done < "$CSV"
+
+          echo "Installed libs in $LIBDIR:"
+          ls -lh "$LIBDIR"
 
       - name: Create ESP32MarauderRegistry local library
         run: |
@@ -165,7 +208,7 @@ jobs:
 
       - name: Unpack display settings (optional)
         run: |
-          if [ -f "display_settings.zip" ]; then
+          if [ -f "scaffold/display/display_settings.zip" ]; then
             mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
             unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
             echo "Unpacked TFT_eSPI headers"
@@ -201,76 +244,138 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
-      - name: Apply TFT header (library-level)
-        if: steps.map.outputs.tft_enabled == 'true' && steps.map.outputs.tft_header != ''
+      - name: Resolve modules
+        id: mods
+        shell: bash
         run: |
-          TE="$HOME/Arduino/libraries/TFT_eSPI"
-          mkdir -p "$TE"
-          echo "// Auto-generated by workflow" > "$TE/User_Setup_Select.h"
-          echo "#include <${{ steps.map.outputs.tft_header }}>" >> "$TE/User_Setup_Select.h"
-          echo "Applied TFT header: ${{ steps.map.outputs.tft_header }}"
+          set -euo pipefail
+          PRESETS="scaffold/configs/modules_presets.csv"
+          CHOICE="${{ github.event.inputs.profile_name }}"
+          CUSTOM="${{ github.event.inputs.modules_csv }}"
+          if [ "$CHOICE" = "Custom" ]; then
+            echo "csv=$CUSTOM" >> $GITHUB_OUTPUT; exit 0
+          fi
+          if [ ! -f "$PRESETS" ]; then
+            echo "::error ::$PRESETS not found"; exit 1
+          fi
+          LINE=$(awk -F',' -v want="$CHOICE" 'tolower($1)==tolower(want){$1="";sub(/^,/, "");print;exit}' "$PRESETS")
+          echo "csv=$LINE" >> $GITHUB_OUTPUT
 
-      - name: Resolve FS/Partition
+      - name: Apply TFT header (library-level)
+        shell: bash
+        run: |
+          set -euo pipefail
+      
+          # Hard guard: skip if TFT disabled in manifest
+          if [ "${{ steps.map.outputs.tft_enabled }}" != "true" ]; then
+            echo "TFT disabled for this board ? skipping TFT setup."
+            exit 0
+          fi
+      
+          TE="$HOME/Arduino/libraries/TFT_eSPI"
+          USD="$TE/User_Setups"
+          mkdir -p "$USD"
+      
+          # 1) Resolve board label from inputs/matrix
+          BOARD_LABEL="${{ github.event.inputs.board_label }}"
+          if [ -z "$BOARD_LABEL" ]; then
+            BOARD_LABEL="${{ matrix.board_label || '' }}"
+          fi
+          if [ -z "$BOARD_LABEL" ]; then
+            echo "::error ::BOARD_LABEL is empty; cannot resolve User_Setup file."
+            exit 1
+          fi
+          echo "Board label: $BOARD_LABEL"
+      
+          # 2) Prefer explicit header from manifest/CSV mapping if provided
+          EXPLICIT_HEADER="${{ steps.map.outputs.tft_header }}"
+          if [ -n "$EXPLICIT_HEADER" ]; then
+            if [ -f "$USD/$EXPLICIT_HEADER" ]; then
+              HEADER_REL="User_Setups/$EXPLICIT_HEADER"
+            elif [ -f "$TE/$EXPLICIT_HEADER" ]; then
+              HEADER_REL="$EXPLICIT_HEADER"
+            else
+              echo "::warning ::Explicit tft_header '$EXPLICIT_HEADER' not found under $USD or $TE; will try derived names."
+              EXPLICIT_HEADER=""
+            fi
+          fi
+      
+          # 3) If not found yet, try derived names from BOARD_LABEL
+          if [ -z "${EXPLICIT_HEADER:-}" ]; then
+            CANDIDATES=("User_Setup_${BOARD_LABEL}.h")
+      
+            SAFE_LABEL="$(echo "$BOARD_LABEL" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]+/_/g;s/_\\+/_/g;s/^_//;s/_$//')"
+            CANDIDATES+=("User_Setup_${SAFE_LABEL}.h" "${SAFE_LABEL}.h")
+      
+            FOUND=""
+            for f in "${CANDIDATES[@]}"; do
+              if [ -f "$USD/$f" ]; then
+                HEADER_REL="User_Setups/$f"
+                FOUND="$f"
+                break
+              elif [ -f "$TE/$f" ]; then
+                HEADER_REL="$f"
+                FOUND="$f"
+                break
+              fi
+            done
+      
+            if [ -z "$FOUND" ]; then
+              echo "::error ::No matching User_Setup header found for '$BOARD_LABEL'."
+              echo "Searched in: $USD and $TE"
+              echo "Tried: ${CANDIDATES[*]}"
+              echo "Listing $USD:"
+              ls -1 "$USD" || true
+              exit 1
+            fi
+          fi
+      
+          # 4) Write User_Setup_Select.h at library root (as TFT_eSPI expects)
+          {
+            echo "// Auto-generated by workflow for $BOARD_LABEL"
+            echo "#include <$HEADER_REL>"
+          } > "$TE/User_Setup_Select.h"
+      
+          echo "Applied TFT header: $HEADER_REL"
+          echo "Wrote: $TE/User_Setup_Select.h"
+
+      - name: Resolve FS/Partition and install custom CSV if present
         id: fs
         shell: bash
         run: |
           set -euo pipefail
-          FS_INPUT="${{ github.event.inputs.filesystem }}"
-          PART_INPUT_RAW="${{ github.event.inputs.partition }}"
-
-          # Map pretty label -> actual CSV filename (if present)
-          part_from_pretty () {
-            local s="$1"
-            # Default selection means "use manifest"
-            if [ -z "$s" ] || [ "$s" = "Default (use manifest)" ]; then
-              echo ""; return
+          FS_IN="${{ steps.map.outputs.def_fs }}"
+          PART_IN="${{ steps.map.outputs.def_part }}"
+          CORE_VER="${{ steps.core.outputs.core_ver }}"
+      
+          # Where the esp32 core keeps partition CSVs
+          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+      
+          FS="$FS_IN"
+          PART="$PART_IN"
+      
+          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
+          if [ -n "$PART" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
+            if [ -f "$SRC" ]; then
+              mkdir -p "$CORE_PART_DIR"
+              cp -f "$SRC" "$CORE_PART_DIR/$PART"
+              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
+            else
+              # If not in repo AND not already in the core, fallback to a stock CSV
+              if [ ! -f "$CORE_PART_DIR/$PART" ]; then
+                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
+                PART="default.csv"
+              fi
             fi
-            # If it looks like "... (filename.csv)" extract filename
-            if [[ "$s" =~ \(([^)]+\.csv)\)$ ]]; then
-              echo "${BASH_REMATCH[1]}"; return
-            fi
-            # Fallback: assume user typed a raw filename
-            echo "$s"
-          }
-
-          PART_INPUT="$(part_from_pretty "$PART_INPUT_RAW")"
-
-          # Prefer user input; otherwise manifest defaults resolved earlier
-          FS="${FS_INPUT:-${{ steps.map.outputs.def_fs }}}"
-          if [ -n "$PART_INPUT" ]; then
-            PART="$PART_INPUT"
-          else
-            PART="${{ steps.map.outputs.def_part }}"
           fi
-
-          echo "fs=$FS" >> $GITHUB_OUTPUT
+      
+          echo "fs=$FS"   >> $GITHUB_OUTPUT
           echo "partition=$PART" >> $GITHUB_OUTPUT
-
-          # If a custom partition CSV is referenced, install it into the core (optional convenience)
-          if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
-            if [ -f "$SRC" ]; then
-              mkdir -p "$DEST"
-              cp -f "$SRC" "$DEST/$PART"
-              echo "Installed custom partition CSV to $DEST/$PART"
-            else
-              echo "Partition CSV '$PART' not found in repo /partitions; relying on core's copy (if any)."
-            fi
-          fi
-
-          if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
-            if [ -f "$SRC" ]; then
-              mkdir -p "$DEST"
-              cp -f "$SRC" "$DEST/$PART"
-              echo "Installed custom partition CSV to $DEST/$PART"
-            else
-              echo "Partition CSV '$PART' not found in repo /partitions; relying on core's copy (if any)."
-            fi
-          fi
-
+      
+          echo "Filesystem: ${FS:-<core default>}"
+          echo "Partition:  ${PART:-<core default>}"
+          
       # ---------- PATCHED: array-based args to preserve -D flags ----------
       - name: Compile (Arduino CLI)
         shell: bash
@@ -278,43 +383,47 @@ jobs:
           set -euo pipefail
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          DEFS="${{ steps.map.outputs.defines }}"
+          RAW_DEFS="${{ steps.map.outputs.defines }}"
           EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
-
+      
+          # keep only -D* tokens; drop accidental junk
+          DEFS=""
+          for t in $RAW_DEFS; do
+            case "$t" in
+              -D*) DEFS="$DEFS $t" ;;
+            esac
+          done
+          DEFS="$(echo "$DEFS" | xargs || true)"
+      
           echo "FQBN: $FQBN"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
           echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
-          echo "DEFINES: $DEFS"
-
+          echo "DEFINES: ${DEFS:-<none>}"
+      
           CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
           C_FLAGS="$EXTRA_INCLUDES $DEFS"
-
+      
           ARGS=()
           ARGS+=(--fqbn "$FQBN")
           ARGS+=(--warnings none)
           ARGS+=(--export-binaries)
           ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
           ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
-
-          if [ -n "$FS" ]; then
-            ARGS+=(--build-property "board_build.filesystem=$FS")
-          fi
-
+      
+          [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
+      
           if [ -n "$PART" ]; then
             mkdir -p "$SKETCH_DIR/partitions"
-            if [ -f "partitions/$PART" ]; then
-              cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
-            fi
-            NAME_ONLY="${PART%.csv}"
-            ARGS+=(--build-property "build.partitions=$NAME_ONLY")
+            # copy from repo if present (optional convenience for debugging)
+            [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
+            # CLI wants the *name without .csv*
+            ARGS+=(--build-property "build.partitions=${PART%.csv}")
           fi
-
-          echo "arduino-cli compile args:"
-          printf '  %q\n' "${ARGS[@]}"
-
+      
+          printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
           arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
       # -------------------------------------------------------------------
 

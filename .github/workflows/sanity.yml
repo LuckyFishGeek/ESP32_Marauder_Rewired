@@ -1,0 +1,20 @@
+name: Sanity
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bash + basic tools
+        run: sudo apt-get update && sudo apt-get install -y dos2unix
+
+      - name: Run project sanity checks
+        run: |
+          chmod +x scaffold/scripts/sanity.sh
+          scaffold/scripts/sanity.sh
