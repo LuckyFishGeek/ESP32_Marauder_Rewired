@@ -495,15 +495,12 @@ jobs:
           arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
       
       # 2) Compile using ArminJo action, but with the exact flags from above
-      - name: Build Marauder firmware
+      - name: Build Marauder firmware (ArminJo)
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
-          # If you compile the prepared sketch in _build/, point to it explicitly:
-          sketch-names: _build/esp32_marauder_rewired/esp32_marauder_rewired.ino
-          # (If your sketch is at repo root as esp32_marauder.ino, use that instead.)
-      
+          sketch-paths: _build/esp32_marauder_rewired/esp32_marauder_rewired.ino
           arduino-board-fqbn: ${{ steps.map.outputs.fqbn }}
-          arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
+          arduino-platform: esp32:esp32@${{ steps.map.outputs.core_version }}
           extra-arduino-cli-args: >
             --warnings none
             --build-property compiler.cpp.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
