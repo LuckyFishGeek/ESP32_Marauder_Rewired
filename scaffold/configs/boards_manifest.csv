@@ -1,0 +1,42 @@
+label,fqbn,flag,filesystem,partition,profile,tft_enabled,tft_header
+Generic ESP32 Dev Module,esp32:esp32:esp32,GENERIC_ESP32,spiffs,marauder_default.csv,Standard,false,
+DOIT ESP32 DEVKIT V1,esp32:esp32:esp32doit-devkit-v1,DOIT_DEVKIT_V1,spiffs,marauder_default.csv,Full,false,
+NodeMCU-32S,esp32:esp32:nodemcu-32s,NODEMCU_32S,littlefs,marauder_default.csv,Standard,false,
+ESP32 DevKitC V4,esp32:esp32:esp32,DEVKITC_V4,spiffs,marauder_default.csv,Standard,false,
+ESP32 WROOM-DA Module,esp32:esp32:esp32da,WROOM_DA,spiffs,marauder_default.csv,Standard,false,
+ESP32 WROVER Module,esp32:esp32:esp32wrover,WROVER_MODULE,spiffs,hugeapp_1m_fs.csv,Full,true,User_Setup_wrover.h
+ESP32 WROVER Kit (all versions),esp32:esp32:esp32wroverkit,WROVER_KIT,spiffs,hugeapp_1m_fs.csv,Full,true,User_Setup_wroverkit.h
+ESP32 PICO-D4,esp32:esp32:pico32,PICO_D4,littlefs,marauder_default.csv,Standard,false,
+AI Thinker ESP32-CAM,esp32:esp32:esp32cam,ESP32_CAM,spiffs,ota_1m_fs.csv,Scanner,false,
+Lolin D32,esp32:esp32:lolin_d32,LOLIN_D32,littlefs,marauder_default.csv,Standard,false,
+Lolin D32 Pro,esp32:esp32:lolin_d32_pro,LOLIN_D32_PRO,littlefs,marauder_default.csv,Full,true,User_Setup_lolin_d32_pro.h
+FireBeetle2 ESP32-E,esp32:esp32:dfrobot_firebeetle2_esp32e,FIREBEETLE2_E,littlefs,marauder_default.csv,Standard,false,
+Heltec WiFi Kit 32 (V3),esp32:esp32:heltec_wifi_kit_32_V3,HELTEC_WIFI_KIT_32_V3,littlefs,marauder_default.csv,Displayless,false,
+ESP32-S2 Dev Module,esp32:esp32:esp32s2,ESP32_S2,littlefs,marauder_default.csv,Minimal,false,
+ESP32-S2 Saola-1,esp32:esp32:esp32s2-saola-1,ESP32_S2_SAOLA,littlefs,marauder_default.csv,Standard,false,
+Adafruit Feather ESP32-S2,esp32:esp32:adafruit_feather_esp32s2,FEATHER_ESP32_S2,littlefs,marauder_default.csv,Standard,false,
+ESP32-S3 Dev Module,esp32:esp32:esp32s3,ESP32_S3_DEV,littlefs,marauder_default.csv,Standard,false,
+Adafruit Feather ESP32-S3 (2MB PSRAM),esp32:esp32:adafruit_feather_esp32s3,FEATHER_ESP32_S3,littlefs,marauder_default.csv,Full,false,
+M5StickC / M5StickC-Plus,esp32:esp32:m5stick-c,M5STICKC,littlefs,marauder_default.csv,Minimal,true,User_Setup_m5stickc.h
+M5Stamp S3,esp32:esp32:m5stack_stampS3,M5STAMP_S3,littlefs,marauder_default.csv,Displayless,false,
+Flipper Zero WiFi Dev Board,esp32:esp32:esp32s2,MARAUDER_FLIPPER,spiffs,marauder_default.csv,Minimal,false,
+Flipper Zero Multi Board S3,esp32:esp32:esp32s3,MARAUDER_MULTIBOARD_S3,spiffs,marauder_default.csv,Minimal,false,
+OG Marauder,esp32:esp32:d32,MARAUDER_V4,spiffs,marauder_default.csv,OG Marauder,true,User_Setup_og_marauder.h
+Marauder v6,esp32:esp32:d32,MARAUDER_V6,spiffs,marauder_default.csv,Marauder v6,true,User_Setup_og_marauder.h
+Marauder v6.1,esp32:esp32:d32,MARAUDER_V6_1,spiffs,marauder_default.csv,Marauder v6.1,true,User_Setup_og_marauder.h
+Marauder Kit,esp32:esp32:d32,MARAUDER_KIT,spiffs,marauder_default.csv,Marauder Kit,true,User_Setup_og_marauder.h
+Marauder Mini,esp32:esp32:d32,MARAUDER_MINI,spiffs,marauder_default.csv,Marauder Mini,true,User_Setup_marauder_mini.h
+ESP32 LDDB,esp32:esp32:d32,ESP32_LDDB,spiffs,marauder_default.csv,Displayless,false,
+Marauder Dev Board Pro,esp32:esp32:d32,MARAUDER_DEV_BOARD_PRO,spiffs,marauder_default.csv,Marauder Dev Board Pro,false,
+M5StickCPlus,esp32:esp32:m5stick-c,MARAUDER_M5STICKC,spiffs,marauder_default.csv,M5StickCPlus,true,User_Setup_marauder_m5stickc.h
+M5StickCPlus 2,esp32:esp32:m5stick-c,MARAUDER_M5STICKCP2,spiffs,marauder_default.csv,M5StickCPlus 2,true,User_Setup_marauder_m5stickcp2.h
+Rev Feather,esp32:esp32:esp32s2,MARAUDER_REV_FEATHER,spiffs,marauder_default.csv,Rev Feather,true,User_Setup_marauder_rev_feather.h
+Marauder v7,esp32:esp32:d32,MARAUDER_V7,spiffs,marauder_default.csv,Marauder v7,true,User_Setup_dual_nrf24.h
+Marauder CYD 2432S028,esp32:esp32:d32,MARAUDER_CYD_MICRO,spiffs,marauder_default.csv,Marauder CYD 2432S028,true,User_Setup_cyd_micro.h
+Marauder CYD 2432S024 GUITION,esp32:esp32:d32,MARAUDER_CYD_GUITION,spiffs,marauder_default.csv,Marauder CYD 2432S024 GUITION,true,User_Setup_cyd_guition.h
+Marauder CYD 2432S028 2 USB,esp32:esp32:d32,MARAUDER_CYD_2USB,spiffs,marauder_default.csv,Marauder CYD 2432S028 2 USB,true,User_Setup_cyd_2usb.h
+Marauder v7.1,esp32:esp32:dfrobot_firebeetle2_esp32e,MARAUDER_V7_1,spiffs,marauder_default.csv,Marauder v7.1,true,User_Setup_dual_nrf24.h
+M5Cardputer,esp32:esp32:esp32s3,MARAUDER_CARDPUTER,littlefs,marauder_default.csv,M5Cardputer,true,User_Setup_marauder_m5cardputer.h
+ESP32-C5-DevKitC-1,esp32:esp32:esp32c5,MARAUDER_C5,littlefs,marauder_default.csv,ESP32-C5-DevKitC-1,false,
+Generic ESP32,esp32:esp32:esp32,GENERIC_ESP32,spiffs,marauder_default.csv,Standard,false,
+ESP32-CS Board,esp32:esp32:esp32cs,ESP32_CS,spiffs,marauder_default.csv,Standard,false,
