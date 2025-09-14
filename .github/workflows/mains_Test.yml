@@ -41,130 +41,72 @@ jobs:
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Locate & sanitize board manifest (JSON or CSV)
+      - name: Locate & sanitize board manifest (CSV only)
         id: manifest
         shell: bash
         run: |
           set -euo pipefail
-          JSON=./scaffold/configs/manifest.json
           CSV=./scaffold/configs/boards_manifest.csv
       
-          if [ -f "$JSON" ]; then
-            # ---- JSON ----
-            MAGIC="$(head -c 3 "$JSON" | od -An -tx1 | tr -d ' \n' || true)"
-            if [ "$MAGIC" = "efbbbf" ]; then
-              tail -c +4 "$JSON" > "$JSON.nobom" && mv "$JSON.nobom" "$JSON"
-              echo "Removed UTF-8 BOM from manifest.json"
-            fi
-            sed -i 's/\r$//' "$JSON"
-            jq . "$JSON" >/dev/null
-            echo "Found JSON manifest: $JSON"
-            echo "Boards:"; jq -r '.boards[].label' "$JSON" | nl -ba
-            echo "man_path=$JSON" >> $GITHUB_OUTPUT
-            echo "man_type=json"  >> $GITHUB_OUTPUT
+          test -f "$CSV" || { echo "::error ::boards_manifest.csv not found at $CSV"; exit 1; }
       
-          elif [ -f "$CSV" ]; then
-            # ---- CSV ----
-            sed -i 's/\r$//' "$CSV"
-            HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-            case "$HDR" in
-              board_label,fqbn* ) ;;
-              * )
-                echo "::error ::$CSV header must start with: board_label,fqbn"
-                echo "Saw: $(head -n1 "$CSV")"
-                exit 1
-                ;;
-            esac
-            echo "Found CSV manifest: $CSV"
-            echo "Boards:"; tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
-            echo "man_path=$CSV" >> $GITHUB_OUTPUT
-            echo "man_type=csv"  >> $GITHUB_OUTPUT
+          # Normalize CRLF -> LF
+          sed -i 's/\r$//' "$CSV"
       
-          else
-            echo "::error ::No manifest found. Expected either:"
-            echo "  - $JSON"
-            echo "  - $CSV"
-            exit 1
-          fi
-
-      - name: Locate & sanitize board manifest (JSON or CSV)
-        id: manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          JSON=./scaffold/configs/manifest.json
-          CSV=./scaffold/configs/boards_manifest.csv
+          # Validate header
+          HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          case "$HDR" in
+            board_label,fqbn* ) ;;
+            * )
+              echo "::error ::$CSV header must start with: board_label,fqbn"
+              echo "Saw: $(head -n1 "$CSV")"
+              exit 1
+              ;;
+          esac
       
-          if [ -f "$JSON" ]; then
-            # ---- JSON ----
-            MAGIC="$(head -c 3 "$JSON" | od -An -tx1 | tr -d ' \n' || true)"
-            if [ "$MAGIC" = "efbbbf" ]; then
-              tail -c +4 "$JSON" > "$JSON.nobom" && mv "$JSON.nobom" "$JSON"
-              echo "Removed UTF-8 BOM from manifest.json"
-            fi
-            sed -i 's/\r$//' "$JSON"
-            jq . "$JSON" >/dev/null
-            echo "Found JSON manifest: $JSON"
-            echo "Boards:"; jq -r '.boards[].label' "$JSON" | nl -ba
-            echo "man_path=$JSON" >> $GITHUB_OUTPUT
-            echo "man_type=json"  >> $GITHUB_OUTPUT
+          echo "Found CSV manifest: $CSV"
+          echo "Boards:"
+          tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
       
-          elif [ -f "$CSV" ]; then
-            # ---- CSV ----
-            sed -i 's/\r$//' "$CSV"
-            HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-            case "$HDR" in
-              board_label,fqbn* ) ;;
-              * )
-                echo "::error ::$CSV header must start with: board_label,fqbn"
-                echo "Saw: $(head -n1 "$CSV")"
-                exit 1
-                ;;
-            esac
-            echo "Found CSV manifest: $CSV"
-            echo "Boards:"; tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
-            echo "man_path=$CSV" >> $GITHUB_OUTPUT
-            echo "man_type=csv"  >> $GITHUB_OUTPUT
+          echo "man_path=$CSV" >> $GITHUB_OUTPUT
+          echo "man_type=csv"  >> $GITHUB_OUTPUT
       
-          else
-            echo "::error ::No manifest found. Expected either:"
-            echo "  - $JSON"
-            echo "  - $CSV"
-            exit 1
-          fi
-
-      - name: Resolve board from manifest
+      - name: Resolve board from manifest (CSV only)
         id: map
         shell: bash
         run: |
-          set -e
+          set -euo pipefail
           MAN="${{ steps.manifest.outputs.man_path }}"
           WANT="${{ matrix.board_label }}"
-
-          COUNT=$(jq --arg L "$WANT" '[.boards[] | select(.label == $L)] | length' "$MAN")
-          if [ "$COUNT" -eq 0 ]; then
+      
+          # Find row matching board_label
+          LINE=$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")
+      
+          if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
-            echo "Available labels:"; jq -r '.boards[].label' "$MAN" | nl -ba
+            echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
             exit 1
           fi
-
-          FQBN=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .fqbn' "$MAN")
-          TFT_ENABLED=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.enabled // false' "$MAN")
-          TFT_HEADER=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .tft.header // ""' "$MAN")
-          DEF_FS=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.filesystem // ""' "$MAN")
-          DEF_PART=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .defaults.partition // ""' "$MAN")
-          DEFINES=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | (.defines // []) | map("-D"+.) | join(" ")' "$MAN")
-          FLAG=$(jq -r --arg L "$WANT" '.boards[] | select(.label==$L) | .flag // ""' "$MAN")
+      
+          # Extract fields (assumes CSV header order)
+          FQBN=$(echo "$LINE"       | cut -d',' -f2)
+          FLAG=$(echo "$LINE"       | cut -d',' -f3)
+          DEF_FS=$(echo "$LINE"     | cut -d',' -f4)
+          DEF_PART=$(echo "$LINE"   | cut -d',' -f5)
+          PROFILE=$(echo "$LINE"    | cut -d',' -f6)
+          TFT_ENABLED=$(echo "$LINE"| cut -d',' -f7)
+          TFT_HEADER=$(echo "$LINE" | cut -d',' -f8)
+          DEFINES=$(echo "$LINE"    | cut -d',' -f9- | tr ';' ' ' | xargs || true)
+      
           if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
-          DEFINES="$(printf '%s' "$DEFINES" | tr -d '\r' | sed 's/["\x27]//g' | xargs || true)"
-
+      
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
           echo "def_fs=$DEF_FS"           >> $GITHUB_OUTPUT
           echo "def_part=$DEF_PART"       >> $GITHUB_OUTPUT
           echo "defines=$DEFINES"         >> $GITHUB_OUTPUT
-
+      
           echo "---- RESOLVED BOARD ----"
           echo "Board:        $WANT"
           echo "FQBN:         $FQBN"
