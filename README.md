@@ -1,5 +1,5 @@
 # ESP32 Marauder Rewired  
-**Official Release v1.0.0**  
+**Official Release v1.0.1**  
 
 ---
 
@@ -15,115 +15,66 @@ This guide walks you step-by-step:
 ---
 
 ## 📝 Overview  
-This is the **first official release** of **ESP32 Marauder Rewired (v1.0.0)** — a complete rebuild of the Marauder firmware system with modern GitHub Actions automation, manifest-driven board definitions, and modular CSV-based feature profiles.  
-
-This project started as an attempt to adapt the **original Marauder source code**, but after many dead ends (compile errors, outdated libs, unsupported boards, messy defines), we took the radical decision to **strip it down and rebuild from scratch**.  
-
-Now, everything is driven by clean manifests and profiles — no more hard-coded spaghetti or random board hacks.  
+This is the **second official release** of **ESP32 Marauder Rewired (v1.0.1)** — building on the 1.0.0 “Manifest Era”.  
+Now with stronger **CSV sanity checks**, **ESP32-C5 support**, and predictable **TFT configuration**.
 
 ---
 
 ## 🛠️ The Journey (Trials & Errors)  
 
+### From v1.0.0 (old journey)
 - **Tried direct porting of the original source** → too many legacy issues.  
 - **Attempted partial rebuilds** → hit endless compiler errors, missing defines, and broken TFT headers.  
 - **Stripped the build system down** to a minimal Arduino-CLI workflow.  
-- **Introduced JSON manifest (`manifest.json`)** to centralize board definitions (FQBN, flags, defaults, TFT headers).  
-- **Added CSV presets (`modules_presets.csv`)** for feature selection: WiFi, BLE, GPS, SD, TFT, etc.  
-- **Refactored GitHub Actions** to be manifest-driven with **pretty dropdowns** for boards, filesystems, and partitions.  
-- **Tested with multiple boards** (OG Marauder, v6, v6.1, v7, M5StickC, Flipper Zero boards, ESP32-S2/S3/C5, etc).  
-- **Partition chaos solved** → standardized on a clean `marauder_default.csv` plus compatibility with all legacy CSVs.  
+- **Introduced JSON manifest (`manifest.json`)** to centralize board definitions.  
+- **Added CSV presets (`modules_presets.csv`)** for feature selection.  
+- **Partition chaos solved** → standardized on `marauder_default.csv` plus all legacy CSVs.  
+
+### Into v1.0.1 (new journey)
+- **Killed JSON drift** → Replaced `manifest.json` with a single source of truth: `scaffold/configs/boards_manifest.csv`.  
+- **Added CSV sanity checks** for CRLF, headers, and partitions.  
+- **Board mapping is CSV-driven** → clean resolve of fqbn, filesystem, partition, tft, defines, core version.  
+- **Per-board core versions** → installs right `esp32:esp32@<core_ver>` (2.x or 3.x).  
+- **ESP32-C5 support added** (core 3.3.0, no TFT).  
+- **TFT setup predictable** → skipped if `tft_enabled=false`; injected if `tft_header` exists.  
+- **Cleaner defines** and **partition installs** handled in workflow.  
+- **Matrix build retired** → main workflow now single-source.  
 
 ---
 
-## ✅ What Works Now (v1.0.0)  
-
-- **Manifest-driven build system**  
-  - Every supported board is declared in `manifest.json`.  
-  - Defaults for filesystem, partition scheme, and TFT header all set per board.  
-
-- **Custom CSV Profiles**  
-  - `modules_presets.csv` defines “Minimal”, “Full”, “Wardriver”, “Scanner”, “Displayless”, etc.  
-  - Users can also supply **Custom CSV** flags for advanced builds.  
-
-- **Arduino-CLI GitHub Actions**  
-  - Fully automated firmware builds via workflow dispatch.  
-  - Dropdown menus for board, filesystem, partition scheme, and profile.  
-  - Works across **esp32, esp32-s2, esp32-s3, esp32-c5** families.  
-
-- **Partition support**  
-  - Includes: `hugeapp_1m_fs.csv`, `marauder_littlefs.csv`, `marauder_spiffs_ota.csv`,  
-    `min_littlefs_ota.csv`, `min_spiffs_ota.csv`, `ota_1m_fs.csv`, and the new **`marauder_default.csv`**.  
-  - All selectable with **pretty labels** in the workflow dropdown.  
-
-- **TFT header injection**  
-  - TFT_eSPI auto-configured per board via manifest.  
-  - Headers like `User_Setup_og_marauder.h`, `User_Setup_marauder_mini.h`, etc.  
+## ✅ What Works Now (v1.0.1)  
+- **Manifest-driven CSV build system** (boards_manifest.csv).  
+- **ESP32-C5 builds cleanly** (no TFT, serial-driven).  
+- **All TFT boards work** with auto-applied User_Setup headers.  
+- **Custom partitions** copied to Arduino core paths.  
+- **Library staging & sanity protocol** ensures reliable builds.  
 
 ---
 
-## ⚠️ Known Issues / Not Yet Implemented  
-
-- **Feature parity with legacy Marauder** → not all menu/UI features restored yet.  
-- **BLE and GPS modules** work only with certain profiles/boards; testing ongoing.  
-- **Some partitions (hugeapp, ota) need stress testing** for stability.  
-- **Not all TFT headers included upstream** → some require manual tweaking.  
-- **M5Stack ecosystem** → partial support, needs polish.  
+## ⚠️ Known Issues  
+- **BLE/GPS** modules limited to certain boards.  
+- **M5Stack ecosystem** partial support.  
+- **Some partitions** (hugeapp, ota) need stress testing.  
 
 ---
 
-## 🔮 What’s Coming Next  
-
-- Full **feature parity with legacy Marauder** (all menus & modules).  
-- Additional **partition profiles** (bigger FS, OTA dual-bank layouts).  
-- Smarter **Auto-profile selection** from manifest → board picks its best feature set.  
-- **Custom pin menu** → assign GPIO pins directly from the firmware UI.  
-- More polished **documentation & examples** (how to extend manifest, how to add new profiles).  
-- Potential **PlatformIO support** alongside Arduino-CLI.  
-- **Community presets** → share and merge your module CSVs easily.  
+## 🔮 Next (v1.1.0 plans)  
+- Full feature parity with legacy Marauder.  
+- Expanded partition schemes.  
+- Auto-profile selection by board.  
+- GUI pin override menus.  
+- More docs/examples.  
+- PlatformIO support.  
 
 ---
 
 ## Sanity protocol
 
-This project includes a CSV/partitions sanity checker to catch common config issues before builds.
-
-What it checks
-
-Normalizes CRLF ? LF across CSVs.
-
-## Verifies headers:
-
-scaffold/configs/boards_manifest.csv starts with board_label,fqbn
-
-scaffold/configs/lib_list.csv is zip or zip,desc
-
-scaffold/configs/modules_presets.csv starts with ProfileName,Modules
-
-scaffold/configs/pins/display_presets.csv starts with profile,model,header,defines
-
-
-Lists detected board labels, module profiles, and display profiles.
-
-Light validation of partition CSVs (at least one non-comment row with ?5 fields).
-
-Extending the checks
-
-Add new required CSVs: append their paths in the script and add a require_header_starts_with rule.
-
-Tighten partition checks: replace the ??5 fields? test with a stricter schema if needed.
-
-Make the script fail on warnings: convert warn calls to fail for stricter gating.
-
----
-
-## 💡 Advantages of This Rewired Build  
-
-- **Cleaner structure** → no more mystery macros; every board is defined in JSON.  
-- **Portable** → easily add new boards or profiles without hacking C++ headers.  
-- **Automated builds** → GitHub Actions outputs firmware for all boards at once.  
-- **Future-proof** → Arduino-ESP32 2.x core supported out of the box.  
-- **Customizable** → profiles and partitions selectable at build time.  
+What it checks:
+- Normalizes CRLF→LF across CSVs.  
+- Validates headers for boards, libs, modules, pins, displays.  
+- Lists detected labels and profiles.  
+- Light validation of partitions.  
 
 ---
 
@@ -132,54 +83,16 @@ Make the script fail on warnings: convert warn calls to fail for stricter gating
 ```
 /scaffold
  ├── configs/
- │   ├── manifest.json           # All board definitions
- │   ├── modules_presets.csv     # Feature profiles
- │   ├── displays/               # Display presets (ILI9341, ST7735, etc)
- │   └── pins/                   # Pin presets per board
- ├── registry/                   # Registry library sources
- ├── *.ino                       # Main sketch entry points
-
-/partitions
- ├── marauder_default.csv
- ├── marauder_spiffs_ota.csv
- ├── marauder_littlefs.csv
- ├── min_spiffs_ota.csv
- ├── min_littlefs_ota.csv
- ├── hugeapp_1m_fs.csv
- └── ota_1m_fs.csv
-
-/.github/workflows/              # Build workflows (premade + custom modes)
+ │   ├── boards_manifest.csv     # Boards
+ │   ├── lib_list.csv            # Libraries
+ │   ├── modules_presets.csv     # Features
+ │   ├── pins/                   # Pin + Display presets
+ ├── partitions/                 # Partition CSVs
+ ├── .github/workflows/          # Build workflows
 ```
 
 ---
 
-## 🛠️ Build Modes  
-
-There are now **two build paths** supported:  
-
-### 1. Premade Build Mode  
-- Select a **board** from the workflow dropdown.  
-- Workflow auto-loads the board’s defaults from `manifest.json`.  
-- Profile, filesystem, and partition are auto-populated.  
-- Best choice if you just want a working firmware without tweaking.  
-
-### 2. Custom Build Mode  
-- Select `"Other (enter FQBN)"` or choose **Custom CSV**.  
-- Provide your own `fqbn_override` or `modules_csv`.  
-- **Pick exactly which modules you want** (WiFi, BLE, GPS, SD, TFT, Buttons, NRF24, etc).  
-- Supports experimental setups, unusual dev boards, or personal module mixes.  
-- Best choice for advanced users who need to experiment.  
-
----
-
 ## 🏷️ Versioning  
-
-This release is tagged as:  
-**`v1.0.0` — The Manifest Era**  
-
-The next milestone will be **`v1.1.0`** once feature parity and testing expand across all boards.  
-
----
-
-🚀 This README marks the official start of the **rewired Marauder firmware project**.  
-We went from **“impossible to build”** → to a **clean, extensible, automated system**.  
+**`v1.0.1` — The Sanity Era**  
+Next milestone: **`v1.1.0`** for full parity + advanced features.  
