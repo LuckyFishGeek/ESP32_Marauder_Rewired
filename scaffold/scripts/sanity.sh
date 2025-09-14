@@ -44,8 +44,8 @@ BOARDS_CSV="$ROOT/scaffold/configs/boards_manifest.csv"
 LIBS_CSV="$ROOT/scaffold/configs/lib_list.csv"
 MODULES_CSV="$ROOT/scaffold/configs/modules_presets.csv"
 PINS_CSV="$ROOT/scaffold/configs/pins/pins_presets.csv"
-DISPLAYS_CSV="$ROOT/scaffold/configs/displays/display_presets.csv"   # fixed path
-BUILD_CSV="$ROOT/scaffold/configs/build_defines.csv"                 # new in checks
+DISPLAYS_CSV="$ROOT/scaffold/configs/displays/display_presets.csv"
+BUILD_CSV="$ROOT/scaffold/configs/build_defines.csv"
 
 PART_DIR="$ROOT/partitions"
 PARTS=(
@@ -66,7 +66,7 @@ normalize_crlf "$BOARDS_CSV"
 require_header_starts_with "$BOARDS_CSV" "board_label,fqbn"
 list_first_col "$BOARDS_CSV" "Boards detected:"
 
-# Libraries list (allow either `zip` or `zip,desc`)
+# Libraries list (allow either `zip` or `zip,desc` header)
 check_exists_and_nonempty "$LIBS_CSV"
 normalize_crlf "$LIBS_CSV"
 lib_hdr="$(head -n1 "$LIBS_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
@@ -83,7 +83,7 @@ normalize_crlf "$MODULES_CSV"
 require_header_starts_with "$MODULES_CSV" "profilename,modules"
 list_first_col "$MODULES_CSV" "Module profiles:"
 
-# Pins presets (schema varies; do minimal checks)
+# Pins presets (schema varies by project; do minimal checks)
 if [ -f "$PINS_CSV" ]; then
   normalize_crlf "$PINS_CSV"
   if [ -s "$PINS_CSV" ]; then
@@ -102,20 +102,31 @@ normalize_crlf "$DISPLAYS_CSV"
 require_header_starts_with "$DISPLAYS_CSV" "profile,model,header,defines"
 list_first_col "$DISPLAYS_CSV" "Display profiles:"
 
-# Build defines CSV (new)
+# Build defines CSV (accept legacy or extended schema)
 check_exists_and_nonempty "$BUILD_CSV"
 normalize_crlf "$BUILD_CSV"
-require_header_starts_with "$BUILD_CSV" "token,define"
-list_first_col "$BUILD_CSV" "Build tokens:"
+bd_hdr="$(head -n1 "$BUILD_CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+case "$bd_hdr" in
+  token,define* )
+    pass "Header OK: $(basename "$BUILD_CSV") = 'token,define?'"
+    ;;
+  key,value* )
+    pass "Header OK: $(basename "$BUILD_CSV") = 'key,value?'"
+    ;;
+  * )
+    fail "$(basename "$BUILD_CSV") header invalid. Saw: '$(head -n1 "$BUILD_CSV")'  Expected to start with 'token,define' or 'key,value'"
+    ;;
+esac
+list_first_col "$BUILD_CSV" "Build tokens/keys:"
 
-# Partitions ? light validation
+# Partitions ? light validation:
 echo "=== Partition CSVs ==="
 for f in "${PARTS[@]}"; do
   if [ ! -f "$f" ]; then
     fail "Missing partition CSV: $f"
   fi
   normalize_crlf "$f"
-  # must have at least one non-comment, non-empty line with 5+ fields
+  # Ensure there is at least one non-comment, non-empty line with 4+ commas (5+ fields)
   if awk -F',' '
       BEGIN{ok=0}
       /^[[:space:]]*#/ {next}
