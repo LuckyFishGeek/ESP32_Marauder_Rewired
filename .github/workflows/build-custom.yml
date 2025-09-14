@@ -135,49 +135,61 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Sanitize manifest.json (strip BOM/CRLF and validate if present)
+      - name: Locate & sanitize board manifest (CSV only)
+        id: manifest
         shell: bash
         run: |
           set -euo pipefail
-          MAN=./scaffold/configs/manifest.json
-          if [ -f "$MAN" ]; then
-            MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
-            if [ "$MAGIC" = "efbbbf" ]; then
-              tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
-              echo "Removed UTF-8 BOM from manifest.json"
-            fi
-            sed -i 's/\r$//' "$MAN"
-            jq . "$MAN" >/dev/null
-            echo "manifest.json OK"
-          else
-            echo "manifest.json not present; continuing (fallback map will be used if needed)"
-          fi
-
-      - name: Resolve FQBN
-        id: map
-        shell: bash
-        run: |
-          set -e
-          LABEL="${{ github.event.inputs.board_label }}"
-          OVR="${{ github.event.inputs.fqbn_override }}"
-          MAN="scaffold/configs/manifest.json"
-          set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
-
-          if [ "$LABEL" = "Other (enter FQBN)" ]; then
-            if [ -z "$OVR" ]; then
-              echo "::error ::You chose 'Other' but did not provide fqbn_override"; exit 1
-            fi
-            set_out fqbn "$OVR"
-            exit 0
-          fi
-
-          FOUND=""
-          if [ -f "$MAN" ]; then
-            FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
-            if [ -n "$FQBN" ]; then
-              FOUND="yes"; set_out fqbn "$FQBN"; echo "Resolved (manifest): $LABEL -> $FQBN"
-            fi
-          fi
+          MAN=./scaffold/configs/boards_manifest.csv
+      
+          test -f "$MAN" || { echo "::error ::boards_manifest.csv not found at $MAN"; exit 1; }
+      
+          # Normalize CRLF -> LF
+          sed -i 's/\r$//' "$MAN"
+      
+          # Header must start with board_label,fqbn
+          HDR="$(head -n1 "$MAN" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          case "$HDR" in
+            board_label,fqbn* ) ;;
+            * )
+              echo "::error ::$MAN must have header starting with: board_label,fqbn"
+              echo "Saw header: $(head -n1 "$MAN")"
+              exit 1
+              ;;
+          esac
+      
+          echo "Found CSV manifest: $MAN"
+          echo "Detected boards:"
+          tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba | sed -e 's/^/  /'
+      
+          echo "man_path=$MAN" >> $GITHUB_OUTPUT
+          echo "man_type=csv"  >> $GITHUB_OUTPUT
+      
+            - name: Resolve FQBN
+              id: map
+              shell: bash
+              run: |
+                set -e
+                LABEL="${{ github.event.inputs.board_label }}"
+                OVR="${{ github.event.inputs.fqbn_override }}"
+                MAN="scaffold/configs/manifest.json"
+                set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
+      
+                if [ "$LABEL" = "Other (enter FQBN)" ]; then
+                  if [ -z "$OVR" ]; then
+                    echo "::error ::You chose 'Other' but did not provide fqbn_override"; exit 1
+                  fi
+                  set_out fqbn "$OVR"
+                  exit 0
+                fi
+      
+                FOUND=""
+                if [ -f "$MAN" ]; then
+                  FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
+                  if [ -n "$FQBN" ]; then
+                    FOUND="yes"; set_out fqbn "$FQBN"; echo "Resolved (manifest): $LABEL -> $FQBN"
+                  fi
+                fi
 
           if [ -z "$FOUND" ]; then
             case "$LABEL" in
