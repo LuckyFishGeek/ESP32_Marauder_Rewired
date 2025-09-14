@@ -135,83 +135,61 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Locate & sanitize board manifest (JSON or CSV)
+      - name: Locate & sanitize board manifest (CSV only)
         id: manifest
         shell: bash
         run: |
           set -euo pipefail
-          JSON=./scaffold/configs/manifest.json
-          CSV=./scaffold/configs/boards_manifest.csv
+          MAN=./scaffold/configs/boards_manifest.csv
       
-          if [ -f "$JSON" ]; then
-            # ---- JSON path ----
-            # Strip BOM if present
-            MAGIC="$(head -c 3 "$JSON" | od -An -tx1 | tr -d ' \n' || true)"
-            if [ "$MAGIC" = "efbbbf" ]; then
-              tail -c +4 "$JSON" > "$JSON.nobom" && mv "$JSON.nobom" "$JSON"
-              echo "Removed UTF-8 BOM from manifest.json"
-            fi
-            # Normalize CRLF -> LF
-            sed -i 's/\r$//' "$JSON"
-            # Validate JSON
-            jq . "$JSON" >/dev/null
-            echo "Found JSON manifest: $JSON"
-            echo "man_path=$JSON"   >> $GITHUB_OUTPUT
-            echo "man_type=json"    >> $GITHUB_OUTPUT
+          test -f "$MAN" || { echo "::error ::boards_manifest.csv not found at $MAN"; exit 1; }
       
-          elif [ -f "$CSV" ]; then
-            # ---- CSV path ----
-            # Normalize CRLF -> LF
-            sed -i 's/\r$//' "$CSV"
-            # Quick header sanity: must start with board_label,fqbn
-            HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-            case "$HDR" in
-              board_label,fqbn* ) ;;
-              * )
-                echo "::error ::$CSV must have header starting with: board_label,fqbn"
-                echo "Saw header: $(head -n1 "$CSV")"
-                exit 1
-                ;;
-            esac
-            # Show a preview of labels
-            echo "Found CSV manifest: $CSV"
-            echo "Detected boards:"
-            tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba | sed -e 's/^/  /'
-            echo "man_path=$CSV"   >> $GITHUB_OUTPUT
-            echo "man_type=csv"    >> $GITHUB_OUTPUT
+          # Normalize CRLF -> LF
+          sed -i 's/\r$//' "$MAN"
       
-          else
-            echo "::error ::No manifest found. Expected either:"
-            echo "  - $JSON"
-            echo "  - $CSV"
-            exit 1
-          fi
-
-      - name: Resolve FQBN
-        id: map
-        shell: bash
-        run: |
-          set -e
-          LABEL="${{ github.event.inputs.board_label }}"
-          OVR="${{ github.event.inputs.fqbn_override }}"
-          MAN="scaffold/configs/manifest.json"
-          set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
-
-          if [ "$LABEL" = "Other (enter FQBN)" ]; then
-            if [ -z "$OVR" ]; then
-              echo "::error ::You chose 'Other' but did not provide fqbn_override"; exit 1
-            fi
-            set_out fqbn "$OVR"
-            exit 0
-          fi
-
-          FOUND=""
-          if [ -f "$MAN" ]; then
-            FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
-            if [ -n "$FQBN" ]; then
-              FOUND="yes"; set_out fqbn "$FQBN"; echo "Resolved (manifest): $LABEL -> $FQBN"
-            fi
-          fi
+          # Header must start with board_label,fqbn
+          HDR="$(head -n1 "$MAN" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+          case "$HDR" in
+            board_label,fqbn* ) ;;
+            * )
+              echo "::error ::$MAN must have header starting with: board_label,fqbn"
+              echo "Saw header: $(head -n1 "$MAN")"
+              exit 1
+              ;;
+          esac
+      
+          echo "Found CSV manifest: $MAN"
+          echo "Detected boards:"
+          tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba | sed -e 's/^/  /'
+      
+          echo "man_path=$MAN" >> $GITHUB_OUTPUT
+          echo "man_type=csv"  >> $GITHUB_OUTPUT
+      
+            - name: Resolve FQBN
+              id: map
+              shell: bash
+              run: |
+                set -e
+                LABEL="${{ github.event.inputs.board_label }}"
+                OVR="${{ github.event.inputs.fqbn_override }}"
+                MAN="scaffold/configs/manifest.json"
+                set_out() { echo "$1=$2" >> $GITHUB_OUTPUT; }
+      
+                if [ "$LABEL" = "Other (enter FQBN)" ]; then
+                  if [ -z "$OVR" ]; then
+                    echo "::error ::You chose 'Other' but did not provide fqbn_override"; exit 1
+                  fi
+                  set_out fqbn "$OVR"
+                  exit 0
+                fi
+      
+                FOUND=""
+                if [ -f "$MAN" ]; then
+                  FQBN=$(jq -r --arg L "$LABEL" '[.boards[] | select(.label==$L)][0].fqbn // empty' "$MAN")
+                  if [ -n "$FQBN" ]; then
+                    FOUND="yes"; set_out fqbn "$FQBN"; echo "Resolved (manifest): $LABEL -> $FQBN"
+                  fi
+                fi
 
           if [ -z "$FOUND" ]; then
             case "$LABEL" in
