@@ -508,32 +508,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-      
-          # 1) Get raw flags from the Resolve modules step
-          RAW="${{ steps.mods.outputs.csv }}"         # e.g. "WIFI,BUTTONS,TFT_OFF" or "WIFI BLE"
-          RAW="${RAW:-}"                              # guard for empty
-      
-          # 2) Normalize to an array of tokens: WIFI BUTTONS TFT_OFF
-          CLEAN="$(printf '%s' "$RAW" \
-            | tr ',;' '  ' \
-            | sed -e 's/"//g' -e "s/'//g" \
-            | tr -s ' ' \
-            | sed -e 's/^ *//' -e 's/ *$//')"
-          read -r -a FLAGS <<< "$CLEAN"
-      
-          has_flag() {
-            local needle="$1"
-            for f in "${FLAGS[@]:-}"; do
-              [[ "$f" == "$needle" ]] && return 0
-            done
-            return 1
-          }
-      
           D=""
+          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
       
-          add() {
+          echo "CSV_FLAGS='${CSV_FLAGS}'"
+      
+          add () {
             local key="$1" def="$2"
-            if has_flag "$key"; then
+            if [[ " ${CSV_FLAGS} " == *" ${key} "* ]]; then
               D="${D} -D${def}"
             fi
           }
@@ -552,39 +534,28 @@ jobs:
           add NRF24     ENABLE_NRF24
           add USB_MSC   ENABLE_USB_MSC
           add DUAL_WIFI ENABLE_DUAL_WIFI
-          add 2WIFI     ENABLE_2WIFI     # literal "2WIFI" token is fine
+          add "2WIFI"   ENABLE_2WIFI
       
-          # Board pin presets (from pins_presets.csv)
+          # From board pin presets
           PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
-          if [ -n "${PRESET_PINS:-}" ]; then
-            D="${D} ${PRESET_PINS}"
-          fi
+          [ -n "$PRESET_PINS" ] && D="$D $PRESET_PINS"
       
-          # Free-text custom pins
+          # From free-text custom_pins parser
           CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
-          if [ -n "${CUST:-}" ]; then
-            D="${D} ${CUST}"
-          fi
+          [ -n "$CUST" ] && D="$D $CUST"
       
-          # Display define(s) from display presets (may be single token like TFT_ILI9341)
+          # From display resolver
           DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
-          if [ -n "${DISP_DEF:-}" ]; then
-            # If multiple tokens are ever returned, add -D to each
-            for tok in $DISP_DEF; do
-              D="${D} -D${tok}"
-            done
-          fi
+          [ -n "$DISP_DEF" ] && D="$D -D$DISP_DEF"
       
-          # Extra manual -D flags from input (space-separated)
+          # Extra manual -D flags
           EXTRA="${{ github.event.inputs.extra_defines }}"
-          if [ -n "${EXTRA:-}" ]; then
-            for t in $EXTRA; do
-              D="${D} -D${t}"
-            done
+          if [ -n "$EXTRA" ]; then
+            for t in $EXTRA; do D="$D -D$t"; done
           fi
       
           echo "Defines => $D"
-          echo "defs=$D" >> "$GITHUB_OUTPUT"
+          echo "defs=$D" >> $GITHUB_OUTPUT
 
       - name: Compile (Arduino CLI)
         shell: bash
