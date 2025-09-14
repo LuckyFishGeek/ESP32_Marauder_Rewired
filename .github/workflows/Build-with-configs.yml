@@ -72,7 +72,6 @@ jobs:
           MAN="scaffold/configs/boards_manifest.csv"
           WANT="${{ github.event.inputs.board_label }}"
       
-          # Find the exact row for the selected board label (col 1)
           LINE="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")"
           if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
@@ -80,21 +79,12 @@ jobs:
             exit 1
           fi
       
-          # Expected columns:
-          # 1:board_label, 2:fqbn, 3:flag, 4:filesystem, 5:partition, 6:profile,
-          # 7:tft_enabled, 8:tft_header, 9:defines (optional), 10:core_version
-          FQBN=$(echo "$LINE"         | cut -d',' -f2)
-          FLAG=$(echo "$LINE"         | cut -d',' -f3)
-          DEF_FS=$(echo "$LINE"       | cut -d',' -f4)
-          DEF_PART=$(echo "$LINE"     | cut -d',' -f5)
-          PROFILE=$(echo "$LINE"      | cut -d',' -f6)
-          TFT_ENABLED=$(echo "$LINE"  | cut -d',' -f7)
-          TFT_HEADER=$(echo "$LINE"   | cut -d',' -f8)
-          DEFINES=$(echo "$LINE"      | cut -d',' -f9  | tr ';' ' ' | xargs || true)
-          CORE_VER=$(echo "$LINE"     | awk -F',' '{print $NF}')
+          # Columns: label,fqbn,flag,filesystem,partition,profile,tft_enabled,tft_header,defines,core_version
+          IFS=',' read -r LABEL FQBN FLAG DEF_FS DEF_PART PROFILE TFT_ENABLED TFT_HEADER DEFINES CORE_VER <<< "$LINE"
       
-          # Append board flag to defines if present
-          [ -n "$FLAG" ] && DEFINES="$(printf '%s %s' "$DEFINES" "-D$FLAG" | xargs)"
+          # Clean up fields
+          DEFINES="$(printf '%s' "${DEFINES:-}" | tr -d '\r' | tr ';' ' ' | xargs || true)"
+          [ -n "${FLAG:-}" ] && DEFINES="$(printf '%s %s' "$DEFINES" "-D$FLAG" | xargs)"
       
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
@@ -124,18 +114,22 @@ jobs:
 
       - name: Configure & Install ESP32 Core
         id: core
+        shell: bash
         run: |
-          CORE_INPUT="${{ github.event.inputs.core_version }}"
-          if [ "$CORE_INPUT" = "Auto" ] || [ -z "$CORE_INPUT" ]; then
-            CORE_VER="${{ steps.map.outputs.core_ver }}"
-          else
-            CORE_VER="$CORE_INPUT"
-          fi
-
+          set -euo pipefail
+          INPUT="${{ github.event.inputs.core_version }}"
+          AUTO_VER="${{ steps.map.outputs.core_ver }}"
+          # Pick version: workflow input (unless 'Auto') -> CSV-provided core_ver -> fallback 2.0.11
+          CORE_VER="$([ -n "$INPUT" ] && [ "$INPUT" != "Auto" ] && echo "$INPUT" || echo "${AUTO_VER:-2.0.11}")"
           echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
-          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+      
+          # For tagged releases use package_esp32_index.json (NOT *_dev_*)
+          URL="https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_index.json"
+      
+          arduino-cli config init --additional-urls "$URL"
           arduino-cli core update-index
           arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core list
       
       - name: Clean conflicting libs
         run: |
