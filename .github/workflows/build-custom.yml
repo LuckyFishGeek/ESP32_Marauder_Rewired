@@ -729,7 +729,11 @@ jobs:
       - name: Build Marauder firmware
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
-          sketch-names: _build/esp32_marauder_rewired/esp32_marauder_rewired.ino
+          # Search starting here (your prepared sketch folder)
+          sketch-names-find-start: _build/esp32_marauder_rewired
+          # Look for this filename (or just use *.ino)
+          sketch-names: esp32_marauder_rewired.ino
+      
           arduino-board-fqbn: ${{ steps.flags.outputs.fqbn }}
           arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
           extra-arduino-cli-args: >
