@@ -49,7 +49,7 @@ on:
       core_version:
         description: 'Arduino-ESP32 core version'
         required: false
-        default: '2.0.11'
+        default: 'auto'
 
 
 jobs:
@@ -123,12 +123,17 @@ jobs:
       - name: Configure & Install ESP32 Core
         id: core
         run: |
-          CORE_VER="${{ steps.map.outputs.core_ver }}"
+          CORE_INPUT="${{ github.event.inputs.core_version }}"
+          if [ "$CORE_INPUT" = "Auto" ] || [ -z "$CORE_INPUT" ]; then
+            CORE_VER="${{ steps.map.outputs.core_ver }}"
+          else
+            CORE_VER="$CORE_INPUT"
+          fi
+
           echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
           arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
           arduino-cli core update-index
           arduino-cli core install "esp32:esp32@${CORE_VER}"
-          arduino-cli core list
       
       - name: Clean conflicting libs
         run: |
