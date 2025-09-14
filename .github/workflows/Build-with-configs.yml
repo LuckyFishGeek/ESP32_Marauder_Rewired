@@ -86,10 +86,10 @@ jobs:
         shell: bash
         run: |
           set -e
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
+          MAN=./scaffold/configs/boards_manifest.csv
+          test -f "$MAN" || { echo "::error ::boards_manifest.csv not found at $MAN"; exit 1; }
           echo "Detected boards in manifest:"
-          jq -r '.boards[].label' "$MAN" | nl -ba
+          tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
           echo "man_path=$MAN" >> $GITHUB_OUTPUT
 
       - name: Resolve board from manifest
