@@ -6,7 +6,7 @@ on:
       board_label:
         type: choice
         description: 'Select board (must match manifest.json)'
-        default: 'OG Marauder'
+        default: 'Marauder v6.1'
         options:
           - Flipper Zero WiFi Dev Board
           - Flipper Zero Multi Board S3
