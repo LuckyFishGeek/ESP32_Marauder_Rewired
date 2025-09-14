@@ -49,7 +49,7 @@ on:
       core_version:
         description: 'Arduino-ESP32 core version'
         required: false
-        default: 'auto'
+        default: 'Auto'
 
 
 jobs:
