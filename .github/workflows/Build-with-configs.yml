@@ -453,39 +453,46 @@ jobs:
           
       # ---------- PATCHED: array-based args to preserve -D flags ----------
 # 1) Build the exact same flags the old block created
-      - name: Assemble compile flags (same semantics as old CLI step)
-        id: flags
+      - name: Compile (Arduino CLI)
         shell: bash
         run: |
           set -euo pipefail
-          RAW_DEFS="${{ steps.map.outputs.defines }}"
-      
-          # keep only -D* tokens; drop accidental junk
-          DEFS=""
-          for t in $RAW_DEFS; do
-            case "$t" in
-              -D*) DEFS="$DEFS $t" ;;
-            esac
-          done
-          DEFS="$(echo "$DEFS" | xargs || true)"
-      
-          INC="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
-          echo "cpp_c_flags=$INC $DEFS" >> $GITHUB_OUTPUT
-      
-          FS="${{ steps.fs.outputs.fs }}"
+          FQBN="${{ steps.map.outputs.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          CPP_C_FLAGS="${{ steps.flags.outputs.cpp_c_flags }}"
+          EXTRA_CLI="${{ steps.flags.outputs.extra_cli }}"
           PART="${{ steps.fs.outputs.partition }}"
-          EXTRA=""
-          [ -n "$FS" ] && EXTRA="$EXTRA --build-property board_build.filesystem=$FS"
-          if [ -n "$PART" ]; then
-            NAME="${PART%.csv}"
-            EXTRA="$EXTRA --build-property build.partitions=$NAME"
-          fi
-          echo "extra_cli=$EXTRA" >> $GITHUB_OUTPUT
       
-          echo "---- FLAGS ----"
-          echo "CPP/C flags: $INC $DEFS"
-          echo "Extra CLI:   $EXTRA"
-          echo "--------------"
+          echo "FQBN:        $FQBN"
+          echo "Sketch dir:  $SKETCH_DIR"
+          echo "CPP/C flags: $CPP_C_FLAGS"
+          echo "Extra CLI:   ${EXTRA_CLI:-<none>}"
+      
+          # If a custom partition CSV was selected, copy it into the sketch (optional convenience)
+          if [ -n "$PART" ] && [ -f "partitions/$PART" ]; then
+            mkdir -p "$SKETCH_DIR/partitions"
+            cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
+          fi
+      
+          # Build arg array
+          ARGS=()
+          ARGS+=(--fqbn "$FQBN")
+          ARGS+=(--warnings none)
+          ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_C_FLAGS")
+          ARGS+=(--build-property "compiler.c.extra_flags=$CPP_C_FLAGS")
+      
+          # Append FS/partition properties assembled earlier
+          if [ -n "${EXTRA_CLI:-}" ]; then
+            # Safely split EXTRA_CLI into array
+            read -r -a EXTRA_ARR <<< "$EXTRA_CLI"
+            ARGS+=("${EXTRA_ARR[@]}")
+          fi
+      
+          echo "arduino-cli compile args:"
+          printf '  %q\n' "${ARGS[@]}"
+      
+          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
       
       # 2) Compile using ArminJo action, but with the exact flags from above
       - name: Build Marauder firmware
