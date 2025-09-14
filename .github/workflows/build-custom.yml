@@ -120,7 +120,7 @@ on:
       core_version:
         description: 'Arduino-ESP32 core'
         required: false
-        default: 'auto'
+        default: 'Auto'
 
 
 jobs:
