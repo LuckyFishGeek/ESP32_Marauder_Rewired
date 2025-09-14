@@ -208,7 +208,7 @@ jobs:
 
       - name: Unpack display settings (optional)
         run: |
-          if [ -f "display_settings.zip" ]; then
+          if [ -f "scaffold/display/display_settings.zip" ]; then
             mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
             unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
             echo "Unpacked TFT_eSPI headers"
