@@ -729,17 +729,15 @@ jobs:
       - name: Build Marauder firmware
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
-          # Search starting here (your prepared sketch folder)
           sketch-names-find-start: _build/esp32_marauder_rewired
-          # Look for this filename (or just use *.ino)
           sketch-names: esp32_marauder_rewired.ino
-      
           arduino-board-fqbn: ${{ steps.flags.outputs.fqbn }}
           arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver }}
           extra-arduino-cli-args: >
-            --warnings none
-            --build-property compiler.cpp.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
-            --build-property compiler.c.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
+            --verbose
+            --warnings all
+            --build-property "compiler.cpp.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}"
+            --build-property "compiler.c.extra_flags=${{ steps.flags.outputs.cpp_c_flags }}"
             ${{ steps.flags.outputs.extra_cli }}
 
       - name: Upload firmware artifact
