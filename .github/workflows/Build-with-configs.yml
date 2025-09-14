@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          MAN="${{ steps.manifest.outputs.man_path }}"
+          MAN="scaffold/configs/boards_manifest.csv"
           WANT="${{ github.event.inputs.board_label }}"
       
           # Find the exact row for the selected board label (col 1)
