@@ -569,34 +569,41 @@ jobs:
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
-      - name: Compose defines
+      - name: Compose defines (safe)
         id: defs
         shell: bash
         run: |
           set -euo pipefail
       
-          # Modules from your earlier step (or leave empty)
-          CSV_FLAGS_RAW="${{ steps.mods.outputs.csv || '' }}"
+          # Raw CSV from modules step (e.g., "WIFI,BLE SD;USB_MSC")
+          CSV_FLAGS_RAW="${{ steps.mods.outputs.csv }}"
           echo "CSV_FLAGS_RAW='${CSV_FLAGS_RAW}'"
       
-          # Normalize -> UPPERCASE, split on , ; | whitespace, unique
+          # Normalize: uppercase, treat comma/semicolon/space as separators
           TOKENS=()
-          if [[ -n "${CSV_FLAGS_RAW// /}" ]]; then
-            while IFS= read -r t; do
-              [[ -z "$t" ]] && continue
-              TOKENS+=("$t")
-            done < <(printf '%s\n' "$CSV_FLAGS_RAW" \
-                      | tr ',;|' ' ' \
-                      | tr '[:lower:]' '[:upper:]' \
-                      | xargs -n1 \
-                      | awk '!seen[$0]++')
-          fi
+          while IFS= read -r tok; do
+            [ -z "$tok" ] && continue
+            TOKENS+=("$tok")
+          done < <(echo "$CSV_FLAGS_RAW" | tr 'a-z' 'A-Z' | tr ',;' '  ')
       
-          has() { local n="$1"; for t in "${TOKENS[@]:-}"; do [[ "$t" == "$n" ]] && return 0; done; return 1; }
-          add() { local key="$1" def="$2"; has "$key" && D+=" -D${def}"; }
+          have() { 
+            local seek="$1"
+            for t in "${TOKENS[@]}"; do
+              [[ "$t" == "$seek" ]] && return 0
+            done
+            return 1
+          }
+      
+          add() {
+            local key="$1" def="$2"
+            if have "$key"; then
+              D="${D:-} -D${def}"
+            fi
+          }
       
           D=""
       
+          # Module ? define map
           add WIFI        ENABLE_WIFI
           add BLE         ENABLE_BLE
           add WEB         ENABLE_WEB
@@ -611,20 +618,25 @@ jobs:
           add NRF24       ENABLE_NRF24
           add USB_MSC     ENABLE_USB_MSC
           add DUAL_WIFI   ENABLE_DUAL_WIFI
-          add 2WIFI       ENABLE_2WIFI      # literal token "2WIFI"
+          add 2WIFI       ENABLE_2WIFI
       
-          # Merge other define sources
-          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs || '' }}"
-          [[ -n "${PRESET_PINS// /}" ]] && D+=" ${PRESET_PINS}"
+          # Board pin presets
+          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
+          [ -n "${PRESET_PINS// /}" ] && D="$D $PRESET_PINS"
       
-          CUST="${{ steps.custompins.outputs.custom_pin_defs || '' }}"
-          [[ -n "${CUST// /}" ]] && D+=" ${CUST}"
+          # Custom free-form pins
+          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
+          [ -n "${CUST// /}" ] && D="$D $CUST"
       
-          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define || '' }}"
-          [[ -n "${DISP_DEF// /}" ]] && D+=" -D${DISP_DEF}"
+          # Display resolver define (e.g., TFT_ILI9341)
+          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
+          [ -n "${DISP_DEF// /}" ] && D="$D -D$DISP_DEF"
       
-          EXTRA="${{ github.event.inputs.extra_defines || '' }}"
-          if [[ -n "${EXTRA// /}" ]]; then for t in $EXTRA; do D+=" -D$t"; done; fi
+          # Extra manual -D flags from input
+          EXTRA="${{ github.event.inputs.extra_defines }}"
+          if [ -n "${EXTRA// /}" ]; then
+            for t in $EXTRA; do D="$D -D$t"; done
+          fi
       
           D="$(echo "$D" | xargs || true)"
           echo "Defines => $D"
