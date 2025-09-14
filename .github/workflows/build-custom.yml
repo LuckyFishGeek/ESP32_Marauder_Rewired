@@ -316,17 +316,40 @@ jobs:
 
       - name: Prepare Sketch Folder
         id: prep
+        shell: bash
         run: |
+          set -e
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
-          rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
-          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
-          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
-          cp -r scaffold/* "$SKETCH_DIR/" || true
-          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          rm -rf "$SKETCH_DIR"
+          mkdir -p "$SKETCH_DIR"
 
-      - name: Sanity check boards CSV
+          if [ -f scaffold/esp32_marauder_rewired.ino ]; then
+            SRC_INO="scaffold/esp32_marauder_rewired.ino"
+          else
+            SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+            [ -n "$SRC_INO" ] || (echo "::error ::No .ino found under scaffold/"; exit 1)
+          fi
+          echo "Using INO: $SRC_INO"
+          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+
+          pushd scaffold >/dev/null
+          find . -type f ! -name '*.ino' -print0 \
+            | xargs -0 -I {} bash -c 'mkdir -p "'"$SKETCH_DIR"'"/$(dirname "{}"); cp "{}" "'"$SKETCH_DIR"'"/"{}"'
+          popd >/dev/null
+
+          [ -f "configs.h" ] && cp "configs.h" "$SKETCH_DIR/configs.h"
+
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          find "$SKETCH_DIR" -maxdepth 2 -type f | sort
+
+      - name: Make sanity.sh executable
+        shell: bash
+        run: chmod +x scaffold/scripts/sanity.sh
+      
+      - name: Sanity check
         shell: bash
         run: scaffold/scripts/sanity.sh
+
 
       - name: Resolve modules
         id: mods
