@@ -24,3 +24,4 @@ Profile7,EPD2IN9,User_Setups/SetupEPD2IN9.h,TFT_EPD2IN9
 Profile8,EPD2IN13,User_Setups/SetupEPD2IN13.h,TFT_EPD2IN13
 Profile9,EPD7IN5,User_Setups/SetupEPD7IN5.h,TFT_EPD7IN5
 Profile10,RA8875,User_Setups/SetupRA8875.h,TFT_RA8875
+AirysDark,ILI9341,User_Setups/Setup9341.h,TFT_ILI9341
