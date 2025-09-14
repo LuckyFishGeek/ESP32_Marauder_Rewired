@@ -283,12 +283,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PRESETS="modules_presets.csv"
+          PRESETS="scaffold/configs/modules_presets.csv"
           CHOICE="${{ github.event.inputs.profile_name }}"
           CUSTOM="${{ github.event.inputs.modules_csv }}"
           if [ "$CHOICE" = "Custom" ]; then
-            echo "csv=$CUSTOM" >> $GITHUB_OUTPUT
-            exit 0
+            echo "csv=$CUSTOM" >> $GITHUB_OUTPUT; exit 0
+          fi
+          if [ ! -f "$PRESETS" ]; then
+            echo "::error ::$PRESETS not found"; exit 1
           fi
           LINE=$(awk -F',' -v want="$CHOICE" 'tolower($1)==tolower(want){$1="";sub(/^,/, "");print;exit}' "$PRESETS")
           echo "csv=$LINE" >> $GITHUB_OUTPUT
