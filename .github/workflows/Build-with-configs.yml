@@ -408,24 +408,22 @@ jobs:
           SCRIPT="scaffold/scripts/gen_configs_h.sh"
           SKETCH_DIR="_build/esp32_marauder_rewired"
       
-          # Ensure generator exists
           [[ -f "$SCRIPT" ]] || { echo "::error ::Generator script missing: $SCRIPT"; exit 1; }
           chmod +x "$SCRIPT"
       
-          # Ensure CSVs exist
-          for f in "$CSV_BOARDS" "$CSV_MODS" "$CSV_PINS" "$CSV_DISP"; do
-            [[ -f "$f" ]] || { echo "::error ::Missing CSV: $f"; exit 1; }
-            sed -i 's/\r$//' "$f" || true
-          done
-      
-          BOARD="${{ github.event.inputs.board_label }}"
-          PROFILE="${{ github.event.inputs.profile_name }}"
+          BOARD="${{ github.event.inputs.board_label || '' }}"
+          PROFILE="${{ github.event.inputs.profile_name || '' }}"
           MODULES_INPUT="${{ github.event.inputs.modules_csv || '' }}"
       
-          [[ -n "${BOARD// /}" ]]   || { echo "::error ::board_label is empty"; exit 1; }
-          [[ -n "${PROFILE// /}" ]] || { echo "::error ::profile_name is empty"; exit 1; }
+          [[ -n "${BOARD// /}" ]] || { echo "::error ::board_label is empty"; exit 1; }
       
-          # If Custom, require modules (fail fast)
+          # If no profile given, fallback to the board?s default profile from boards_manifest.csv
+          if [[ -z "${PROFILE// /}" ]]; then
+            PROFILE="$(awk -F',' -v want="$BOARD" 'NR==1{next} $1==want {print $6; exit}' "$CSV_BOARDS")"
+            echo "No profile input; using board default: $PROFILE"
+          fi
+      
+          # If Custom, require modules
           if [[ "${PROFILE,,}" == "custom" && -z "${MODULES_INPUT// /}" ]]; then
             echo "::error ::profile=Custom requires 'modules_csv' (e.g., WIFI,BLE,SD,TFT_ON)"
             exit 1
@@ -433,7 +431,6 @@ jobs:
       
           mkdir -p "$SKETCH_DIR"
       
-          # Build command; pass --modules only when provided
           CMD=( "$SCRIPT"
                 --board "$BOARD"
                 --profile "$PROFILE"
