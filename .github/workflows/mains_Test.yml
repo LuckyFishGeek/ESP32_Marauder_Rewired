@@ -41,28 +41,97 @@ jobs:
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
-        shell: bash
-        run: |
-          set -euo pipefail
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
-          MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
-          if [ "$MAGIC" = "efbbbf" ]; then
-            tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
-            echo "Removed UTF-8 BOM from manifest.json"
-          fi
-          sed -i 's/\r$//' "$MAN"
-          jq . "$MAN" >/dev/null
-
-      - name: Load manifest and list available boards
+      - name: Locate & sanitize board manifest (JSON or CSV)
         id: manifest
         shell: bash
         run: |
-          set -e
-          MAN=./scaffold/configs/manifest.json
-          jq -r '.boards[].label' "$MAN" | nl -ba
-          echo "man_path=$MAN" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          JSON=./scaffold/configs/manifest.json
+          CSV=./scaffold/configs/boards_manifest.csv
+      
+          if [ -f "$JSON" ]; then
+            # ---- JSON ----
+            MAGIC="$(head -c 3 "$JSON" | od -An -tx1 | tr -d ' \n' || true)"
+            if [ "$MAGIC" = "efbbbf" ]; then
+              tail -c +4 "$JSON" > "$JSON.nobom" && mv "$JSON.nobom" "$JSON"
+              echo "Removed UTF-8 BOM from manifest.json"
+            fi
+            sed -i 's/\r$//' "$JSON"
+            jq . "$JSON" >/dev/null
+            echo "Found JSON manifest: $JSON"
+            echo "Boards:"; jq -r '.boards[].label' "$JSON" | nl -ba
+            echo "man_path=$JSON" >> $GITHUB_OUTPUT
+            echo "man_type=json"  >> $GITHUB_OUTPUT
+      
+          elif [ -f "$CSV" ]; then
+            # ---- CSV ----
+            sed -i 's/\r$//' "$CSV"
+            HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+            case "$HDR" in
+              board_label,fqbn* ) ;;
+              * )
+                echo "::error ::$CSV header must start with: board_label,fqbn"
+                echo "Saw: $(head -n1 "$CSV")"
+                exit 1
+                ;;
+            esac
+            echo "Found CSV manifest: $CSV"
+            echo "Boards:"; tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
+            echo "man_path=$CSV" >> $GITHUB_OUTPUT
+            echo "man_type=csv"  >> $GITHUB_OUTPUT
+      
+          else
+            echo "::error ::No manifest found. Expected either:"
+            echo "  - $JSON"
+            echo "  - $CSV"
+            exit 1
+          fi
+
+      - name: Locate & sanitize board manifest (JSON or CSV)
+        id: manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          JSON=./scaffold/configs/manifest.json
+          CSV=./scaffold/configs/boards_manifest.csv
+      
+          if [ -f "$JSON" ]; then
+            # ---- JSON ----
+            MAGIC="$(head -c 3 "$JSON" | od -An -tx1 | tr -d ' \n' || true)"
+            if [ "$MAGIC" = "efbbbf" ]; then
+              tail -c +4 "$JSON" > "$JSON.nobom" && mv "$JSON.nobom" "$JSON"
+              echo "Removed UTF-8 BOM from manifest.json"
+            fi
+            sed -i 's/\r$//' "$JSON"
+            jq . "$JSON" >/dev/null
+            echo "Found JSON manifest: $JSON"
+            echo "Boards:"; jq -r '.boards[].label' "$JSON" | nl -ba
+            echo "man_path=$JSON" >> $GITHUB_OUTPUT
+            echo "man_type=json"  >> $GITHUB_OUTPUT
+      
+          elif [ -f "$CSV" ]; then
+            # ---- CSV ----
+            sed -i 's/\r$//' "$CSV"
+            HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+            case "$HDR" in
+              board_label,fqbn* ) ;;
+              * )
+                echo "::error ::$CSV header must start with: board_label,fqbn"
+                echo "Saw: $(head -n1 "$CSV")"
+                exit 1
+                ;;
+            esac
+            echo "Found CSV manifest: $CSV"
+            echo "Boards:"; tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
+            echo "man_path=$CSV" >> $GITHUB_OUTPUT
+            echo "man_type=csv"  >> $GITHUB_OUTPUT
+      
+          else
+            echo "::error ::No manifest found. Expected either:"
+            echo "  - $JSON"
+            echo "  - $CSV"
+            exit 1
+          fi
 
       - name: Resolve board from manifest
         id: map
