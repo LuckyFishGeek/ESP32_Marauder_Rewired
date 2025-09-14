@@ -569,109 +569,78 @@ jobs:
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
-      - name: Parse custom_pins input
-        id: custompins
-        shell: bash
-        run: |
-          set -euo pipefail
-          RAW="${{ github.event.inputs.custom_pins }}"
-          OUT=""
-
-          trim() { awk '{$1=$1;print}' <<<"$1"; }
-          emit_kv(){ local k="$1"; local v="$2"; [ -n "$(trim "$v")" ] && OUT="$OUT -D${k}=$(trim "$v")"; }
-
-          IFS=' ' read -r -a TOKS <<<"$(echo "$RAW" | tr ';' ' ')"
-          for tok in "${TOKS[@]}"; do
-            [ -z "$tok" ] && continue
-            [[ "$tok" != *"="* ]] && { echo "Skipping token without '=': $tok"; continue; }
-            KEY="$(echo "${tok%%=*}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_]\+//g')"
-            VALS_RAW="${tok#*=}"
-            IFS=',' read -r -a V <<<"$VALS_RAW"
-
-            case "$KEY" in
-              gps_pin)
-                emit_kv GPS_RX "${V[0]:-}"; emit_kv GPS_TX "${V[1]:-}"
-                emit_kv GPS_PPS "${V[2]:-}"; emit_kv GPS_EN "${V[3]:-}" ;;
-              i2c_pin)
-                emit_kv I2C_SDA "${V[0]:-}"; emit_kv I2C_SCL "${V[1]:-}" ;;
-              tft_pin)
-                # MISO,MOSI,SCK,CS,DC,RST
-                emit_kv TFT_MISO "${V[0]:-}"; emit_kv TFT_MOSI "${V[1]:-}"; emit_kv TFT_SCK "${V[2]:-}"
-                emit_kv TFT_CS "${V[3]:-}";  emit_kv TFT_DC "${V[4]:-}";  emit_kv TFT_RST "${V[5]:-}" ;;
-              sd_pin)
-                # MISO,MOSI,SCK,CS
-                emit_kv SD_MISO "${V[0]:-}"; emit_kv SD_MOSI "${V[1]:-}"; emit_kv SD_SCK "${V[2]:-}"; emit_kv SD_CS "${V[3]:-}" ;;
-              neopixel_pin) emit_kv NEOPIXEL "${V[0]:-}" ;;
-              buzzer_pin)   emit_kv BUZZER   "${V[0]:-}" ;;
-              buttons_pin)  emit_kv BTN1 "${V[0]:-}"; emit_kv BTN2 "${V[1]:-}"; emit_kv BTN3 "${V[2]:-}" ;;
-              wifi_pin)
-                # MISO,MOSI,SCK,CS
-                emit_kv WIFI_MISO "${V[0]:-}"; emit_kv WIFI_MOSI "${V[1]:-}"; emit_kv WIFI_SCK "${V[2]:-}"; emit_kv WIFI_CS "${V[3]:-}" ;;
-              wifi2_pin)
-                # MISO,MOSI,SCK,CS  (second Wi-Fi module)
-                emit_kv WIFI2_MISO "${V[0]:-}"; emit_kv WIFI2_MOSI "${V[1]:-}"; emit_kv WIFI2_SCK "${V[2]:-}"; emit_kv WIFI2_CS "${V[3]:-}" ;;
-              *)
-                UKEY="$(echo "$KEY" | tr '[:lower:]' '[:upper:]')"
-                emit_kv "$UKEY" "$VALS_RAW" ;;
-            esac
-          done
-
-          echo "custom_pin_defs=$OUT" >> "$GITHUB_OUTPUT"
-          echo "Custom pin defines: $OUT"
-
       - name: Compose defines
         id: defs
         shell: bash
         run: |
           set -euo pipefail
-          D=""
-          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
       
-          echo "CSV_FLAGS='${CSV_FLAGS}'"
+          # 1) Raw module tokens from previous step
+          CSV_FLAGS_RAW="${{ steps.mods.outputs.csv || '' }}"
+          echo "CSV_FLAGS_RAW='${CSV_FLAGS_RAW}'"
       
-          add () {
-            local key="$1" def="$2"
-            if [[ " ${CSV_FLAGS} " == *" ${key} "* ]]; then
-              D="${D} -D${def}"
-            fi
-          }
-      
-          add WIFI      ENABLE_WIFI
-          add BLE       ENABLE_BLE
-          add WEB       ENABLE_WEB
-          add SD        ENABLE_SD
-          add GPS       ENABLE_GPS
-          add TOUCH     ENABLE_TOUCH
-          add LVGL      ENABLE_LVGL
-          add NEOPIXEL  ENABLE_NEOPIXEL
-          add BUZZER    ENABLE_BUZZER
-          add BUTTONS   ENABLE_BUTTONS
-          add BATTERY   ENABLE_BATTERY
-          add NRF24     ENABLE_NRF24
-          add USB_MSC   ENABLE_USB_MSC
-          add DUAL_WIFI ENABLE_DUAL_WIFI
-          add "2WIFI"   ENABLE_2WIFI
-      
-          # From board pin presets
-          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
-          [ -n "$PRESET_PINS" ] && D="$D $PRESET_PINS"
-      
-          # From free-text custom_pins parser
-          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
-          [ -n "$CUST" ] && D="$D $CUST"
-      
-          # From display resolver
-          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
-          [ -n "$DISP_DEF" ] && D="$D -D$DISP_DEF"
-      
-          # Extra manual -D flags
-          EXTRA="${{ github.event.inputs.extra_defines }}"
-          if [ -n "$EXTRA" ]; then
-            for t in $EXTRA; do D="$D -D$t"; done
+          # 2) Normalize to distinct UPPERCASE tokens
+          TOKENS=()
+          if [[ -n "${CSV_FLAGS_RAW// /}" ]]; then
+            while IFS= read -r t; do
+              [[ -z "$t" ]] && continue
+              TOKENS+=("$t")
+            done < <(printf '%s\n' "$CSV_FLAGS_RAW" \
+                      | tr ',;|' ' ' \
+                      | tr '[:lower:]' '[:upper:]' \
+                      | xargs -n1 \
+                      | awk '!seen[$0]++')
           fi
       
+          # membership test
+          has() {
+            local needle="$1"
+            for t in "${TOKENS[@]:-}"; do
+              [[ "$t" == "$needle" ]] && return 0
+            done
+            return 1
+          }
+      
+          # 3) Build -D flags from known tokens
+          D=""
+      
+          add() { local key="$1" def="$2"; if has "$key"; then D+=" -D${def}"; fi; }
+      
+          add WIFI        ENABLE_WIFI
+          add BLE         ENABLE_BLE
+          add WEB         ENABLE_WEB
+          add SD          ENABLE_SD
+          add GPS         ENABLE_GPS
+          add TOUCH       ENABLE_TOUCH
+          add LVGL        ENABLE_LVGL
+          add NEOPIXEL    ENABLE_NEOPIXEL
+          add BUZZER      ENABLE_BUZZER
+          add BUTTONS     ENABLE_BUTTONS
+          add BATTERY     ENABLE_BATTERY
+          add NRF24       ENABLE_NRF24
+          add USB_MSC     ENABLE_USB_MSC
+          add DUAL_WIFI   ENABLE_DUAL_WIFI
+          add 2WIFI       ENABLE_2WIFI      # token "2WIFI" (string)
+      
+          # 4) Merge in pin presets, custom pins, display define, and extra manual -D
+          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
+          [[ -n "${PRESET_PINS// /}" ]] && D+=" ${PRESET_PINS}"
+      
+          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
+          [[ -n "${CUST// /}" ]] && D+=" ${CUST}"
+      
+          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
+          [[ -n "${DISP_DEF// /}" ]] && D+=" -D${DISP_DEF}"
+      
+          EXTRA="${{ github.event.inputs.extra_defines || '' }}"
+          if [[ -n "${EXTRA// /}" ]]; then
+            for t in $EXTRA; do D+=" -D$t"; done
+          fi
+      
+          # 5) Trim + export
+          D="$(echo "$D" | xargs || true)"
           echo "Defines => $D"
-          echo "defs=$D" >> $GITHUB_OUTPUT
+          echo "defs=$D" >> "$GITHUB_OUTPUT"
 
       - name: Generate configs.h from CSV
         shell: bash
