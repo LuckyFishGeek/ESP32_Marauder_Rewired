@@ -10,10 +10,10 @@ set -euo pipefail
 #   --profile "<profile name>"          (required, e.g., Minimal/Full/Custom)
 #   --out     "path/to/configs.h"       (required)
 #   --modules "WIFI,BLE,SD,..."         (optional, used when profile=Custom)
-#   --boards  "path/to/boards_manifest.csv"      (default scaffold/configs/boards_manifest.csv)
-#   --mods    "path/to/modules_presets.csv"      (default scaffold/configs/modules_presets.csv)
-#   --pins    "path/to/pins/pins_presets.csv"    (optional; ignored if missing)
-#   --disp    "path/to/displays/display_presets.csv" (optional; ignored if missing)
+#   --boards  "path/to/boards_manifest.csv"            (default scaffold/configs/boards_manifest.csv)
+#   --mods    "path/to/modules_presets.csv"            (default scaffold/configs/modules_presets.csv)
+#   --pins    "path/to/pins/pins_presets.csv"          (optional; ignored if missing)
+#   --disp    "path/to/displays/display_presets.csv"   (optional; ignored if missing)
 #
 # Outputs:
 #   A self-contained configs.h suitable for inclusion by the sketch.
@@ -23,7 +23,7 @@ set -euo pipefail
 BOARDS_CSV="scaffold/configs/boards_manifest.csv"
 MODS_CSV="scaffold/configs/modules_presets.csv"
 PINS_CSV="scaffold/configs/pins/pins_presets.csv"
-DISP_CSV="scaffold/configs/pins/display_presets.csv"
+DISP_CSV="scaffold/configs/displays/display_presets.csv"  # fixed path
 BOARD_LABEL=""
 PROFILE_NAME=""
 OUT_PATH=""
@@ -72,8 +72,9 @@ IFS=',' read -r _ FQBN BOARD_FLAG DEF_FS DEF_PART DEF_PROFILE TFT_ENABLED TFT_HE
 # Resolve modules set
 MODULES=""
 if [[ "${PROFILE_NAME,,}" == "custom" ]]; then
-  if [[ -z "$CUSTOM_MODULES" ]]; then
-    echo "::error ::profile=Custom but no --modules provided"
+  # STRICT: Custom requires explicit --modules list
+  if [[ -z "${CUSTOM_MODULES// /}" ]]; then
+    echo "::error ::profile=Custom but no --modules provided (modules_csv input is required)"
     exit 1
   fi
   MODULES="$CUSTOM_MODULES"
@@ -135,7 +136,10 @@ PIN_DEFS=""
 if [[ -f "$PINS_CSV" ]]; then
   # Example assumed header (adjust if yours differs):
   # board_label,gps_rx,gps_tx,i2c_sda,i2c_scl,sd_miso,sd_mosi,sd_sck,sd_cs,tft_miso,tft_mosi,tft_sck,tft_cs,tft_dc,tft_rst,neopixel_pin,buzzer_pin,btn1,btn2,btn3
-  PINS_LINE="$(awk -F',' -v want="$BOARD_LABEL" 'NR==1{next} $1==want {print; exit}' "$PINS_CSV")" || true
+  PINS_LINE="$(awk -F',' -v want="$BOARD_LABEL" 'NR=1{next} $1==want {print; exit}' "$PINS_CSV" 2>/dev/null || true)"
+  if [[ -z "$PINS_LINE" ]]; then
+    PINS_LINE="$(awk -F',' -v want="$BOARD_LABEL" 'NR==1{next} $1==want {print; exit}' "$PINS_CSV" 2>/dev/null || true)"
+  fi
   if [[ -n "$PINS_LINE" ]]; then
     IFS=',' read -r _ GPS_RX GPS_TX I2C_SDA I2C_SCL SD_MISO SD_MOSI SD_SCK SD_CS TFT_MISO TFT_MOSI TFT_SCK TFT_CS TFT_DC TFT_RST NEO_PIN BUZ_PIN BTN1 BTN2 BTN3 <<<"$PINS_LINE"
     [[ -n "${GPS_RX:-}" ]] && PIN_DEFS+="\n#define GPS_PIN_RX $GPS_RX"
