@@ -1,4 +1,4 @@
-label,fqbn,flag,filesystem,partition,profile,tft_enabled,tft_header
+board_label,fqbn,flag,filesystem,partition,profile,tft_enabled,tft_header
 Generic ESP32 Dev Module,esp32:esp32:esp32,GENERIC_ESP32,spiffs,marauder_default.csv,Standard,false,
 DOIT ESP32 DEVKIT V1,esp32:esp32:esp32doit-devkit-v1,DOIT_DEVKIT_V1,spiffs,marauder_default.csv,Full,false,
 NodeMCU-32S,esp32:esp32:nodemcu-32s,NODEMCU_32S,littlefs,marauder_default.csv,Standard,false,
