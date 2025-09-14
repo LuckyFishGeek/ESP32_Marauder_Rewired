@@ -41,3 +41,4 @@ ESP32-C5-DevKitC-1,esp32:esp32:esp32c5,MARAUDER_C5,littlefs,marauder_default.csv
 Generic ESP32,esp32:esp32:esp32,GENERIC_ESP32,spiffs,marauder_default.csv,Standard,false,,2.0.11
 ESP32-CS Board,esp32:esp32:esp32cs,ESP32_CS,spiffs,marauder_default.csv,Standard,false,,3.3.0
 AirysDark build,esp32:esp32:esp32s3,ESP32_S3_DEV,spiffs,hugeapp_1m_fs.csv,AirysDark,true,User_Setup_AirysDark.h,2.0.11
+ESP32-3248S035 LCD,esp32:esp32:esp32,ESP32_3248S035,littlefs,marauder_default.csv,Profile 2,true,User_Setup_ili9488_3248s035.h,2.0.11
