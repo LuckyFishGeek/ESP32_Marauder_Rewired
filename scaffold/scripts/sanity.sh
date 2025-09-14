@@ -44,7 +44,7 @@ BOARDS_CSV="$ROOT/scaffold/configs/boards_manifest.csv"
 LIBS_CSV="$ROOT/scaffold/configs/lib_list.csv"
 MODULES_CSV="$ROOT/scaffold/configs/modules_presets.csv"
 PINS_CSV="$ROOT/scaffold/configs/pins/pins_presets.csv"
-DISPLAYS_CSV="$ROOT/scaffold/configs/pins/display_presets.csv"
+DISPLAYS_CSV="$ROOT/scaffold/configs/displays/display_presets.csv"
 
 PART_DIR="$ROOT/partitions"
 PARTS=(
