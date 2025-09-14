@@ -29,6 +29,7 @@ on:
           - M5StickC / M5StickC-Plus
           - M5Stamp S3
           - Other (enter FQBN)
+          - AirysDark build
 
       fqbn_override:
         description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
@@ -50,6 +51,7 @@ on:
           - Displayless
           - Debug
           - Custom
+          - Airysdark mods
 
       modules_csv:
         description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
@@ -91,6 +93,7 @@ on:
           - EPD2IN13
           - EPD7IN5
           - RA8875
+          - AirysDark TFT
 
       filesystem:
         type: choice
