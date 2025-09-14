@@ -84,39 +84,6 @@ Now, everything is driven by clean manifests and profiles — no more hard-coded
 
 ---
 
-## Sanity protocol
-
-This project includes a CSV/partitions sanity checker to catch common config issues before builds.
-
-What it checks
-
-Normalizes CRLF ? LF across CSVs.
-
-## Verifies headers:
-
-scaffold/configs/boards_manifest.csv starts with board_label,fqbn
-
-scaffold/configs/lib_list.csv is zip or zip,desc
-
-scaffold/configs/modules_presets.csv starts with ProfileName,Modules
-
-scaffold/configs/pins/display_presets.csv starts with profile,model,header,defines
-
-
-Lists detected board labels, module profiles, and display profiles.
-
-Light validation of partition CSVs (at least one non-comment row with ?5 fields).
-
-Extending the checks
-
-Add new required CSVs: append their paths in the script and add a require_header_starts_with rule.
-
-Tighten partition checks: replace the ??5 fields? test with a stricter schema if needed.
-
-Make the script fail on warnings: convert warn calls to fail for stricter gating.
-
----
-
 ## 💡 Advantages of This Rewired Build  
 
 - **Cleaner structure** → no more mystery macros; every board is defined in JSON.  

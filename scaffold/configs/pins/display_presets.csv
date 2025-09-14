@@ -1,7 +1,8 @@
-profile,model,header,defines
-Auto,Auto,,
+# profile,model,header,defines
+Auto,Auto,,                # Follows manifest.json defaults
 Displayless,None,,
 
+# --- Common TFTs ---
 Generic,ILI9341,User_Setups/Setup9341.h,TFT_ILI9341
 Standard,ILI9488,User_Setups/Setup9488.h,TFT_ILI9488
 Full,ST7789,User_Setups/Setup7789.h,TFT_ST7789
@@ -9,10 +10,12 @@ Wardriver,ST7735,User_Setups/Setup7735.h,TFT_ST7735
 Scanner,ILI9225,User_Setups/Setup9225.h,TFT_ILI9225
 Debug,ILI9163,User_Setups/Setup9163.h,TFT_ILI9163
 
+# --- Smaller OLED/IPS displays ---
 BLE-only,SSD1306,User_Setups/SetupSSD1306.h,TFT_SSD1306
 Minimal,SH1106,User_Setups/SetupSH1106.h,TFT_SH1106
 Custom,SSD1331,User_Setups/SetupSSD1331.h,TFT_SSD1331
 
+# --- High-resolution IPS TFTs ---
 Profile1,GC9A01,User_Setups/SetupGC9A01.h,TFT_GC9A01
 Profile2,ST7796,User_Setups/Setup7796.h,TFT_ST7796
 Profile3,HX8357,User_Setups/SetupHX8357.h,TFT_HX8357
@@ -20,6 +23,7 @@ Profile4,ILI9486,User_Setups/Setup9486.h,TFT_ILI9486
 Profile5,ILI9481,User_Setups/Setup9481.h,TFT_ILI9481
 Profile6,ILI9806,User_Setups/Setup9806.h,TFT_ILI9806
 
+# --- E-paper / specialty ---
 Profile7,EPD2IN9,User_Setups/SetupEPD2IN9.h,TFT_EPD2IN9
 Profile8,EPD2IN13,User_Setups/SetupEPD2IN13.h,TFT_EPD2IN13
 Profile9,EPD7IN5,User_Setups/SetupEPD7IN5.h,TFT_EPD7IN5
