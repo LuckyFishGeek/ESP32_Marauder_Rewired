@@ -206,14 +206,26 @@ jobs:
           includes=registry/ToolRegistry.h
           PROP
 
-      - name: Unpack display settings (optional)
+      - name: Unpack TFT display settings
+        shell: bash
         run: |
-          if [ -f "scaffold/display/display_settings.zip" ]; then
-            mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
-            unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
-            echo "Unpacked TFT_eSPI headers"
+          set -euo pipefail
+      
+          ZIP="${GITHUB_WORKSPACE}/scaffold/display/display_settings.zip"
+          TE="$HOME/Arduino/libraries/TFT_eSPI"
+          USD="$TE/User_Setups"
+      
+          # (optional) ensure unzip is available
+          command -v unzip >/dev/null || { sudo apt-get update && sudo apt-get install -y unzip; }
+      
+          if [ -f "$ZIP" ]; then
+            mkdir -p "$USD"
+            echo "Unpacking $ZIP -> $TE"
+            unzip -o "$ZIP" -d "$TE" >/dev/null
+            echo "Unpacked TFT_eSPI headers. Listing candidates:"
+            find "$TE" -maxdepth 2 -type f -name 'User_Setup*.h' | sort || true
           else
-            echo "display_settings.zip not present; skipping"
+            echo "::warning ::${ZIP} not found; did you enable LFS on checkout?"
           fi
 
       - name: Prepare Sketch Folder
