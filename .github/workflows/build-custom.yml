@@ -292,6 +292,16 @@ jobs:
           cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
           echo -e "name=ESP32MarauderRegistry\nversion=0.0.3\narchitectures=*\nincludes=registry/ToolRegistry.h" > "$LIBDIR/library.properties"
 
+      - name: Unpack display settings (optional)
+        run: |
+          if [ -f "scaffold/display/display_settings.zip" ]; then
+            mkdir -p "$HOME/Arduino/libraries/TFT_eSPI"
+            unzip -o "display_settings.zip" -d "$HOME/Arduino/libraries/TFT_eSPI" >/dev/null
+            echo "Unpacked TFT_eSPI headers"
+          else
+            echo "display_settings.zip not present; skipping"
+          fi
+
       - name: Prepare Sketch Folder
         id: prep
         run: |
