@@ -508,16 +508,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          D=""
-          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
       
-          add () {
+          # Normalize the modules list to space-separated tokens
+          RAW="${{ steps.mods.outputs.csv }}"
+          CSV_FLAGS="$(printf '%s' "$RAW" | tr ',' ' ' | xargs)"   # e.g. "WIFI BUTTONS TFT_OFF"
+          D=""
+      
+          add() {
             local key="$1" def="$2"
             if [[ " ${CSV_FLAGS} " == *" ${key} "* ]]; then
               D="${D} -D${def}"
             fi
           }
-
+      
           add WIFI      ENABLE_WIFI
           add BLE       ENABLE_BLE
           add WEB       ENABLE_WEB
@@ -532,26 +535,26 @@ jobs:
           add NRF24     ENABLE_NRF24
           add USB_MSC   ENABLE_USB_MSC
           add DUAL_WIFI ENABLE_DUAL_WIFI
-          add "2WIFI"     ENABLE_2WIFI
-
+          add "2WIFI"   ENABLE_2WIFI
+      
           # From board pin presets
           PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
           [ -n "$PRESET_PINS" ] && D="$D $PRESET_PINS"
-
+      
           # From free-text custom_pins parser
           CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
           [ -n "$CUST" ] && D="$D $CUST"
-
+      
           # From display resolver
           DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
           [ -n "$DISP_DEF" ] && D="$D -D$DISP_DEF"
-
+      
           # Extra manual -D flags
           EXTRA="${{ github.event.inputs.extra_defines }}"
           if [ -n "$EXTRA" ]; then
             for t in $EXTRA; do D="$D -D$t"; done
           fi
-
+      
           echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
 
