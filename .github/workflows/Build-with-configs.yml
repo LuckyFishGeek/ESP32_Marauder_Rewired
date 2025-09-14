@@ -64,7 +64,7 @@ jobs:
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Resolve board from manifest (CSV only)
+      - name: Resolve board from manifest (CSV)
         id: map
         shell: bash
         run: |
@@ -72,16 +72,17 @@ jobs:
           MAN="${{ steps.manifest.outputs.man_path }}"
           WANT="${{ github.event.inputs.board_label }}"
       
-          # Find row matching board_label
-          LINE=$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")
-      
+          # Find the exact row for the selected board label (col 1)
+          LINE="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")"
           if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
             echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
             exit 1
           fi
       
-          # Extract fields (assumes CSV header order)
+          # Expected columns:
+          # 1:board_label, 2:fqbn, 3:flag, 4:filesystem, 5:partition, 6:profile,
+          # 7:tft_enabled, 8:tft_header, 9:defines (optional), 10:core_version
           FQBN=$(echo "$LINE"         | cut -d',' -f2)
           FLAG=$(echo "$LINE"         | cut -d',' -f3)
           DEF_FS=$(echo "$LINE"       | cut -d',' -f4)
@@ -89,10 +90,11 @@ jobs:
           PROFILE=$(echo "$LINE"      | cut -d',' -f6)
           TFT_ENABLED=$(echo "$LINE"  | cut -d',' -f7)
           TFT_HEADER=$(echo "$LINE"   | cut -d',' -f8)
-          DEFINES=$(echo "$LINE"      | cut -d',' -f9- | cut -d',' -f1 | tr ';' ' ' | xargs || true)
+          DEFINES=$(echo "$LINE"      | cut -d',' -f9  | tr ';' ' ' | xargs || true)
           CORE_VER=$(echo "$LINE"     | awk -F',' '{print $NF}')
       
-          if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
+          # Append board flag to defines if present
+          [ -n "$FLAG" ] && DEFINES="$(printf '%s %s' "$DEFINES" "-D$FLAG" | xargs)"
       
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
