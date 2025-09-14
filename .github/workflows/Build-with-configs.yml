@@ -256,7 +256,11 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
-      - name: Sanity check boards CSV
+      - name: Make sanity.sh executable
+        shell: bash
+        run: chmod +x scaffold/scripts/sanity.sh
+      
+      - name: Sanity check
         shell: bash
         run: scaffold/scripts/sanity.sh
 
