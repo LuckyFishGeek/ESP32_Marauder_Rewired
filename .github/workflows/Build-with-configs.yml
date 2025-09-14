@@ -70,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
           MAN="${{ steps.manifest.outputs.man_path }}"
-          WANT="${{ matrix.board_label }}"
+          WANT="${{ github.event.inputs.board_label }}"
       
           # Find row matching board_label
           LINE=$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")
