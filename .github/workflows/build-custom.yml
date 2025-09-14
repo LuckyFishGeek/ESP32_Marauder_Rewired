@@ -575,11 +575,11 @@ jobs:
         run: |
           set -euo pipefail
       
-          # 1) Raw module tokens from previous step
+          # Modules from your earlier step (or leave empty)
           CSV_FLAGS_RAW="${{ steps.mods.outputs.csv || '' }}"
           echo "CSV_FLAGS_RAW='${CSV_FLAGS_RAW}'"
       
-          # 2) Normalize to distinct UPPERCASE tokens
+          # Normalize -> UPPERCASE, split on , ; | whitespace, unique
           TOKENS=()
           if [[ -n "${CSV_FLAGS_RAW// /}" ]]; then
             while IFS= read -r t; do
@@ -592,19 +592,10 @@ jobs:
                       | awk '!seen[$0]++')
           fi
       
-          # membership test
-          has() {
-            local needle="$1"
-            for t in "${TOKENS[@]:-}"; do
-              [[ "$t" == "$needle" ]] && return 0
-            done
-            return 1
-          }
+          has() { local n="$1"; for t in "${TOKENS[@]:-}"; do [[ "$t" == "$n" ]] && return 0; done; return 1; }
+          add() { local key="$1" def="$2"; has "$key" && D+=" -D${def}"; }
       
-          # 3) Build -D flags from known tokens
           D=""
-      
-          add() { local key="$1" def="$2"; if has "$key"; then D+=" -D${def}"; fi; }
       
           add WIFI        ENABLE_WIFI
           add BLE         ENABLE_BLE
@@ -620,24 +611,21 @@ jobs:
           add NRF24       ENABLE_NRF24
           add USB_MSC     ENABLE_USB_MSC
           add DUAL_WIFI   ENABLE_DUAL_WIFI
-          add 2WIFI       ENABLE_2WIFI      # token "2WIFI" (string)
+          add 2WIFI       ENABLE_2WIFI      # literal token "2WIFI"
       
-          # 4) Merge in pin presets, custom pins, display define, and extra manual -D
-          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs }}"
+          # Merge other define sources
+          PRESET_PINS="${{ steps.pinpreset.outputs.pins_defs || '' }}"
           [[ -n "${PRESET_PINS// /}" ]] && D+=" ${PRESET_PINS}"
       
-          CUST="${{ steps.custompins.outputs.custom_pin_defs }}"
+          CUST="${{ steps.custompins.outputs.custom_pin_defs || '' }}"
           [[ -n "${CUST// /}" ]] && D+=" ${CUST}"
       
-          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define }}"
+          DISP_DEF="${{ steps.disp_resolve.outputs.disp_define || '' }}"
           [[ -n "${DISP_DEF// /}" ]] && D+=" -D${DISP_DEF}"
       
           EXTRA="${{ github.event.inputs.extra_defines || '' }}"
-          if [[ -n "${EXTRA// /}" ]]; then
-            for t in $EXTRA; do D+=" -D$t"; done
-          fi
+          if [[ -n "${EXTRA// /}" ]]; then for t in $EXTRA; do D+=" -D$t"; done; fi
       
-          # 5) Trim + export
           D="$(echo "$D" | xargs || true)"
           echo "Defines => $D"
           echo "defs=$D" >> "$GITHUB_OUTPUT"
