@@ -69,9 +69,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          MAN="scaffold/configs/boards_manifest.csv"
+          MAN="./scaffold/configs/boards_manifest.csv"
           WANT="${{ github.event.inputs.board_label }}"
       
+          # exact row
           LINE="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")"
           if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
@@ -79,12 +80,28 @@ jobs:
             exit 1
           fi
       
-          # Columns: label,fqbn,flag,filesystem,partition,profile,tft_enabled,tft_header,defines,core_version
-          IFS=',' read -r LABEL FQBN FLAG DEF_FS DEF_PART PROFILE TFT_ENABLED TFT_HEADER DEFINES CORE_VER <<< "$LINE"
+          NFIELDS="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print NF; exit}' "$MAN")"
       
-          # Clean up fields
-          DEFINES="$(printf '%s' "${DEFINES:-}" | tr -d '\r' | tr ';' ' ' | xargs || true)"
-          [ -n "${FLAG:-}" ] && DEFINES="$(printf '%s %s' "$DEFINES" "-D$FLAG" | xargs)"
+          FQBN=$(echo "$LINE"       | cut -d',' -f2)
+          FLAG=$(echo "$LINE"       | cut -d',' -f3)
+          DEF_FS=$(echo "$LINE"     | cut -d',' -f4)
+          DEF_PART=$(echo "$LINE"   | cut -d',' -f5)
+          PROFILE=$(echo "$LINE"    | cut -d',' -f6)
+          TFT_ENABLED=$(echo "$LINE"| cut -d',' -f7)
+          TFT_HEADER=$(echo "$LINE" | cut -d',' -f8)
+      
+          if [ "$NFIELDS" -ge 10 ]; then
+            RAW_DEFINES=$(echo "$LINE" | cut -d',' -f9)
+            CORE_VER=$(echo "$LINE"    | cut -d',' -f10)
+          else
+            RAW_DEFINES=""
+            CORE_VER=$(echo "$LINE" | cut -d',' -f9)
+          fi
+      
+          # clean defines (semicolon-separated in CSV)
+          DEFINES="$(printf '%s' "$RAW_DEFINES" | tr ';' ' ' | tr -d '\r' | xargs || true)"
+          [ -n "$FLAG" ] && DEFINES="$DEFINES -D$FLAG"
+          DEFINES="$(printf '%s' "$DEFINES" | xargs || true)"
       
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
@@ -318,62 +335,42 @@ jobs:
           echo "Applied TFT header: $HEADER_REL"
           echo "Wrote: $TE/User_Setup_Select.h"
 
-      - name: Resolve FS/Partition
+      - name: Resolve FS/Partition and install custom CSV if present
         id: fs
         shell: bash
         run: |
           set -euo pipefail
-          FS_INPUT="${{ github.event.inputs.filesystem }}"
-          PART_INPUT_RAW="${{ github.event.inputs.partition }}"
-
-          # Map pretty label -> actual CSV filename (if present)
-          part_from_pretty () {
-            local s="$1"
-            # Default selection means "use manifest"
-            if [ -z "$s" ] || [ "$s" = "Default (use manifest)" ]; then
-              echo ""
-              return
-            fi
-
-            # If it looks like "... (filename.csv)" extract filename without regex
-            case "$s" in
-              *"("*.csv")"*)
-                local tmp="${s##*(}"   # strip everything up to last "("
-                tmp="${tmp%)}"        # strip trailing ")"
-                echo "$tmp"
-                ;;
-              *)
-                # Fallback: assume user typed a raw filename
-                echo "$s"
-                ;;
-            esac
-          }
-
-          PART_INPUT="$(part_from_pretty "$PART_INPUT_RAW")"
-
-          # Prefer user input; otherwise manifest defaults resolved earlier
-          FS="${FS_INPUT:-${{ steps.map.outputs.def_fs }}}"
-          if [ -n "$PART_INPUT" ]; then
-            PART="$PART_INPUT"
-          else
-            PART="${{ steps.map.outputs.def_part }}"
-          fi
-
-          echo "fs=$FS" >> $GITHUB_OUTPUT
-          echo "partition=$PART" >> $GITHUB_OUTPUT
-
-          # If a custom partition CSV is referenced, install it into the core (optional convenience)
+          FS_IN="${{ steps.map.outputs.def_fs }}"
+          PART_IN="${{ steps.map.outputs.def_part }}"
+          CORE_VER="${{ steps.core.outputs.core_ver }}"
+      
+          # Where the esp32 core keeps partition CSVs
+          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+      
+          FS="$FS_IN"
+          PART="$PART_IN"
+      
+          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ github.event.inputs.core_version }}/tools/partitions"
             if [ -f "$SRC" ]; then
-              mkdir -p "$DEST"
-              cp -f "$SRC" "$DEST/$PART"
-              echo "Installed custom partition CSV to $DEST/$PART"
+              mkdir -p "$CORE_PART_DIR"
+              cp -f "$SRC" "$CORE_PART_DIR/$PART"
+              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
             else
-              echo "Partition CSV '$PART' not found in repo /partitions; relying on core's copy (if any)."
+              # If not in repo AND not already in the core, fallback to a stock CSV
+              if [ ! -f "$CORE_PART_DIR/$PART" ]; then
+                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
+                PART="default.csv"
+              fi
             fi
           fi
+      
+          echo "fs=$FS"   >> $GITHUB_OUTPUT
+          echo "partition=$PART" >> $GITHUB_OUTPUT
+      
+          echo "Filesystem: ${FS:-<core default>}"
+          echo "Partition:  ${PART:-<core default>}"
           
       # ---------- PATCHED: array-based args to preserve -D flags ----------
       - name: Compile (Arduino CLI)
@@ -382,43 +379,47 @@ jobs:
           set -euo pipefail
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          DEFS="${{ steps.map.outputs.defines }}"
+          RAW_DEFS="${{ steps.map.outputs.defines }}"
           EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
-
+      
+          # keep only -D* tokens; drop accidental junk
+          DEFS=""
+          for t in $RAW_DEFS; do
+            case "$t" in
+              -D*) DEFS="$DEFS $t" ;;
+            esac
+          done
+          DEFS="$(echo "$DEFS" | xargs || true)"
+      
           echo "FQBN: $FQBN"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
           echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
-          echo "DEFINES: $DEFS"
-
+          echo "DEFINES: ${DEFS:-<none>}"
+      
           CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
           C_FLAGS="$EXTRA_INCLUDES $DEFS"
-
+      
           ARGS=()
           ARGS+=(--fqbn "$FQBN")
           ARGS+=(--warnings none)
           ARGS+=(--export-binaries)
           ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
           ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
-
-          if [ -n "$FS" ]; then
-            ARGS+=(--build-property "board_build.filesystem=$FS")
-          fi
-
+      
+          [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
+      
           if [ -n "$PART" ]; then
             mkdir -p "$SKETCH_DIR/partitions"
-            if [ -f "partitions/$PART" ]; then
-              cp -f "partitions/$PART" "$SKETCH_DIR/partitions/"
-            fi
-            NAME_ONLY="${PART%.csv}"
-            ARGS+=(--build-property "build.partitions=$NAME_ONLY")
+            # copy from repo if present (optional convenience for debugging)
+            [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
+            # CLI wants the *name without .csv*
+            ARGS+=(--build-property "build.partitions=${PART%.csv}")
           fi
-
-          echo "arduino-cli compile args:"
-          printf '  %q\n' "${ARGS[@]}"
-
+      
+          printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
           arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
       # -------------------------------------------------------------------
 
