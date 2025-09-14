@@ -231,6 +231,23 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           find "$SKETCH_DIR" -maxdepth 2 -type f | sort
 
+      - name: Resolve modules
+        id: mods
+        shell: bash
+        run: |
+          set -euo pipefail
+          PRESETS="scaffold/configs/modules_presets.csv"
+          CHOICE="${{ github.event.inputs.profile_name }}"
+          CUSTOM="${{ github.event.inputs.modules_csv }}"
+          if [ "$CHOICE" = "Custom" ]; then
+            echo "csv=$CUSTOM" >> $GITHUB_OUTPUT; exit 0
+          fi
+          if [ ! -f "$PRESETS" ]; then
+            echo "::error ::$PRESETS not found"; exit 1
+          fi
+          LINE=$(awk -F',' -v want="$CHOICE" 'tolower($1)==tolower(want){$1="";sub(/^,/, "");print;exit}' "$PRESETS")
+          echo "csv=$LINE" >> $GITHUB_OUTPUT
+
       - name: Apply TFT header (library-level)
         if: steps.map.outputs.tft_enabled == 'true' && steps.map.outputs.tft_header != ''
         run: |
