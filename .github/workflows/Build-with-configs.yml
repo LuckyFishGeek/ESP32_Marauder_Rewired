@@ -117,17 +117,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+      
+          # Pick version: user input (unless 'Auto') -> CSV-provided -> fallback
           INPUT="${{ github.event.inputs.core_version }}"
-          AUTO_VER="${{ steps.map.outputs.core_ver }}"
-          # Pick version: workflow input (unless 'Auto') -> CSV-provided core_ver -> fallback 2.0.11
-          CORE_VER="$([ -n "$INPUT" ] && [ "$INPUT" != "Auto" ] && echo "$INPUT" || echo "${AUTO_VER:-2.0.11}")"
+          CSV_VER="${{ steps.map.outputs.core_ver }}"
+          CORE_VER="$([ -n "$INPUT" ] && [ "$INPUT" != "Auto" ] && echo "$INPUT" || echo "${CSV_VER:-2.0.11}")"
           echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
+          echo "Using Arduino-ESP32 core: $CORE_VER"
       
-          # For tagged releases use package_esp32_index.json (NOT *_dev_*)
-          URL="https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_index.json"
+          # Use Espressif's stable index (works for 2.x and 3.x)
+          URL="https://espressif.github.io/arduino-esp32/package_esp32_index.json"
       
-          arduino-cli config init --additional-urls "$URL"
-          arduino-cli core update-index
+          # Fresh config + set additional URL
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls "$URL"
+      
+          # Update index (with a simple retry)
+          arduino-cli core update-index || { echo "Retrying index update..."; sleep 2; arduino-cli core update-index; }
+      
+          # Install requested core version
           arduino-cli core install "esp32:esp32@${CORE_VER}"
           arduino-cli core list
       
