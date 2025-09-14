@@ -498,18 +498,19 @@ jobs:
       
           echo "Applied TFT header: $HEADER_REL"
           echo "Wrote: $TE/User_Setup_Select.h"
-      - name: Resolve board pin preset (pins_presets.csv)
-        id: pinpreset
+          
+      - name: Resolve board pin custom (pins_custom.csv)
+        id: pincustom
         shell: bash
         run: |
           set -euo pipefail
-          CSV="scaffold/configs/pins/pins_presets.csv"
+          CSV="scaffold/configs/pins/pins_custom.csv"
           BOARD="${{ github.event.inputs.board_label }}"
 
           out(){ echo "$1=$2" >> "$GITHUB_OUTPUT"; }
 
           if [ ! -f "$CSV" ]; then
-            echo "pins_presets.csv not found at $CSV (skipping)."
+            echo "pins_custom.csv not found at $CSV (skipping)."
             out pins_defs ""
             exit 0
           fi
@@ -680,8 +681,8 @@ jobs:
           done
       
           # Merge in pin presets, custom pins, display define, and extra -D from inputs
-          PIN_PRESET="${{ steps.pinpreset.outputs.pins_defs || '' }}"
-          [ -n "$PIN_PRESET" ] && D+=" $PIN_PRESET"
+          PIN_CUSTOM="${{ steps.pincustom.outputs.pins_defs || '' }}"
+          [ -n "$PIN_CUSTOM" ] && D+=" $PIN_CUSTOM"
       
           CUSTOM_PINS="${{ steps.custompins.outputs.custom_pin_defs || '' }}"
           [ -n "$CUSTOM_PINS" ] && D+=" $CUSTOM_PINS"
@@ -704,7 +705,7 @@ jobs:
       
           CSV_BOARDS="scaffold/configs/boards_manifest.csv"
           CSV_MODS="scaffold/configs/modules_presets.csv"
-          CSV_PINS="scaffold/configs/pins/pins_presets.csv"
+          CSV_PINS="scaffold/configs/pins/pins_custom.csv"
           CSV_DISP="scaffold/configs/displays/display_presets.csv"
           SCRIPT="scaffold/scripts/gen_configs_h.sh"
           SKETCH_DIR="_build/esp32_marauder_rewired"
