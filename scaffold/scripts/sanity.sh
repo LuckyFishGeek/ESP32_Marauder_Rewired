@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Sanity checks for CSV configs and partitions
 # Usage: ./scaffold/scripts/sanity.sh
-set -euo pipefail
+set -Eeuo pipefail
+
+# Nice errors with line numbers
+trap 'ec=$?; echo "[ERR]  Failed at line $LINENO (exit $ec)"; exit $ec' ERR
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
@@ -12,6 +15,7 @@ fail()  { printf "[ERR]  %s\n" "$*" >&2; exit 1; }
 normalize_crlf() {
   local f="$1"
   [ -f "$f" ] || fail "Missing file: $f"
+  # Normalize CRLF -> LF
   sed -i 's/\r$//' "$f" || true
 }
 
@@ -19,10 +23,10 @@ require_header_starts_with() {
   local f="$1" expect="$2"
   local hdr
   hdr="$(head -n1 "$f" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
-  if [[ "$hdr" == $expect* ]]; then
-    pass "Header OK: $(basename "$f") starts with '$expect'"
+  if [[ "$hdr" == "${expect}"* ]]; then
+    pass "Header OK: $(basename "$f") starts with '${expect}'"
   else
-    fail "$(basename "$f") header invalid. Saw: '$(head -n1 "$f")'  Expected to start with: '$expect'"
+    fail "$(basename "$f") header invalid. Saw: '$(head -n1 "$f")' | Expected to start with: '${expect}'"
   fi
 }
 
@@ -63,6 +67,7 @@ PARTS=(
 )
 
 echo "=== CSV Sanity ==="
+echo "ROOT: $ROOT"
 
 # Boards manifest
 check_exists_and_nonempty "$BOARDS_CSV"
