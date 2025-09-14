@@ -64,23 +64,6 @@ jobs:
       - name: Install jq + unzip
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Sanitize manifest.json (strip BOM/CRLF and validate)
-        shell: bash
-        run: |
-          set -euo pipefail
-          MAN=./scaffold/configs/manifest.json
-          test -f "$MAN" || { echo "::error ::manifest.json not found at $MAN"; exit 1; }
-          # Strip UTF-8 BOM if present
-          MAGIC="$(head -c 3 "$MAN" | od -An -tx1 | tr -d ' \n')"
-          if [ "$MAGIC" = "efbbbf" ]; then
-            tail -c +4 "$MAN" > "$MAN.nobom" && mv "$MAN.nobom" "$MAN"
-            echo "Removed UTF-8 BOM from manifest.json"
-          fi
-          # Normalize CRLF -> LF
-          sed -i 's/\r$//' "$MAN"
-          # Validate JSON
-          jq . "$MAN" >/dev/null
-
       - name: Load manifest and list available boards
         id: manifest
         shell: bash
