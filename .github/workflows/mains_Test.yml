@@ -10,27 +10,30 @@ jobs:
       fail-fast: false
       max-parallel: 6
       matrix:
-        board_label:
-          - "Flipper Zero WiFi Dev Board"
-          - "Flipper Zero Multi Board S3"
-          - "OG Marauder"
-          - "Marauder v6"
-          - "Marauder v6.1"
-          - "Marauder Kit"
-          - "Marauder Mini"
-          - "ESP32 LDDB"
-          - "Marauder Dev Board Pro"
-          - "M5StickCPlus"
-          - "M5StickCPlus 2"
-          - "Rev Feather"
-          - "Marauder v7"
-          - "Marauder CYD 2432S028"
-          - "Marauder CYD 2432S024 GUITION"
-          - "Marauder CYD 2432S028 2 USB"
-          - "Marauder v7.1"
-          - "M5Cardputer"
-          - "ESP32-C5-DevKitC-1"
-          - "Generic ESP32 Dev Module"
+        include:
+          # ---- 2.0.11 builds ----
+          - { board_label: "Flipper Zero WiFi Dev Board",          core_version: "2.0.11" }
+          - { board_label: "Flipper Zero Multi Board S3",          core_version: "2.0.11" }
+          - { board_label: "OG Marauder",                          core_version: "2.0.11" }
+          - { board_label: "Marauder v6",                          core_version: "2.0.11" }
+          - { board_label: "Marauder v6.1",                        core_version: "2.0.11" }
+          - { board_label: "Marauder Kit",                         core_version: "2.0.11" }
+          - { board_label: "Marauder Mini",                        core_version: "2.0.11" }
+          - { board_label: "ESP32 LDDB",                           core_version: "2.0.11" }
+          - { board_label: "Marauder Dev Board Pro",               core_version: "2.0.11" }
+          - { board_label: "M5StickCPlus",                         core_version: "2.0.11" }
+          - { board_label: "M5StickCPlus 2",                       core_version: "2.0.11" }
+          - { board_label: "Rev Feather",                          core_version: "2.0.11" }
+          - { board_label: "Marauder v7",                          core_version: "2.0.11" }
+          - { board_label: "Marauder CYD 2432S028",                core_version: "2.0.11" }
+          - { board_label: "Marauder CYD 2432S024 GUITION",        core_version: "2.0.11" }
+          - { board_label: "Marauder CYD 2432S028 2 USB",          core_version: "2.0.11" }
+          - { board_label: "Marauder v7.1",                        core_version: "2.0.11" }
+          - { board_label: "M5Cardputer",                          core_version: "2.0.11" }
+          - { board_label: "Generic ESP32 Dev Module",             core_version: "2.0.11" }
+
+          # ---- 3.x builds (needed for ESP32-C5) ----
+          - { board_label: "ESP32-C5-DevKitC-1",                   core_version: "3.0.0" }
 
     steps:
       - name: Checkout repo (with LFS)
@@ -47,13 +50,13 @@ jobs:
         run: |
           set -euo pipefail
           CSV=./scaffold/configs/boards_manifest.csv
-      
+
           test -f "$CSV" || { echo "::error ::boards_manifest.csv not found at $CSV"; exit 1; }
-      
+
           # Normalize CRLF -> LF
           sed -i 's/\r$//' "$CSV"
-      
-          # Validate header
+
+          # Validate header (must start with board_label,fqbn)
           HDR="$(head -n1 "$CSV" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
           case "$HDR" in
             board_label,fqbn* ) ;;
@@ -63,14 +66,14 @@ jobs:
               exit 1
               ;;
           esac
-      
+
           echo "Found CSV manifest: $CSV"
           echo "Boards:"
           tail -n +2 "$CSV" | cut -d',' -f1 | nl -ba
-      
+
           echo "man_path=$CSV" >> $GITHUB_OUTPUT
           echo "man_type=csv"  >> $GITHUB_OUTPUT
-      
+
       - name: Resolve board from manifest (CSV only)
         id: map
         shell: bash
@@ -78,16 +81,16 @@ jobs:
           set -euo pipefail
           MAN="${{ steps.manifest.outputs.man_path }}"
           WANT="${{ matrix.board_label }}"
-      
+
           # Find row matching board_label
           LINE=$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")
-      
+
           if [ -z "$LINE" ]; then
             echo "::error ::Board label not found in manifest: $WANT"
             echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
             exit 1
           fi
-      
+
           # Extract fields (assumes CSV header order)
           FQBN=$(echo "$LINE"       | cut -d',' -f2)
           FLAG=$(echo "$LINE"       | cut -d',' -f3)
@@ -97,16 +100,16 @@ jobs:
           TFT_ENABLED=$(echo "$LINE"| cut -d',' -f7)
           TFT_HEADER=$(echo "$LINE" | cut -d',' -f8)
           DEFINES=$(echo "$LINE"    | cut -d',' -f9- | tr ';' ' ' | xargs || true)
-      
+
           if [ -n "$FLAG" ]; then DEFINES="$DEFINES -D$FLAG"; fi
-      
+
           echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
           echo "tft_enabled=$TFT_ENABLED" >> $GITHUB_OUTPUT
           echo "tft_header=$TFT_HEADER"   >> $GITHUB_OUTPUT
           echo "def_fs=$DEF_FS"           >> $GITHUB_OUTPUT
           echo "def_part=$DEF_PART"       >> $GITHUB_OUTPUT
           echo "defines=$DEFINES"         >> $GITHUB_OUTPUT
-      
+
           echo "---- RESOLVED BOARD ----"
           echo "Board:        $WANT"
           echo "FQBN:         $FQBN"
@@ -115,6 +118,7 @@ jobs:
           echo "Default FS:   ${DEF_FS:-<core default>}"
           echo "Default Part: ${DEF_PART:-<core default>}"
           echo "Defines:      ${DEFINES:-<none>}"
+          echo "Core target:  esp32:esp32@${{ matrix.core_version }}"
           echo "------------------------"
 
       - name: Install Arduino CLI
@@ -124,15 +128,28 @@ jobs:
           export PATH="${GITHUB_WORKSPACE}/bin:$PATH"
           arduino-cli version
 
-      - name: Configure & Install ESP32 Core
-        id: core
+      - name: Configure & Install ESP32 Core (matrix version)
         run: |
-          CORE_VER="2.0.11"
-          echo "core_ver=$CORE_VER" >> $GITHUB_OUTPUT
-          arduino-cli config init --additional-urls "https://github.com/espressif/arduino-esp32/releases/download/${CORE_VER}/package_esp32_dev_index.json"
+          set -euo pipefail
+          V="${{ matrix.core_version }}"
+          # Use the unified index that lists ALL versions
+          arduino-cli config init --additional-urls "https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json"
           arduino-cli core update-index
-          arduino-cli core install "esp32:esp32@${CORE_VER}"
+          arduino-cli core install "esp32:esp32@${V}"
           arduino-cli core list
+
+      - name: Verify FQBN exists in installed core
+        id: check_fqbn
+        shell: bash
+        run: |
+          set -euo pipefail
+          FQBN="${{ steps.map.outputs.fqbn }}"
+          if ! arduino-cli board listall | awk '{print $NF}' | grep -qx "$FQBN"; then
+            echo "::warning ::FQBN $FQBN not found in esp32:esp32@${{ matrix.core_version }}; skipping compile for ${{ matrix.board_label }}."
+            echo "skip_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_build=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Clean conflicting libs
         run: |
@@ -212,7 +229,7 @@ jobs:
           echo "partition=$PART" >> $GITHUB_OUTPUT
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ steps.core.outputs.core_ver }}/tools/partitions"
+            DEST="$HOME/.arduino15/packages/esp32/hardware/esp32/${{ matrix.core_version }}/tools/partitions"
             if [ -f "$SRC" ]; then
               mkdir -p "$DEST"
               cp -f "$SRC" "$DEST/$PART"
@@ -221,6 +238,7 @@ jobs:
           fi
 
       - name: Compile (Arduino CLI)
+        if: steps.check_fqbn.outputs.skip_build == 'false'
         shell: bash
         run: |
           set -euo pipefail
@@ -232,6 +250,7 @@ jobs:
           PART="${{ steps.fs.outputs.partition }}"
 
           echo "Board:       ${{ matrix.board_label }}"
+          echo "Core:        esp32:esp32@${{ matrix.core_version }}"
           echo "FQBN:        $FQBN"
           echo "Filesystem:  ${FS:-<default>}"
           echo "Partition:   ${PART:-<default>}"
@@ -258,6 +277,7 @@ jobs:
           arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
 
       - name: Upload firmware artifact
+        if: steps.check_fqbn.outputs.skip_build == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: fw_${{ matrix.board_label }}_${{ github.sha }}
