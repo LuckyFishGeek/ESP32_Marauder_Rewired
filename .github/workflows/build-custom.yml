@@ -508,8 +508,13 @@ jobs:
           set -euo pipefail
           D=""
           CSV_FLAGS="${{ steps.mods.outputs.csv }}"
-
-          add () { [[ "$CSV_FLAGS" == *"$1"* ]] && D="$D -D$2"; }
+      
+          add () {
+            local key="$1" def="$2"
+            if [[ " ${CSV_FLAGS} " == *" ${key} "* ]]; then
+              D="${D} -D${def}"
+            fi
+          }
 
           add WIFI      ENABLE_WIFI
           add BLE       ENABLE_BLE
