@@ -69,9 +69,8 @@ on:
       tft_model:
         type: choice
         description: 'Select TFT/Display model (from display_presets.csv)'
-        default: 'Auto'
+        default: 'None'
         options:
-          - Auto
           - None
           - ILI9341
           - ILI9488
