@@ -34,9 +34,10 @@ on:
         default: ''
         options: ['', 'spiffs', 'littlefs']
       partition:
-        type: choice
-        description: 'Override partition CSV (pretty names) ? blank uses manifest default'
+        description: 'Partition scheme'
+        required: false
         default: 'Default (use manifest)'
+        type: choice
         options:
           - 'Default (use manifest)'
           - 'Huge App + 1MB FS (hugeapp_1m_fs.csv)'
@@ -46,6 +47,10 @@ on:
           - 'Minimal (SPIFFS OTA) (min_spiffs_ota.csv)'
           - 'OTA + 1MB FS (ota_1m_fs.csv)'
           - 'Marauder Default (marauder_default.csv)'
+          # --- new additions ---
+          - 'App 2M / FS 2M (app_2m_fs_2m.csv)'
+          - 'OTA Dual 1M/1M (ota_dual_1m_1m.csv)'
+          - 'WiFi Capture BigFS (wifi_capture_bigfs.csv)'
       core_version:
         description: 'Arduino-ESP32 core version'
         required: false
@@ -364,37 +369,106 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          FS_IN="${{ steps.map.outputs.def_fs }}"
-          PART_IN="${{ steps.map.outputs.def_part }}"
+      
+          # Inputs from earlier steps / workflow
+          CSV_FS="${{ steps.map.outputs.def_fs }}"
+          CSV_PART="${{ steps.map.outputs.def_part }}"
           CORE_VER="${{ steps.core.outputs.core_ver }}"
+          INPUT_PART_LABEL="${{ github.event.inputs.partition || '' }}"
+          INPUT_FS_OVERRIDE="${{ github.event.inputs.filesystem || '' }}"
       
-          # Where the esp32 core keeps partition CSVs
-          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+          # Map dropdown label -> filename (includes legacy + new three)
+          label_to_file() {
+            case "$1" in
+              "Default (use manifest)"|"") echo "" ;;
+              "Huge App + 1MB FS (hugeapp_1m_fs.csv)") echo "hugeapp_1m_fs.csv" ;;
+              "Marauder (LittleFS OTA) (marauder_littlefs.csv)") echo "marauder_littlefs.csv" ;;
+              "Marauder (SPIFFS OTA) (marauder_spiffs_ota.csv)") echo "marauder_spiffs_ota.csv" ;;
+              "Minimal (LittleFS OTA) (min_littlefs_ota.csv)") echo "min_littlefs_ota.csv" ;;
+              "Minimal (SPIFFS OTA) (min_spiffs_ota.csv)") echo "min_spiffs_ota.csv" ;;
+              "OTA + 1MB FS (ota_1m_fs.csv)") echo "ota_1m_fs.csv" ;;
+              "Marauder Default (marauder_default.csv)") echo "marauder_default.csv" ;;
+              # new
+              "App 2M / FS 2M (app_2m_fs_2m.csv)") echo "app_2m_fs_2m.csv" ;;
+              "OTA Dual 1M/1M (ota_dual_1m_1m.csv)") echo "ota_dual_1m_1m.csv" ;;
+              "WiFi Capture BigFS (wifi_capture_bigfs.csv)") echo "wifi_capture_bigfs.csv" ;;
+              *) echo "" ;;
+            esac
+          }
       
-          FS="$FS_IN"
-          PART="$PART_IN"
+          # Decide partition (filename) with friendly label recorded
+          PART_LABEL="$INPUT_PART_LABEL"
+          PART_FILE="$(label_to_file "$INPUT_PART_LABEL")"
+          if [ -z "$PART_FILE" ]; then
+            PART_FILE="$CSV_PART"
+            [ -z "$PART_LABEL" ] && PART_LABEL="Default (use manifest)"
+          fi
       
-          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
-          if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
+          # Decide FS & where it came from (override > CSV > inferred)
+          FS_SOURCE=""
+          case "$(echo "$INPUT_FS_OVERRIDE" | tr '[:upper:]' '[:lower:]')" in
+            littlefs) FS="littlefs"; FS_SOURCE="workflow override";;
+            spiffs)   FS="spiffs";   FS_SOURCE="workflow override";;
+            ""|"default (use manifest)")
+              if [ -n "$CSV_FS" ]; then
+                FS="$CSV_FS"; FS_SOURCE="CSV default"
+              else
+                if [[ "$PART_FILE" == *littlefs* ]]; then FS="littlefs"; else FS="spiffs"; fi
+                FS_SOURCE="inferred from partition name"
+              fi
+              ;;
+            *)
+              if [ -n "$CSV_FS" ]; then
+                FS="$CSV_FS"; FS_SOURCE="unknown override ? using CSV default"
+              else
+                if [[ "$PART_FILE" == *littlefs* ]]; then FS="littlefs"; else FS="spiffs"; fi
+                FS_SOURCE="unknown override ? inferred"
+              fi
+              ;;
+          esac
+      
+          # Find core partitions dir
+          if [ -n "$CORE_VER" ] && [ -d "$HOME/.arduino15/packages/esp32/hardware/esp32/$CORE_VER/tools/partitions" ]; then
+            CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/$CORE_VER/tools/partitions"
+          else
+            CAND=( "$HOME/.arduino15/packages/esp32/hardware/esp32/"*/tools/partitions )
+            CORE_PART_DIR="${CAND[-1]}"
+          fi
+          mkdir -p "$CORE_PART_DIR"
+      
+          # Install repo partition CSV (if present) into the core; note the source
+          PART_SOURCE="none"
+          if [ -n "$PART_FILE" ]; then
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART_FILE"
             if [ -f "$SRC" ]; then
-              mkdir -p "$CORE_PART_DIR"
-              cp -f "$SRC" "$CORE_PART_DIR/$PART"
-              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
+              cp -f "$SRC" "$CORE_PART_DIR/$PART_FILE"
+              PART_SOURCE="repo ? core"
             else
-              # If not in repo AND not already in the core, fallback to a stock CSV
-              if [ ! -f "$CORE_PART_DIR/$PART" ]; then
-                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
-                PART="default.csv"
+              if [ -f "$CORE_PART_DIR/$PART_FILE" ]; then
+                PART_SOURCE="already in core"
+              else
+                echo "::warning ::Partition '$PART_FILE' not found in repo or core; build may fail if referenced."
+                PART_SOURCE="missing"
               fi
             fi
           fi
       
-          echo "fs=$FS"   >> $GITHUB_OUTPUT
-          echo "partition=$PART" >> $GITHUB_OUTPUT
+          # Outputs for later steps
+          echo "fs=$FS"                 >> $GITHUB_OUTPUT
+          echo "partition=$PART_FILE"   >> $GITHUB_OUTPUT
+          echo "part_label=$PART_LABEL" >> $GITHUB_OUTPUT
+          echo "fs_source=$FS_SOURCE"   >> $GITHUB_OUTPUT
+          echo "part_source=$PART_SOURCE" >> $GITHUB_OUTPUT
       
-          echo "Filesystem: ${FS:-<core default>}"
-          echo "Partition:  ${PART:-<core default>}"
+          echo "---- FS / Partition Resolution ----"
+          echo "Workflow partition label: $PART_LABEL"
+          echo "CSV default partition:    ${CSV_PART:-<none>}"
+          echo "Chosen partition file:    ${PART_FILE:-<core default>}"
+          echo "Partition source:         $PART_SOURCE"
+          echo "CSV default FS:           ${CSV_FS:-<none>}"
+          echo "Chosen FS:                $FS  (source: $FS_SOURCE)"
+          echo "Core partitions dir:      $CORE_PART_DIR"
+          echo "-----------------------------------"
 
       - name: Generate configs.h from CSV
         shell: bash
