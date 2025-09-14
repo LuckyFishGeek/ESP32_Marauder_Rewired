@@ -495,12 +495,23 @@ jobs:
           arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
       
       # 2) Compile using ArminJo action, but with the exact flags from above
-      - name: Build Marauder firmware (ArminJo)
+      - name: Build Marauder firmware
         uses: ArminJo/arduino-test-compile@v3.3.0
         with:
-          sketch-paths: _build/esp32_marauder_rewired/esp32_marauder_rewired.ino
+          # Tell the action the sketch filename?
+          sketch-names: esp32_marauder_rewired.ino
+          # ?and where to search for it (your prepared _build dir)
+          sketch-names-find-start: _build/esp32_marauder_rewired
+      
           arduino-board-fqbn: ${{ steps.map.outputs.fqbn }}
-          arduino-platform: esp32:esp32@${{ steps.map.outputs.core_version }}
+      
+          # Use the core version from your earlier step (fallback to map if needed)
+          arduino-platform: esp32:esp32@${{ steps.core.outputs.core_ver || steps.map.outputs.core_ver }}
+      
+          # Use Espressif?s official index (works for 2.x & 3.x)
+          platform-url: https://espressif.github.io/arduino-esp32/package_esp32_index.json
+      
+          # Carry over your include/defines and FS/partitions flags
           extra-arduino-cli-args: >
             --warnings none
             --build-property compiler.cpp.extra_flags='${{ steps.flags.outputs.cpp_c_flags }}'
