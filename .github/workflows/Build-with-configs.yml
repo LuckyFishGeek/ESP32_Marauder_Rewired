@@ -15,6 +15,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,15 +38,16 @@ jobs:
           echo "Core:   $CORE_VERSION"
           echo "FS/PS:  $FILESYSTEM / $PARTITION"
           echo "Addr:   $ADDR"
-          echo "Disp:   enabled=$DISPLAY_ENABLED model=${DISPLAY_MODEL:-'(from manifest)'}"
+          echo "Disp:   enabled=$DISPLAY_ENABLED model=${DISPLAY_MODEL:-'(manifest)'}"
           echo "Libs:   NimBLE=$LIBS_NIMBLE_VERSION  ESPAsync=$LIBS_ESP_ASYNC_VERSION"
 
       - name: Setup Arduino CLI & ESP32 core
         uses: arduino/setup-arduino-cli@v2
         with:
           version: latest
-      - run: |
-         arduino-cli config init
+      - name: Install ESP32 core
+        run: |
+          arduino-cli config init
           arduino-cli core update-index
           arduino-cli core install esp32:esp32@${CORE_VERSION}
 
@@ -83,7 +85,7 @@ jobs:
             --pins-json scaffold/configs/pins/pin_presets.json \
             --board-label "$BOARD_LABEL" \
             --board-flag "$BOARD_FLAG" \
-            --model "${DISPLAY_MODEL:-$DISPLAY_MODEL}" \
+            --model "${DISPLAY_MODEL}" \
             --tft-enabled "${DISPLAY_ENABLED}" \
             --out-dir scaffold/.tft_setup
 
