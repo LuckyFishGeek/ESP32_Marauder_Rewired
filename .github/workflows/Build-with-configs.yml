@@ -229,7 +229,6 @@ jobs:
           FQBN="${{ steps.map.outputs.fqbn }}"
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
           RAW_DEFS="${{ steps.map.outputs.defines }}"
-          EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
       
@@ -245,11 +244,7 @@ jobs:
           echo "FQBN: $FQBN"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
-          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
           echo "DEFINES: ${DEFS:-<none>}"
-      
-          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
-          C_FLAGS="$EXTRA_INCLUDES $DEFS"
       
           ARGS=()
           ARGS+=(--fqbn "$FQBN")
