@@ -118,6 +118,21 @@ jobs:
             echo "::warning::LIBS_ESP_ASYNC_VERSION/VER empty; using default branch of ${ESPASYNC_REPO}."
             git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           fi
+###     THIS IS THE CODE    ###
+      - name: Prepare Sketch Folder
+        id: prep
+        run: |
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
+          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+          cp -r scaffold/* "$SKETCH_DIR/" || true
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+#a##      ^^^          ###
+
+      - name: Assert sketch prepared
+        run: |
+          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; exit 1; }
 
       - name: Generate config.h (JSON-driven)
         run: |
@@ -127,11 +142,11 @@ jobs:
             --modules-json scaffold/configs/modules/modules_presets.json \
             --board-flag "$BOARD_FLAG" \
             --board-label "$BOARD_LABEL" \
-            --out scaffold/.autogen/config.h
+            --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
       - name: Generate TFT_eSPI header (serial-only safe)
         run: |
-          mkdir -p scaffold/.tft_setup
+          mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
           python3 scaffold/tools/gen_tft_setup_json.py \
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --displays-json scaffold/configs/displays/display_presets.json \
@@ -140,17 +155,17 @@ jobs:
             --board-flag "$BOARD_FLAG" \
             --model "${DISPLAY_MODEL}" \
             --tft-enabled "${DISPLAY_ENABLED}" \
-            --out-dir scaffold/.tft_setup
+            --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       - name: Build (compile only)
         run: |
-          EXTRA="-I${{ github.workspace }}/scaffold/.tft_setup -I${{ github.workspace }}/scaffold/.autogen"
+          EXTRA="-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
           arduino-cli compile \
             --fqbn "$FQBN" \
             --build-property compiler.cpp.extra_flags="$EXTRA" \
             --build-property build.partitions="$PARTITION" \
             --output-dir build_out \
-            scaffold/src
+            "${{ steps.prep.outputs.sketch_dir }}"
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
