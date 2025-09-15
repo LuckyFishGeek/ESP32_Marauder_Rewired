@@ -51,31 +51,26 @@ jobs:
           echo "Disp:   enabled=$DISPLAY_ENABLED model=${DISPLAY_MODEL:-'(manifest)'}"
           echo "Libs:   NimBLE=$LIBS_NIMBLE_VERSION  ESPAsync=$LIBS_ESP_ASYNC_VERSION"
 
+# Always use a pinned CLI version (avoid "latest")
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
-          version: latest
+          version: 0.35.3   # <- pin this; known-good
+        # no 'token' needed
       
       - name: Configure ESP32 board manager index
         run: |
           arduino-cli config init
-          # Add Espressif package index
           arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-          # Update index (include the URL explicitly too, belt-and-braces)
           arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
       
-      - name: Resolve core version (fallback if missing)
-        run: |
-          echo "Resolved CORE_VERSION='${CORE_VERSION}'"
-          if [ -z "${CORE_VERSION}" ]; then
-            echo "::warning::CORE_VERSION was empty; defaulting to 2.0.11"
-            echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
-          fi
+      # Hard-pin the ESP32 core version (your requirement)
+      - name: Force core version 2.0.11
+        run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
       
-      - name: Install ESP32 core
+      - name: Install ESP32 core (with retry)
         run: |
           set -e
-          # Retry a couple times in case of transient network issues
           for i in 1 2 3; do
             arduino-cli core install esp32:esp32@${CORE_VERSION} \
               --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json && break || {
