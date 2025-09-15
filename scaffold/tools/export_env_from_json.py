@@ -50,16 +50,28 @@ def load_rows():
     return []
 
 def pick(rows, flag, label):
-    if flag:
-        for r in rows:
-            if (r.get("flag") or "").strip() == flag:
-                return r
+    """
+    Select a board row from the manifest.
+
+    Priority:
+      1. Exact board_label match (like CSV flow)
+      2. Exact flag match
+      3. Default to MARAUDER_V7 if both selectors are empty
+    """
     if label:
         for r in rows:
             if (r.get("board_label") or "").strip() == label:
                 return r
+    if flag:
+        for r in rows:
+            if (r.get("flag") or "").strip() == flag:
+                return r
+    # default if neither provided
+    for r in rows:
+        if (r.get("flag") or "").strip() == "MARAUDER_V7":
+            return r
     return None
-
+    
 def safe_print(k, v):
     print(f"{k}={v}")
 
