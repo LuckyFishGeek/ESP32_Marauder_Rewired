@@ -89,11 +89,35 @@ jobs:
 
       - name: Install required libraries
         run: |
-          arduino-cli lib install NimBLE-Arduino@${LIBS_NIMBLE_VERSION}
-          REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
-          VER="${LIBS_ESP_ASYNC_VERSION:-master}"
-          cd "$HOME/Arduino/libraries"
-          git clone --depth 1 --branch "$VER" "https://github.com/$REPO" ESPAsyncWebServer
+          set -e
+      
+          # Resolve names from manifest (handle both *_VERSION and *_VER keys)
+          NIMBLE_VER="${LIBS_NIMBLE_VERSION:-$LIBS_NIMBLE_VER}"
+          ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
+          ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
+      
+          echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
+      
+          # NimBLE ? only add @version if non-empty to avoid CLI panic
+          if [ -n "$NIMBLE_VER" ]; then
+            arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
+          else
+            echo "::warning::LIBS_NIMBLE_VERSION/VER empty; installing latest NimBLE-Arduino (no pin)."
+            arduino-cli lib install NimBLE-Arduino
+          fi
+      
+          # ESPAsyncWebServer from Git (repo+branch/tag)
+          LIBDIR="$HOME/Arduino/libraries"
+          mkdir -p "$LIBDIR"
+          cd "$LIBDIR"
+          rm -rf ESPAsyncWebServer || true
+      
+          if [ -n "$ESPASYNC_VER" ]; then
+            git clone --depth 1 --branch "$ESPASYNC_VER" "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
+          else
+            echo "::warning::LIBS_ESP_ASYNC_VERSION/VER empty; using default branch of ${ESPASYNC_REPO}."
+            git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
+          fi
 
       - name: Generate config.h (JSON-driven)
         run: |
