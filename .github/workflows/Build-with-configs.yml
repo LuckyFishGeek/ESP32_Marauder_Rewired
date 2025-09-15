@@ -42,6 +42,16 @@ jobs:
           echo "----- exporter stderr -----"
           cat exporter.err || true
 
+      - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
+        run: |
+          if [ -z "$FLAG" ]; then
+            if [ -n "${{ github.event.inputs.board_flag }}" ]; then
+              echo "FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
+            else
+              echo "FLAG=MARAUDER_V7" >> $GITHUB_ENV
+            fi
+          fi
+
       - name: Ensure FQBN set (fbqn fallback)
         run: |
           if [ -z "$FQBN" ]; then
