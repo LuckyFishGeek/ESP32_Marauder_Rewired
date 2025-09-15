@@ -1,0 +1,158 @@
+[
+  {
+    "ProfileName": "Minimal",
+    "Modules": "WIFI,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "Standard",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Full",
+    "Modules": "WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON"
+  },
+  {
+    "ProfileName": "Wardriver",
+    "Modules": "WIFI,SD,GPS,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Scanner",
+    "Modules": "WIFI,BLE,WEB,BUTTONS,TFT_ON"
+  },
+  {
+    "ProfileName": "BLE-only",
+    "Modules": "BLE,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "Displayless",
+    "Modules": "WIFI,BLE,WEB,SD,GPS,BUTTONS,BATTERY,TFT_OFF"
+  },
+  {
+    "ProfileName": "Debug",
+    "Modules": "WIFI,BLE,WEB,SD,GPS,NEOPIXEL,BUZZER,BUTTONS,BATTERY,DEBUG,TFT_ON"
+  },
+  {
+    "ProfileName": "Storage-heavy",
+    "Modules": "WIFI,BLE,WEB,SD,USB_MSC,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Sensors",
+    "Modules": "WIFI,BLE,GPS,TOUCH,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Graphics",
+    "Modules": "WIFI,BLE,WEB,LVGL,TOUCH,TFT_ON"
+  },
+  {
+    "ProfileName": "Low-power",
+    "Modules": "WIFI,BLE,BUTTONS,BATTERY,TFT_OFF"
+  },
+  {
+    "ProfileName": "Audio/Visual",
+    "Modules": "WIFI,BLE,NEOPIXEL,BUZZER,LVGL,TFT_ON"
+  },
+  {
+    "ProfileName": "NRF-only",
+    "Modules": "NRF24,SD,TFT_OFF"
+  },
+  {
+    "ProfileName": "SD-only",
+    "Modules": "SD,USB_MSC,TFT_OFF"
+  },
+  {
+    "ProfileName": "Experimental",
+    "Modules": "WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG"
+  },
+  {
+    "ProfileName": "Dual-WiFi (flag)",
+    "Modules": "WIFI,DUAL_WIFI,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "Two-WiFi Modules (flag)",
+    "Modules": "WIFI,2WIFI,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "OG Marauder",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder v6",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder v6.1",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder Kit",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder Mini",
+    "Modules": "WIFI,BLE,WEB,BUTTONS,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder v7",
+    "Modules": "WIFI,BLE,WEB,SD,NRF24,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder v7.1",
+    "Modules": "WIFI,BLE,WEB,SD,NRF24,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "M5StickCPlus",
+    "Modules": "WIFI,BLE,WEB,NEOPIXEL,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "M5StickCPlus 2",
+    "Modules": "WIFI,BLE,WEB,NEOPIXEL,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "M5Cardputer",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TOUCH,LVGL,TFT_ON"
+  },
+  {
+    "ProfileName": "Flipper Zero WiFi Dev Board",
+    "Modules": "WIFI,WEB,SD,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "Flipper Zero Multi Board S3",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "ESP32 LDDB",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_OFF"
+  },
+  {
+    "ProfileName": "Marauder Dev Board Pro",
+    "Modules": "WIFI,BLE,WEB,SD,GPS,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Rev Feather",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder CYD 2432S028",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder CYD 2432S024 GUITION",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "Marauder CYD 2432S028 2 USB",
+    "Modules": "WIFI,BLE,WEB,SD,USB_MSC,BUTTONS,BATTERY,TFT_ON"
+  },
+  {
+    "ProfileName": "ESP32-C5-DevKitC-1",
+    "Modules": "WIFI,BLE,WEB,SD,BUTTONS,BATTERY,TFT_OFF"
+  },
+  {
+    "ProfileName": "AI Thinker ESP32-CAM",
+    "Modules": "WIFI,WEB,SD,BUTTONS,TFT_OFF"
+  },
+  {
+    "ProfileName": "AirysDark mods",
+    "Modules": "DUAL_WIFI,TFT_ON,BLE,SD,WEB,TOUCH,GPS,LVGL,USB_MSC,BATTERY,BUTTONS,DEBUG"
+  }
+]

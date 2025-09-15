@@ -1,0 +1,30 @@
+[
+  {
+    "# zip_file": "lib-Gfxcore1.zip",
+    "description": "split GFX"
+  },
+  {
+    "# zip_file": "lib-Gfxcore2.zip",
+    "description": "split GFX"
+  },
+  {
+    "# zip_file": "lib-Gfxcore3.zip",
+    "description": "split GFX"
+  },
+  {
+    "# zip_file": "lib-Gfxcore4.zip",
+    "description": "split GFX"
+  },
+  {
+    "# zip_file": "lib-Adafruitcore.zip",
+    "description": "Adafruit lib"
+  },
+  {
+    "# zip_file": "lib-espcore.zip",
+    "description": "esp lib"
+  },
+  {
+    "# zip_file": "lib-etccore.zip",
+    "description": "etc cores"
+  }
+]

@@ -1,0 +1,8486 @@
+[
+  {
+    "key": "configs_h",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "POLISH_POTATO",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_VERSION",
+    "value": "\"v1.8.5\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_REFRESH",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "DUAL_BAND_CHANNELS",
+    "value": "51",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"M5Stick-C Plus\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"M5Stick-C Plus2\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"M5 Cardputer\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder Mini\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder v7\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder v7.1\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Adafruit Feather ESP32-S2 Reverse TFT\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder v4\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder v6\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder v6.1\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"CYD 2432S028\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"CYD 2432S028 2USB\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"CYD 2432S024 GUITION\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Marauder Kit\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Flipper Zero Dev Board\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Flipper Zero Multi Board S3\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"ESP32 LDDB\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"Flipper Zero Dev Board Pro\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"XIAO ESP32 S3\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"ESP32-C5 DevKit\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HARDWARE_NAME",
+    "value": "\"ESP32\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_PWR_MGMT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_PSRAM",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_KB",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_MINI_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FLIPPER_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_CYD_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FLIPPER_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_CYD_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_CYD_PORTRAIT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FLIPPER_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT_REMOTE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BUTTONS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TOUCH",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BATTERY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FULL_SCREEN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_TEMP_SENSOR",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FLIPPER_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_PSRAM",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_FLIPPER_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_NEOPIXEL_LED",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FLIPPER_ZERO_HAT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_BT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_GPS",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C5_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "USE_SD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_DUAL_BAND",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "POWER_HOLD_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_U",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_D",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "false",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "false",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "34",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "35",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_L",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_R",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_U",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_D",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "34",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "35",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_L",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_R",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_U",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_D",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "34",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "35",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_L",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_R",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_U",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_D",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "37",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "35",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_U",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_D",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_BTN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_BTN",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_C",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "L_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "C_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "U_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "D_PULL",
+    "value": "true",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MOSI",
+    "value": "15",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_SCLK",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DC",
+    "value": "23",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RST",
+    "value": "18",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BL",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOUCH_CS",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "135",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_HEIGHT // Originally 240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_WIDTH // Originally 320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "(TFT_HEIGHT/10) // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "TFT_HEIGHT // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "(TFT_HEIGHT/16)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_M5STICKC",
+    "value": "// From now on, everything is the same, except for one check in esp32_marauder.ino amd stickc_led.cpp/h",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MOSI",
+    "value": "15",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_SCLK",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DC",
+    "value": "14",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RST",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BL",
+    "value": "27",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOUCH_CS",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "135",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_HEIGHT // Originally 240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_WIDTH // Originally 320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "(TFT_HEIGHT/10) // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "TFT_HEIGHT // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "(TFT_HEIGHT/16)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MOSI",
+    "value": "35",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_SCLK",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CS",
+    "value": "37",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DC",
+    "value": "34",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RST",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BL",
+    "value": "38",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "135",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_HEIGHT // Originally 240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_WIDTH // Originally 320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "(TFT_HEIGHT/10) // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "TFT_HEIGHT // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "(TFT_HEIGHT/16)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_SHIELD",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DIY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ST7789",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DIY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DIY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DIY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HAS_ILI9341",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DIY",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "20",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_HEIGHT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "16 // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "320 // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KIT_LED_BUILTIN",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MISO",
+    "value": "19",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MOSI",
+    "value": "23",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_SCLK",
+    "value": "18",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CS",
+    "value": "27",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DC",
+    "value": "26",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RST",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BL",
+    "value": "32",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOUCH_CS",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "128",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "128",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH // Originally 240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT // Originally 320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "(TFT_HEIGHT/10) // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "TFT_HEIGHT // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "(TFT_HEIGHT/16)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_CHAR_WIDTH",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CS",
+    "value": "42",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_DC",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RST",
+    "value": "41",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BL",
+    "value": "45",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_BUFFER",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_SCREEN_BUFFER",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TEXT_SIZE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WIDTH",
+    "value": "240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_HEIGHT",
+    "value": "135",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GRAPH_VERT_LIM",
+    "value": "TFT_HEIGHT/2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "EXT_BUTTON_WIDTH",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_ORIENTATION",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "CHAR_WIDTH",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_WIDTH",
+    "value": "TFT_WIDTH // Originally 240",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SCREEN_HEIGHT",
+    "value": "TFT_HEIGHT // Originally 320",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HEIGHT_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "WIDTH_1",
+    "value": "TFT_WIDTH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "(TFT_WIDTH/6) // number of characters on a single line with normal font",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TEXT_HEIGHT",
+    "value": "(TFT_HEIGHT/10) // Height of text to be printed and scrolled",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BOT_FIXED_AREA",
+    "value": "0 // Number of lines in bottom fixed area (lines counted from bottom of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TOP_FIXED_AREA",
+    "value": "48 // Number of lines in top fixed area (lines counted from top of screen)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "YMAX",
+    "value": "TFT_HEIGHT // Bottom of screen area",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MENU_FONT",
+    "value": "&FreeMono9pt7b // Winner",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_SCREEN_LIMIT",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_ARRAY_LEN",
+    "value": "BUTTON_SCREEN_LIMIT",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUS_BAR_WIDTH",
+    "value": "(TFT_HEIGHT/16)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "LVGL_TICK_PERIOD",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_X",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_Y",
+    "value": "64",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_W",
+    "value": "120",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FRAME_H",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_X",
+    "value": "FRAME_X",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "REDBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_X",
+    "value": "(REDBUTTON_X + REDBUTTON_W)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_Y",
+    "value": "FRAME_Y",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_W",
+    "value": "(FRAME_W/2)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GREENBUTTON_H",
+    "value": "FRAME_H",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STATUSBAR_COLOR",
+    "value": "0x4A49",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "120 // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "240 // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "(TFT_WIDTH/2) // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "(TFT_HEIGHT/4.5)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "TFT_WIDTH // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "(TFT_HEIGHT/12.8)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "(TFT_WIDTH/2) // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "(TFT_HEIGHT/4.5)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "TFT_WIDTH // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "(TFT_HEIGHT/12.8)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "(TFT_WIDTH/2) // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "(TFT_HEIGHT/5)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "TFT_HEIGHT // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "(TFT_HEIGHT/17)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "60",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "50",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "COMMAND_PREFIX",
+    "value": "\"!\"",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_X",
+    "value": "(TFT_WIDTH/2) // Centre of key",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_Y",
+    "value": "(TFT_HEIGHT/5)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_W",
+    "value": "TFT_HEIGHT // Width and height",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_H",
+    "value": "(TFT_HEIGHT/17)",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_X",
+    "value": "0 // X and Y gap",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_SPACING_Y",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "KEY_TEXTSIZE",
+    "value": "1   // Font size multiplier",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_W",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "ICON_H",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUTTON_PADDING",
+    "value": "60",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "14",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_SCK",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MISO",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MOSI",
+    "value": "14",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "3",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_CS",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTWHITE",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTCYAN",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTBLUE",
+    "value": "3",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTRED",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTGREEN",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTGREY",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTGRAY",
+    "value": "7",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTMAGENTA",
+    "value": "8",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTVIOLET",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTORANGE",
+    "value": "10",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTYELLOW",
+    "value": "11",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTLIGHTGREY",
+    "value": "12",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTPURPLE",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTNAVY",
+    "value": "14",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTSILVER",
+    "value": "15",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTDARKGREY",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTSKYBLUE",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFTLIME",
+    "value": "18",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_FARTGRAY",
+    "value": "0x528a",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BANNER_TIME",
+    "value": "GRAPH_REFRESH",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BLACK",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_WHITE",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_CYAN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_BLUE",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_RED",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_GREEN",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_GREY",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_GRAY",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_MAGENTA",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_VIOLET",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_ORANGE",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "TFT_YELLOW",
+    "value": "0",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "STANDARD_FONT_CHAR_LIMIT",
+    "value": "40",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "FLASH_BUTTON",
+    "value": "-1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MEM_LOWER_LIM",
+    "value": "10000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "PIN",
+    "value": "25",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_HTML_SIZE",
+    "value": "30000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MAX_HTML_SIZE",
+    "value": "11400",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "mac_history_len",
+    "value": "500",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "mac_history_len",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "1 // Community pinout matching old forks and even bruce firmware allowing for hardware standardization",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "3",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "1 // Community pinout matching old forks and even bruce firmware allowing for hardware standardization",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "3",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "21 // Fits the extended I/O",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "21",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "32",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "9",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_SERIAL_INDEX",
+    "value": "1",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_TX",
+    "value": "14",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "GPS_RX",
+    "value": "13",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "mac_history_len",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "26",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "27",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "27",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SDA",
+    "value": "22",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "I2C_SCL",
+    "value": "27",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "MARAUDER_TITLE_BYTES",
+    "value": "13578",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUF_SIZE",
+    "value": "8 * 1024 // Had to reduce buffer size to save RAM. GG @spacehuhn",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SNAP_LEN",
+    "value": "1 * 4096 // max len of each recieved packet",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUF_SIZE",
+    "value": "8 * 1024 // Had to reduce buffer size to save RAM. GG @spacehuhn",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SNAP_LEN",
+    "value": "4096 // max len of each recieved packet",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "BUF_SIZE",
+    "value": "3 * 1024 // Had to reduce buffer size to save RAM. GG @spacehuhn",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SNAP_LEN",
+    "value": "2324 // max len of each recieved packet",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_IRQ",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_MOSI",
+    "value": "32",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_MISO",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_CLK",
+    "value": "25",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_CS",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MISO",
+    "value": "19",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MOSI",
+    "value": "23",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_SCK",
+    "value": "18",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_IRQ",
+    "value": "36",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_MOSI",
+    "value": "32",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_MISO",
+    "value": "39",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_CLK",
+    "value": "25",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "XPT2046_CS",
+    "value": "33",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MISO",
+    "value": "19",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MOSI",
+    "value": "23",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_SCK",
+    "value": "18",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MISO",
+    "value": "2",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_MOSI",
+    "value": "7",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "SD_SCK",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "B_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "G_PIN",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PIN",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "B_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "G_PIN",
+    "value": "5",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PIN",
+    "value": "6",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "B_PIN",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "G_PIN",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "B_PIN",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "G_PIN",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "B_PIN",
+    "value": "17",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "G_PIN",
+    "value": "16",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "R_PIN",
+    "value": "4",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HOP_DELAY",
+    "value": "1000",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  },
+  {
+    "key": "HOP_DELAY",
+    "value": "100",
+    "when_profile": NaN,
+    "when_board": NaN,
+    "notes": NaN
+  }
+]
