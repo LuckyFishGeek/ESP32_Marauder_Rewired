@@ -38,36 +38,42 @@ jobs:
         run: |
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
           echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
-          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> error.log
-          cat error.log || true
+          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
+          echo "----- exporter stderr -----"
+          cat exporter.err || true
 
-      - name: Show resolved configuration
+      - name: Ensure FQBN set (fbqn fallback)
         run: |
-          echo "Board:  $BOARD_LABEL ($FLAG)"
-          echo "FQBN:   $FQBN"
-          echo "Core:   $CORE_VERSION"
-          echo "FS/PS:  $FILESYSTEM / $PARTITION"
-          echo "Addr:   $ADDR"
-          echo "Disp:   enabled=$DISPLAY_ENABLED model=${DISPLAY_MODEL:-'(manifest)'}"
-          echo "Libs:   NimBLE=$LIBS_NIMBLE_VERSION  ESPAsync=$LIBS_ESP_ASYNC_VERSION"
+          if [ -z "$FQBN" ]; then
+            echo "::warning::FQBN empty; checking FBQN fallback"
+            if [ -n "$FBQN" ]; then
+              echo "FQBN=$FBQN" >> $GITHUB_ENV
+            else
+              echo "::error::Both FQBN and FBQN are empty; cannot compile."
+              exit 1
+            fi
+          fi
 
-# Always use a pinned CLI version (avoid "latest")
+      - name: Dump resolved env (debug)
+        run: |
+          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)' || true
+
+      # Always use a pinned CLI version (avoid "latest")
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
-          version: 0.35.3   # <- pin this; known-good
-        # no 'token' needed
-      
+          version: 0.35.3
+
       - name: Configure ESP32 board manager index
         run: |
           arduino-cli config init
           arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
           arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-      
-      # Hard-pin the ESP32 core version (your requirement)
+
+      # Hard-pin the ESP32 core version (your rule)
       - name: Force core version 2.0.11
         run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
-      
+
       - name: Install ESP32 core (with retry)
         run: |
           set -e
@@ -90,14 +96,11 @@ jobs:
       - name: Install required libraries
         run: |
           set -e
-      
           # Resolve names from manifest (handle both *_VERSION and *_VER keys)
           NIMBLE_VER="${LIBS_NIMBLE_VERSION:-$LIBS_NIMBLE_VER}"
           ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
           ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
-      
           echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
-      
           # NimBLE ? only add @version if non-empty to avoid CLI panic
           if [ -n "$NIMBLE_VER" ]; then
             arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
@@ -105,20 +108,19 @@ jobs:
             echo "::warning::LIBS_NIMBLE_VERSION/VER empty; installing latest NimBLE-Arduino (no pin)."
             arduino-cli lib install NimBLE-Arduino
           fi
-      
           # ESPAsyncWebServer from Git (repo+branch/tag)
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
           cd "$LIBDIR"
           rm -rf ESPAsyncWebServer || true
-      
           if [ -n "$ESPASYNC_VER" ]; then
             git clone --depth 1 --branch "$ESPASYNC_VER" "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           else
             echo "::warning::LIBS_ESP_ASYNC_VERSION/VER empty; using default branch of ${ESPASYNC_REPO}."
             git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           fi
-###     THIS IS THE CODE    ###
+
+      ### STAGE & ASSERT THE SKETCH ###
       - name: Prepare Sketch Folder
         id: prep
         run: |
@@ -128,12 +130,12 @@ jobs:
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-#a##      ^^^          ###
 
       - name: Assert sketch prepared
         run: |
-          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; exit 1; }
+          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
+      ### AUTOGEN HEADERS INTO THE PREPARED DIR ###
       - name: Generate config.h (JSON-driven)
         run: |
           python3 scaffold/tools/gen_user_config.py \
