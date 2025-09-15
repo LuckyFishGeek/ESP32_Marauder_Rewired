@@ -151,6 +151,19 @@ jobs:
             git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           fi
 
+      - name: Create ESP32MarauderRegistry local library
+        run: |
+          set -e
+          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
+          mkdir -p "$LIBDIR/src/registry"
+          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
+          cat > "$LIBDIR/library.properties" <<'PROP'
+          name=ESP32MarauderRegistry
+          version=0.0.3
+          architectures=*
+          includes=registry/ToolRegistry.h
+          PROP
+
       ### STAGE & ASSERT THE SKETCH ###
       - name: Prepare Sketch Folder
         id: prep
@@ -231,7 +244,8 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_INCLUDES: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
+          EXTRA_INCLUDES: "-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          SKETCH_DIR: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
         run: |
           set -euo pipefail
 
