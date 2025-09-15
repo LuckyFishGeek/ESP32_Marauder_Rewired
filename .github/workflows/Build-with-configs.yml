@@ -189,82 +189,85 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          FS_IN="${{ steps.map.outputs.def_fs }}"
-          PART_IN="${{ steps.map.outputs.def_part }}"
-          CORE_VER="${{ steps.core.outputs.core_ver }}"
-      
+          FS_IN="${FILESYSTEM:-}"
+          PART_IN="${PARTITION:-}"
+          CORE_VER="${CORE_VERSION:-2.0.11}"
+
           # Where the esp32 core keeps partition CSVs
           CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
-      
+
           FS="$FS_IN"
-          PART="$PART_IN"
-      
-          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
+          PART="${PART_IN}"
+
+          # Normalize: strip a trailing .csv once
+          if [ -n "$PART" ]; then
+            PART="${PART%.csv}.csv"
+          fi
+
+          # If a custom CSV exists in repo root ./partitions, copy it into the core
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
             if [ -f "$SRC" ]; then
               mkdir -p "$CORE_PART_DIR"
               cp -f "$SRC" "$CORE_PART_DIR/$PART"
               echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
-            else
-              # If not in repo AND not already in the core, fallback to a stock CSV
-              if [ ! -f "$CORE_PART_DIR/$PART" ]; then
-                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
-                PART="default.csv"
-              fi
             fi
           fi
-      
+
           echo "fs=$FS"   >> $GITHUB_OUTPUT
           echo "partition=$PART" >> $GITHUB_OUTPUT
-      
+
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
 
       - name: Compile (Arduino CLI)
+        working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
+        env:
+          EXTRA_INCLUDES: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
         run: |
           set -euo pipefail
-          FQBN="${{ steps.map.outputs.fqbn }}"
-          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          RAW_DEFS="${{ steps.map.outputs.defines }}"
+
+          # FQBN was asserted earlier; read it from env (not from a removed step)
+          if [ -z "${FQBN:-}" ]; then
+            echo "::error::FQBN is empty at compile time; check earlier steps."
+            exit 1
+          fi
+
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
-      
-          # keep only -D* tokens; drop accidental junk
-          DEFS=""
-          for t in $RAW_DEFS; do
-            case "$t" in
-              -D*) DEFS="$DEFS $t" ;;
-            esac
-          done
-          DEFS="$(echo "$DEFS" | xargs || true)"
-      
-          echo "FQBN: $FQBN"
+
+          # Defines: exporter emits -D<FLAG> as DEFINES_BASE; also allow user-provided DEFINES
+          DEFS_BASE="${DEFINES_BASE:-}"
+          DEFS_EXTRA="${DEFINES:-}"
+          DEFS="$(printf '%s %s' "$DEFS_BASE" "$DEFS_EXTRA" | xargs || true)"
+
+          echo "FQBN:       $FQBN"
+          echo "Sketch dir: $(pwd)"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
-          echo "DEFINES: ${DEFS:-<none>}"
-      
+          echo "Defines:    ${DEFS:-<none>}"
+          ls -la; ls -la .tft_setup || true; ls -la .autogen || true
+
           ARGS=()
           ARGS+=(--fqbn "$FQBN")
           ARGS+=(--warnings none)
           ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=${EXTRA_INCLUDES} ${DEFS}")
 
-      
-          [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
-      
-          if [ -n "$PART" ]; then
-            mkdir -p "$SKETCH_DIR/partitions"
-            # copy from repo if present (optional convenience for debugging)
-            [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
-            # CLI wants the *name without .csv*
-            ARGS+=(--build-property "build.partitions=${PART%.csv}")
+          # Filesystem & partitions (guarded)
+          if [ -n "$FS" ]; then
+            ARGS+=(--build-property "board_build.filesystem=${FS}")
           fi
-      
+          if [ -n "$PART" ]; then
+            # Arduino CLI wants the name without .csv
+            PART_NAME="${PART%.csv}"
+            ARGS+=(--build-property "build.partitions=${PART_NAME}")
+          fi
+
           printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
-          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
-            .
+          arduino-cli compile "${ARGS[@]}" .
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
