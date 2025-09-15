@@ -201,7 +201,7 @@ jobs:
       
           # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
           if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/scaffold/tools/partitions/$PART"
+            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
             if [ -f "$SRC" ]; then
               mkdir -p "$CORE_PART_DIR"
               cp -f "$SRC" "$CORE_PART_DIR/$PART"
@@ -222,23 +222,54 @@ jobs:
           echo "Partition:  ${PART:-<core default>}"
 
 
-      - name: Build (compile only)
-        working-directory: ${{ steps.prep.outputs.sketch_dir }}
-        env:
-          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
+      - name: Compile (Arduino CLI)
+        shell: bash
         run: |
-          set -e
-          echo "FQBN=$FQBN"
-          echo "Sketch dir: $(pwd)"
-          ls -la
-          ls -la .tft_setup || true
-          ls -la .autogen || true
-
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS" \
-            --build-property build.partitions="$PARTITION" \
-            --output-dir "$GITHUB_WORKSPACE/build_out" \
+          set -euo pipefail
+          FQBN="${{ steps.map.outputs.fqbn }}"
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          RAW_DEFS="${{ steps.map.outputs.defines }}"
+          EXTRA_INCLUDES="-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
+          FS="${{ steps.fs.outputs.fs }}"
+          PART="${{ steps.fs.outputs.partition }}"
+      
+          # keep only -D* tokens; drop accidental junk
+          DEFS=""
+          for t in $RAW_DEFS; do
+            case "$t" in
+              -D*) DEFS="$DEFS $t" ;;
+            esac
+          done
+          DEFS="$(echo "$DEFS" | xargs || true)"
+      
+          echo "FQBN: $FQBN"
+          echo "Filesystem: ${FS:-<default>}"
+          echo "Partition:  ${PART:-<default>}"
+          echo "EXTRA_INCLUDES: $EXTRA_INCLUDES"
+          echo "DEFINES: ${DEFS:-<none>}"
+      
+          CPP_FLAGS="$EXTRA_INCLUDES $DEFS"
+          C_FLAGS="$EXTRA_INCLUDES $DEFS"
+      
+          ARGS=()
+          ARGS+=(--fqbn "$FQBN")
+          ARGS+=(--warnings none)
+          ARGS+=(--export-binaries)
+          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
+          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
+      
+          [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
+      
+          if [ -n "$PART" ]; then
+            mkdir -p "$SKETCH_DIR/partitions"
+            # copy from repo if present (optional convenience for debugging)
+            [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
+            # CLI wants the *name without .csv*
+            ARGS+=(--build-property "build.partitions=${PART%.csv}")
+          fi
+      
+          printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
+          arduino-cli compile "${ARGS[@]}" "$SKETCH_DIR"
             .
 
       - name: Upload firmware artifact
