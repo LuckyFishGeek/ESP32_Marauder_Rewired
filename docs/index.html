@@ -1,97 +1,73 @@
 <!doctype html>
-<meta charset="utf-8" />
-<title>Marauder Builder</title>
-<style>
-  body { font-family: system-ui, sans-serif; margin: 24px; display: grid; grid-template-columns: 320px 1fr 360px; gap: 16px; }
-  select, button, input { width: 100%; padding: 8px; margin: 6px 0; }
-  .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
-  #canvas { border: 1px dashed #aaa; height: 520px; border-radius: 12px; position: relative; }
-  .pin { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #444; background: #fff; cursor: crosshair; }
-  .pin.req { border-color: #c00; }
-  .pin.ok  { background: #4caf50; }
-  svg { position:absolute; inset:0; pointer-events:none; }
-  .out { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
-</style>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ESP32 Marauder Rewired</title>
+  <style>
+    :root { --bg:#0b0f13; --fg:#e8eef5; --muted:#9fb3c8; --card:#11171d; --accent:#50e3c2; }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100svh; font:16px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 80% -10%, #17202a 0%, transparent 60%), var(--bg);
+      color:var(--fg); display:grid; place-items:center; padding:32px;
+    }
+    .wrap{max-width:960px; width:100%;}
+    header{ text-align:center; margin-bottom:28px; }
+    h1{ margin:0 0 8px; font-size:clamp(28px,4vw,40px); letter-spacing:.4px; }
+    p.sub{ margin:0; color:var(--muted); }
+    .grid{
+      display:grid; gap:20px; grid-template-columns:repeat(2, minmax(260px,1fr));
+      margin-top:28px;
+    }
+    .card{
+      background:linear-gradient(180deg, #131a22 0%, #0f151b 100%); border:1px solid #1f2a34;
+      border-radius:18px; padding:22px; transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+      text-decoration:none; color:inherit; display:flex; flex-direction:column; justify-content:space-between;
+    }
+    .card:hover{ transform:translateY(-2px); border-color:#2a3b4a; box-shadow:0 14px 30px rgba(0,0,0,.35); }
+    .card h2{ margin:0 0 6px; font-size:clamp(20px,2.5vw,26px); }
+    .card p{ margin:0; color:var(--muted); }
+    .go{
+      margin-top:16px; align-self:flex-start; padding:10px 14px; border-radius:12px; border:1px solid #2a3b4a;
+      color:#0b0f13; background:linear-gradient(180deg, var(--accent), #4fd8c0);
+      font-weight:600; text-decoration:none; display:inline-block;
+      transition:filter .15s ease, transform .1s ease;
+    }
+    .go:active{ transform:translateY(1px); }
+    footer{ margin-top:26px; text-align:center; color:var(--muted); font-size:14px; }
+    @media (max-width:640px){ .grid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>ESP32 Marauder Rewired</h1>
+      <p class="sub">Pick your path: pre-made boards or fully custom builds.</p>
+    </header>
 
-<div class="card">
-  <h3>Selectors</h3>
-  <label>Board</label>
-  <select id="board"></select>
-  <label>Display</label>
-  <select id="display"></select>
-  <label>Wi-Fi Module</label>
-  <select id="wifi"></select>
-  <label>GPS Module</label>
-  <select id="gps"></select>
-  <label>Filesystem</label>
-  <select id="fs"><option value="">(default)</option><option>spiffs</option><option>littlefs</option></select>
-  <label>Partition</label>
-  <select id="part"><option>Default (use manifest/default)</option></select>
-  <button id="gen">Generate</button>
-</div>
+    <section class="grid">
+      <a class="card" href="./prebuilt.html">
+        <div>
+          <h2>Pre-built</h2>
+          <p>Official devices & known-good combos. Click, build, flash.</p>
+        </div>
+        <span class="go">Open pre-built →</span>
+      </a>
 
-<div id="canvas" class="card">
-  <svg id="wires"></svg>
-  <!-- You?d dynamically place pin dots for board & modules here -->
-</div>
+      <a class="card" href="./custom.html">
+        <div>
+          <h2>Custom build</h2>
+          <p>Mix any ESP32 board + display + modules. Provide pins on the fly.</p>
+        </div>
+        <span class="go">Open custom →</span>
+      </a>
+    </section>
 
-<div class="card">
-  <h3>Checklist</h3>
-  <div id="reqs"></div>
-  <h3>Generated</h3>
-  <div class="out" id="out"></div>
-</div>
-
-<script>
-  async function loadCSV(path){
-    const res = await fetch(path);
-    const text = await res.text();
-    const [header,...rows] = text.trim().split(/\r?\n/);
-    const cols = header.split(',');
-    return rows.map(r=>{
-      const vals = r.split(',');
-      const o = {};
-      cols.forEach((c,i)=>o[c.trim()] = (vals[i]||'').trim());
-      return o;
-    });
-  }
-
-  const state = { core:[], display:[], wifi:[], gps:[] };
-
-  (async () => {
-    // Adjust paths to your Pages structure (you can serve from /scaffold/configs/?)
-    state.core    = await loadCSV('scaffold/configs/pins/pins_core.csv');
-    state.display = await loadCSV('scaffold/configs/pins/pins_display.csv');
-    state.wifi    = await loadCSV('scaffold/configs/pins/pins_wifi.csv');
-    state.gps     = await loadCSV('scaffold/configs/pins/pins_gps.csv');
-    const boards  = await loadCSV('scaffold/configs/boards_manifest.csv');
-    const models  = await loadCSV('scaffold/configs/displays/display_presets.csv');
-
-    // Populate pickers
-    const bSel = document.getElementById('board');
-    boards.forEach(b=>{ const o=document.createElement('option'); o.textContent=b.board_label; bSel.appendChild(o); });
-    const dSel = document.getElementById('display');
-    models.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.model; dSel.appendChild(o); });
-
-    const wSel = document.getElementById('wifi');
-    state.wifi.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.module_label || m.Module || 'WiFi'; wSel.appendChild(o); });
-    const gSel = document.getElementById('gps');
-    state.gps.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.module_label || m.Module || 'GPS'; gSel.appendChild(o); });
-
-    document.getElementById('gen').onclick = () => {
-      // This is where you?d read the user?s connections from the canvas,
-      // resolve required pins, and compose your workflow inputs:
-      // e.g. custom_pins, tft_model, modules_csv, filesystem, partition
-      const customPins = "tft_pin=19,23,18,5,2,4 gps_pin=34,33";
-      const tftModel   = dSel.value || "None";
-      const out = [
-        `custom_pins: ${customPins}`,
-        `tft_model: ${tftModel}`,
-        `modules_csv: WIFI,BLE,SD,TFT_ON`,
-        `filesystem: (default)`,
-        `partition: Default (use manifest/default)`
-      ].join('\n');
-      document.getElementById('out').textContent = out;
-    };
-  })();
-</script>
+    <footer>
+      Works best in WebSerial-enabled browsers (Chrome, Edge).
+    </footer>
+  </div>
+</body>
+</html>
