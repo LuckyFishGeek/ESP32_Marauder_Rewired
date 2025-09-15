@@ -29,7 +29,8 @@ jobs:
         run: |
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
           echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
-          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV
+          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> error.log
+          cat error.log || true
 
       - name: Show resolved configuration
         run: |
