@@ -1,5 +1,0 @@
-module_label,WIFI_CS,WIFI_MOSI,WIFI_MISO,WIFI_SCK,WIFI_EN,WIFI_RST,WIFI_IRQ,NOTES
-ESP8266_AT,,,,,,,
-ESP32_Module,,,,,,,
-ESP32S2_Module,,,,,,,
-WiFi_Placeholder,OPT,REQ,REQ,REQ,OPT,OPT,OPT,External SPI/SDIO-based Wi-Fi modules
