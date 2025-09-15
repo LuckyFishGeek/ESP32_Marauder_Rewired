@@ -184,6 +184,44 @@ jobs:
             --tft-enabled "${DISPLAY_ENABLED}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
+      - name: Resolve FS/Partition and install custom CSV if present
+        id: fs
+        shell: bash
+        run: |
+          set -euo pipefail
+          FS_IN="${{ steps.map.outputs.def_fs }}"
+          PART_IN="${{ steps.map.outputs.def_part }}"
+          CORE_VER="${{ steps.core.outputs.core_ver }}"
+      
+          # Where the esp32 core keeps partition CSVs
+          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
+      
+          FS="$FS_IN"
+          PART="$PART_IN"
+      
+          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
+          if [ -n "$PART" ]; then
+            SRC="${GITHUB_WORKSPACE}/scaffold/tools/partitions/$PART"
+            if [ -f "$SRC" ]; then
+              mkdir -p "$CORE_PART_DIR"
+              cp -f "$SRC" "$CORE_PART_DIR/$PART"
+              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
+            else
+              # If not in repo AND not already in the core, fallback to a stock CSV
+              if [ ! -f "$CORE_PART_DIR/$PART" ]; then
+                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
+                PART="default.csv"
+              fi
+            fi
+          fi
+      
+          echo "fs=$FS"   >> $GITHUB_OUTPUT
+          echo "partition=$PART" >> $GITHUB_OUTPUT
+      
+          echo "Filesystem: ${FS:-<core default>}"
+          echo "Partition:  ${PART:-<core default>}"
+
+
       - name: Build (compile only)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         env:
