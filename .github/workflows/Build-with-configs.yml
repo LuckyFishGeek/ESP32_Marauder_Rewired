@@ -44,23 +44,20 @@ jobs:
 
       - name: Ensure FQBN set (fbqn fallback)
         run: |
-          if [ -z "$FQBN" ] && [ -n "$FBQN" ]; then
-            echo "FQBN=$FBQN" >> $GITHUB_ENV
+          if [ -z "$FQBN" ]; then
+            echo "::warning::FQBN empty; checking FBQN fallback"
+            if [ -n "$FBQN" ]; then
+              echo "FQBN=$FBQN" >> $GITHUB_ENV
+            fi
           fi
 
-      - name: Last-resort FQBN mapping (unblock common boards)
+      - name: Last-resort FQBN mapping (unblock MARAUDER_V7)
         run: |
           if [ -z "$FQBN" ]; then
             case "$FLAG" in
-              MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
-                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
-              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
-                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> $GITHUB_ENV ;;
-              MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
-                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
-              *)
-                echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."
-                exit 1;;
+              MARAUDER_V7)   echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              MARAUDER_MINI) echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              *) echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."; exit 1;;
             esac
             echo "::notice::Applied last-resort FQBN mapping for $FLAG"
           fi
@@ -74,7 +71,7 @@ jobs:
 
       - name: Dump resolved env (debug)
         run: |
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_|DEFINES_BASE)' || true
+          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)' || true
 
       # Always use a pinned CLI version (avoid "latest")
       - name: Setup Arduino CLI
@@ -138,7 +135,7 @@ jobs:
             git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           fi
 
-      ### STAGE & ASSERT THE SKETCH (your snippet) ###
+      ### STAGE & ASSERT THE SKETCH ###
       - name: Prepare Sketch Folder
         id: prep
         run: |
@@ -177,23 +174,18 @@ jobs:
             --tft-enabled "${DISPLAY_ENABLED}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
-      # Debug compile context (handy when hunting path fights)
-      - name: Echo compile context (debug)
+      - name: Build (compile only)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
+        env:
+          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
         run: |
+          set -e
           echo "FQBN=$FQBN"
-          echo "PWD=$(pwd)"
-          echo "EXTRA_FLAGS=${DEFINES_BASE} -I${PWD}/.tft_setup -I${PWD}/.autogen"
+          echo "Sketch dir: $(pwd)"
           ls -la
           ls -la .tft_setup || true
           ls -la .autogen || true
 
-      - name: Build (compile only)
-        working-directory: ${{ steps.prep.outputs.sketch_dir }}
-        env:
-          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen ${DEFINES_BASE}
-        run: |
-          set -e
           arduino-cli compile \
             --fqbn "$FQBN" \
             --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS" \
