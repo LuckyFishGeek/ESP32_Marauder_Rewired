@@ -1,68 +1,97 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>ESP32 Marauder Rewired Web Flasher</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-      text-align: center;
-      margin: 0;
-      padding: 2rem;
-    }
-    h1 {
-      color: #00e0ff;
-    }
-    .card {
-      background: #1b1b1b;
-      padding: 2rem;
-      margin: 2rem auto;
-      border-radius: 12px;
-      max-width: 600px;
-      box-shadow: 0 0 12px rgba(0, 224, 255, 0.3);
-    }
-    esp-web-install-button {
-      --esp-tools-button-color: #00e0ff;
-      --esp-tools-button-text-color: #000;
-      --esp-tools-button-border-radius: 8px;
-      --esp-tools-button-padding: 12px 24px;
-      --esp-tools-button-font-size: 16px;
-    }
-    footer {
-      margin-top: 2rem;
-      font-size: 0.9em;
-      color: #888;
-    }
-    a {
-      color: #00e0ff;
-      text-decoration: none;
-    }
-  </style>
-  <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js"></script>
-</head>
-<body>
-  <h1>ESP32 Marauder Rewired v1.0.0</h1>
-  <div class="card">
-    <p>
-      Flash the latest <strong>ESP32 Marauder Rewired</strong> firmware directly from your browser.<br>
-      Works in <b>Chrome</b>, <b>Edge</b>, and other WebSerial-enabled browsers.
-    </p>
-    <esp-web-install-button manifest="firmware/manifest.json">
-      <button slot="unsupported">Browser not supported (use Chrome/Edge)</button>
-      <button slot="not-allowed">Connect a board via USB</button>
-      <button slot="installing">Flashing?</button>
-      <button slot="done">Done ? Restart your ESP32</button>
-    </esp-web-install-button>
-  </div>
+<!doctype html>
+<meta charset="utf-8" />
+<title>Marauder Builder</title>
+<style>
+  body { font-family: system-ui, sans-serif; margin: 24px; display: grid; grid-template-columns: 320px 1fr 360px; gap: 16px; }
+  select, button, input { width: 100%; padding: 8px; margin: 6px 0; }
+  .card { border: 1px solid #ddd; border-radius: 12px; padding: 12px; }
+  #canvas { border: 1px dashed #aaa; height: 520px; border-radius: 12px; position: relative; }
+  .pin { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #444; background: #fff; cursor: crosshair; }
+  .pin.req { border-color: #c00; }
+  .pin.ok  { background: #4caf50; }
+  svg { position:absolute; inset:0; pointer-events:none; }
+  .out { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; white-space: pre-wrap; }
+</style>
 
-  <footer>
-    <p>
-      Source: <a href="https://github.com/AirysDark/ESP32_Marauder_Rewired" target="_blank">
-      ESP32 Marauder Rewired on GitHub</a>
-    </p>
-  </footer>
-</body>
-</html>
+<div class="card">
+  <h3>Selectors</h3>
+  <label>Board</label>
+  <select id="board"></select>
+  <label>Display</label>
+  <select id="display"></select>
+  <label>Wi-Fi Module</label>
+  <select id="wifi"></select>
+  <label>GPS Module</label>
+  <select id="gps"></select>
+  <label>Filesystem</label>
+  <select id="fs"><option value="">(default)</option><option>spiffs</option><option>littlefs</option></select>
+  <label>Partition</label>
+  <select id="part"><option>Default (use manifest/default)</option></select>
+  <button id="gen">Generate</button>
+</div>
+
+<div id="canvas" class="card">
+  <svg id="wires"></svg>
+  <!-- You?d dynamically place pin dots for board & modules here -->
+</div>
+
+<div class="card">
+  <h3>Checklist</h3>
+  <div id="reqs"></div>
+  <h3>Generated</h3>
+  <div class="out" id="out"></div>
+</div>
+
+<script>
+  async function loadCSV(path){
+    const res = await fetch(path);
+    const text = await res.text();
+    const [header,...rows] = text.trim().split(/\r?\n/);
+    const cols = header.split(',');
+    return rows.map(r=>{
+      const vals = r.split(',');
+      const o = {};
+      cols.forEach((c,i)=>o[c.trim()] = (vals[i]||'').trim());
+      return o;
+    });
+  }
+
+  const state = { core:[], display:[], wifi:[], gps:[] };
+
+  (async () => {
+    // Adjust paths to your Pages structure (you can serve from /scaffold/configs/?)
+    state.core    = await loadCSV('scaffold/configs/pins/pins_core.csv');
+    state.display = await loadCSV('scaffold/configs/pins/pins_display.csv');
+    state.wifi    = await loadCSV('scaffold/configs/pins/pins_wifi.csv');
+    state.gps     = await loadCSV('scaffold/configs/pins/pins_gps.csv');
+    const boards  = await loadCSV('scaffold/configs/boards_manifest.csv');
+    const models  = await loadCSV('scaffold/configs/displays/display_presets.csv');
+
+    // Populate pickers
+    const bSel = document.getElementById('board');
+    boards.forEach(b=>{ const o=document.createElement('option'); o.textContent=b.board_label; bSel.appendChild(o); });
+    const dSel = document.getElementById('display');
+    models.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.model; dSel.appendChild(o); });
+
+    const wSel = document.getElementById('wifi');
+    state.wifi.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.module_label || m.Module || 'WiFi'; wSel.appendChild(o); });
+    const gSel = document.getElementById('gps');
+    state.gps.forEach(m=>{ const o=document.createElement('option'); o.textContent=m.module_label || m.Module || 'GPS'; gSel.appendChild(o); });
+
+    document.getElementById('gen').onclick = () => {
+      // This is where you?d read the user?s connections from the canvas,
+      // resolve required pins, and compose your workflow inputs:
+      // e.g. custom_pins, tft_model, modules_csv, filesystem, partition
+      const customPins = "tft_pin=19,23,18,5,2,4 gps_pin=34,33";
+      const tftModel   = dSel.value || "None";
+      const out = [
+        `custom_pins: ${customPins}`,
+        `tft_model: ${tftModel}`,
+        `modules_csv: WIFI,BLE,SD,TFT_ON`,
+        `filesystem: (default)`,
+        `partition: Default (use manifest/default)`
+      ].join('\n');
+      document.getElementById('out').textContent = out;
+    };
+  })();
+</script>
