@@ -51,15 +51,39 @@ jobs:
           echo "Disp:   enabled=$DISPLAY_ENABLED model=${DISPLAY_MODEL:-'(manifest)'}"
           echo "Libs:   NimBLE=$LIBS_NIMBLE_VERSION  ESPAsync=$LIBS_ESP_ASYNC_VERSION"
 
-      - name: Setup Arduino CLI & ESP32 core
+      - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
           version: latest
-      - name: Install ESP32 core
+      
+      - name: Configure ESP32 board manager index
         run: |
           arduino-cli config init
-          arduino-cli core update-index
-          arduino-cli core install esp32:esp32@${CORE_VERSION}
+          # Add Espressif package index
+          arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          # Update index (include the URL explicitly too, belt-and-braces)
+          arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+      
+      - name: Resolve core version (fallback if missing)
+        run: |
+          echo "Resolved CORE_VERSION='${CORE_VERSION}'"
+          if [ -z "${CORE_VERSION}" ]; then
+            echo "::warning::CORE_VERSION was empty; defaulting to 2.0.11"
+            echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
+          fi
+      
+      - name: Install ESP32 core
+        run: |
+          set -e
+          # Retry a couple times in case of transient network issues
+          for i in 1 2 3; do
+            arduino-cli core install esp32:esp32@${CORE_VERSION} \
+              --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json && break || {
+                echo "Install attempt $i failed; retrying in 5s..."
+                sleep 5
+              }
+          done
+          arduino-cli core list
 
       - name: Clean conflicting libraries (XPT touch/TFT leftovers)
         run: |
