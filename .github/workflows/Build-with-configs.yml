@@ -250,8 +250,7 @@ jobs:
           ARGS+=(--fqbn "$FQBN")
           ARGS+=(--warnings none)
           ARGS+=(--export-binaries)
-          ARGS+=(--build-property "compiler.cpp.extra_flags=$CPP_FLAGS")
-          ARGS+=(--build-property "compiler.c.extra_flags=$C_FLAGS")
+
       
           [ -n "$FS" ] && ARGS+=(--build-property "board_build.filesystem=$FS")
       
