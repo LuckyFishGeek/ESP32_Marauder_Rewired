@@ -1,3 +1,119 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Pre-built</title></head>
-<body><h1>Pre-built</h1><p>Placeholder for prebuilt profiles.</p></body></html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pre-built • ESP32 Marauder Rewired</title>
+  <style>
+    :root { --bg:#0b0f13; --fg:#e8eef5; --muted:#9fb3c8; --card:#11171d; --accent:#50e3c2; }
+    *{box-sizing:border-box}
+    body{
+      margin:0; min-height:100svh; font:16px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial,sans-serif;
+      background:radial-gradient(1200px 800px at 80% -10%, #17202a 0%, transparent 60%), var(--bg);
+      color:var(--fg); display:flex; flex-direction:column; align-items:center; padding:32px;
+    }
+    .wrap{max-width:1100px; width:100%;}
+    header{ display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:22px; }
+    h1{ margin:0; font-size:clamp(24px,4vw,38px); letter-spacing:.3px; }
+    a.home{ color:var(--fg); text-decoration:none; opacity:.9; border:1px solid #1f2a34; padding:10px 14px; border-radius:12px; }
+    a.home:hover{ background:#11171d; }
+    p.sub{ margin:4px 0 0; color:var(--muted); }
+    .controls{ display:flex; gap:12px; flex-wrap:wrap; margin:8px 0 18px; }
+    .search{
+      flex:1 1 280px; background:linear-gradient(180deg,#131a22,#0f151b); border:1px solid #1f2a34; border-radius:12px;
+      padding:10px 12px; color:var(--fg); outline:none;
+    }
+    .grid{ display:grid; gap:18px; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); }
+    .card{
+      background:linear-gradient(180deg,#131a22 0%,#0f151b 100%); border:1px solid #1f2a34; border-radius:18px; padding:18px;
+      transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+      box-shadow:0 10px 24px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.02);
+      display:flex; flex-direction:column; gap:10px;
+    }
+    .card:hover{ transform:translateY(-2px); border-color:#2a3b4a; box-shadow:0 14px 30px rgba(0,0,0,.35); }
+    .name{ font-weight:700; font-size:18px; }
+    .meta{ color:var(--muted); font-size:14px; }
+    .actions{ display:flex; gap:10px; margin-top:6px; }
+    .btn{
+      border:1px solid #2a3b4a; border-radius:12px; padding:10px 12px; text-decoration:none; color:var(--fg);
+      background:#0f151b; display:inline-block;
+    }
+    .btn.go{ background:linear-gradient(180deg,var(--accent),#4fd8c0); color:#0b0f13; font-weight:700; }
+    footer{ margin-top:26px; text-align:center; color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Pre-built devices</h1>
+        <p class="sub">Known-good boards & combos. Pick one to build/flash quickly.</p>
+      </div>
+      <a class="home" href="./index.html">← Back to home</a>
+    </header>
+
+    <div class="controls">
+      <input id="search" class="search" placeholder="Search devices… (e.g., v6.1, Cardputer, ESP32-S3)" />
+    </div>
+
+    <section id="cards" class="grid">
+      <!-- Cards are injected by JS below -->
+    </section>
+
+    <footer>Need full control? Use <a href="./custom.html" style="color:var(--accent);text-decoration:none;">Custom build</a>.</footer>
+  </div>
+
+  <script>
+    // Minimal list (extend as you like)
+    const devices = [
+      { name: "Flipper Zero WiFi Dev Board", id: "flipper-wifi", notes: "ESP32-S2 • no TFT" },
+      { name: "Flipper Zero Multi Board S3", id: "flipper-multiboard-s3", notes: "ESP32-S3 • no TFT" },
+      { name: "OG Marauder", id: "og-marauder", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder v6", id: "marauder-v6", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder v6.1", id: "marauder-v6-1", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder Kit", id: "marauder-kit", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder Mini", id: "marauder-mini", notes: "ESP32 D32 • TFT" },
+      { name: "ESP32 LDDB", id: "esp32-lddb", notes: "ESP32 D32 • no TFT" },
+      { name: "Marauder Dev Board Pro", id: "marauder-dev-pro", notes: "ESP32 D32 • no TFT" },
+      { name: "M5StickCPlus", id: "m5stickcplus", notes: "M5StickC • TFT" },
+      { name: "M5StickCPlus 2", id: "m5stickcplus2", notes: "M5StickC • TFT" },
+      { name: "Rev Feather (ESP32-S2)", id: "rev-feather", notes: "ESP32-S2 • TFT" },
+      { name: "Marauder v7", id: "marauder-v7", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder CYD 2432S028", id: "cyd-2432s028", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder CYD 2432S024 GUITION", id: "cyd-2432s024", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder CYD 2432S028 2 USB", id: "cyd-2432s028-2usb", notes: "ESP32 D32 • TFT" },
+      { name: "Marauder v7.1 (DFRobot FireBeetle2 ESP32-E)", id: "marauder-v7-1", notes: "ESP32-E • TFT" },
+      { name: "M5Cardputer", id: "m5cardputer", notes: "ESP32-S3 • TFT" },
+      { name: "ESP32-C5-DevKitC-1", id: "esp32-c5-devkitc1", notes: "ESP32-C5 • no TFT" }
+    ];
+
+    const elCards = document.getElementById("cards");
+    const elSearch = document.getElementById("search");
+
+    function cardTpl(d) {
+      return `
+        <article class="card" data-name="${d.name.toLowerCase()} ${d.notes.toLowerCase()}">
+          <div class="name">${d.name}</div>
+          <div class="meta">${d.notes}</div>
+          <div class="actions">
+            <a class="btn" href="./flash.html?board=${encodeURIComponent(d.name)}">Flash</a>
+            <a class="btn go" href="./build.html?preset=${encodeURIComponent(d.name)}">Build</a>
+          </div>
+        </article>`;
+    }
+
+    function render(list){
+      elCards.innerHTML = list.map(cardTpl).join("");
+    }
+
+    function filter(q){
+      const z = q.trim().toLowerCase();
+      if(!z){ render(devices); return; }
+      render(devices.filter(d => (d.name + " " + d.notes).toLowerCase().includes(z)));
+    }
+
+    elSearch.addEventListener("input", e => filter(e.target.value));
+    render(devices);
+  </script>
+</body>
+</html>
