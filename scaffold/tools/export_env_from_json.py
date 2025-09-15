@@ -29,6 +29,11 @@ def load_rows():
     except Exception as ex:
         eprint(f"[exporter] Could not read {MANIFEST}: {ex}")
         return []
+
+    # Accept common shapes:
+    # 1) [ {...}, {...} ]
+    # 2) { "boards": [ {...}, ... ] }
+    # 3) { "MARAUDER_V7": {..}, "MARAUDER_MINI": {..} }  (flag-keyed map)
     if isinstance(data, list):
         return data
     if isinstance(data, dict):
@@ -37,36 +42,35 @@ def load_rows():
         if all(isinstance(v, dict) for v in data.values()):
             out = []
             for k, v in data.items():
-                vv = dict(v); vv.setdefault("flag", k); out.append(vv)
+                vv = dict(v)
+                vv.setdefault("flag", k)
+                out.append(vv)
             return out
     eprint(f"[exporter] Unrecognized JSON shape in {MANIFEST}.")
     return []
 
 def pick(rows, flag, label):
-    # CSV behavior: prefer board_label exact match
-    if label:
-        for r in rows:
-            if (r.get("board_label") or "").strip() == label:
-                return r
-        # also try common aliases
-        for r in rows:
-            if (r.get("name") or "").strip() == label:
-                return r
     if flag:
         for r in rows:
             if (r.get("flag") or "").strip() == flag:
                 return r
+    if label:
+        for r in rows:
+            if (r.get("board_label") or "").strip() == label:
+                return r
     return None
 
-def safe_print(k, v): print(f"{k}={v}")
+def safe_print(k, v):
+    print(f"{k}={v}")
 
 def main():
-    # Always emit selectors
+    # Always record requested selectors so later steps can see them
     if flag:  safe_print("FLAG", flag)
     if label: safe_print("BOARD_LABEL", label)
 
     rows = load_rows()
-    if not rows: return
+    if not rows:
+        return
 
     row = pick(rows, flag, label)
     if not row:
@@ -74,7 +78,7 @@ def main():
         eprint(f"[exporter] Board not found. FLAG='{flag}' LABEL='{label}'. Available flags: {avail}")
         return
 
-    # Normalize fbqn?FQBN; accept case variations
+    # Top-level keys (normalize fbqn?FQBN; accept case variations)
     top_keys = ("board_label","fqbn","fbqn","FQBN","flag","filesystem","partition","addr","core_version")
     mapped   = {"fbqn": "fqbn", "FQBN": "fqbn"}
     for k in top_keys:
@@ -82,12 +86,7 @@ def main():
             key = mapped.get(k, k).upper()
             safe_print(key, row[k])
 
-    # Base defines: always add -D<FLAG> like your CSV
-    fl = (row.get("flag") or "").strip() or flag
-    if fl:
-        safe_print("DEFINES_BASE", f"-D{fl}")
-
-    # Display / libs (normalize nimble_ver, esp_async.ver)
+    # Flatten display/libs. Also normalize nimble_ver -> nimble_version; esp_async.ver -> esp_async.version
     disp = row.get("display") or {}
     for k, v in flatten("display", disp):
         safe_print(k, v)
