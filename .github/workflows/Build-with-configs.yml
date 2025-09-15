@@ -25,6 +25,15 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Debug repo layout
+        run: |
+          pwd
+          ls -la
+          ls -la scaffold || true
+          ls -la scaffold/configs || true
+          ls -la scaffold/configs/boards || true
+          sed -n '1,120p' scaffold/configs/boards/boards_manifest.json || true
+
       - name: Export board env from JSON manifest
         run: |
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
