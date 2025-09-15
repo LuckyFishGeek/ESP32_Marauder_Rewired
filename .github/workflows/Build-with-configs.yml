@@ -79,56 +79,6 @@ jobs:
             exit 1
           fi
 
-
-      - name: Stab in the Dark FQBN mapping
-        id: map
-        shell: bash
-        run: |
-          set -euo pipefail
-          MAN="./scaffold/configs/boards/boards_manifest.json""
-          WANT="${{ github.event.inputs.board_label }}"
-      
-          # exact row
-          LINE="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print; exit}' "$MAN")"
-          if [ -z "$LINE" ]; then
-            echo "::error ::Board label not found in manifest: $WANT"
-            echo "Available labels:"; tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba
-            exit 1
-          fi
-      
-          NFIELDS="$(awk -F',' -v want="$WANT" 'NR>1 && $1==want {print NF; exit}' "$MAN")"
-      
-          FQBN=$(echo "$LINE"       | cut -d','-f2)
-          FLAG=$(echo "$LINE"       | cut -d',' -f3)
-          DEF_FS=$(echo "$LINE"     | cut -d',' -f4)
-          DEF_PART=$(echo "$LINE"   | cut -d',' -f5)
-      
-          if [ "$NFIELDS" -ge 10 ]; then
-            RAW_DEFINES=$(echo "$LINE" | cut -d',' -f9)
-            CORE_VER=$(echo "$LINE"    | cut -d',' -f10)
-          else
-            RAW_DEFINES=""
-            CORE_VER=$(echo "$LINE" | cut -d',' -f9)
-          fi
-      
-          # clean defines (semicolon-separated in CSV)
-          DEFINES="$(printf '%s' "$RAW_DEFINES" | tr ';' ' ' | tr -d '\r' | xargs || true)"
-          [ -n "$FLAG" ] && DEFINES="$DEFINES -D$FLAG"
-          DEFINES="$(printf '%s' "$DEFINES" | xargs || true)"
-      
-          echo "fqbn=$FQBN"               >> $GITHUB_OUTPUT
-          echo "def_fs=$DEF_FS"           >> $GITHUB_OUTPUT
-          echo "def_part=$DEF_PART"       >> $GITHUB_OUTPUT
-          echo "core_ver=$CORE_VER"       >> $GITHUB_OUTPUT
-      
-          echo "---- RESOLVED BOARD ----"
-          echo "Board:        $WANT"
-          echo "FQBN:         $FQBN"
-          echo "Core Ver:     $CORE_VER"
-          echo "Default FS:   ${DEF_FS:-<core default>}"
-          echo "Default Part: ${DEF_PART:-<core default>}"
-          echo "------------------------"
-
       - name: Dump resolved env (debug)
         run: |
           env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)' || true
