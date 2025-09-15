@@ -2,7 +2,7 @@
 import json, os, sys
 
 MANIFEST = "scaffold/configs/boards/boards_manifest.json"
-flag = (os.environ.get("BOARD_FLAG") or "").strip()
+flag  = (os.environ.get("BOARD_FLAG")  or "").strip()
 label = (os.environ.get("BOARD_LABEL") or "").strip()
 
 def eprint(*a): print(*a, file=sys.stderr)
@@ -34,42 +34,54 @@ def pick(rows, flag, label):
                 return r
     return None
 
-def safe_print(env_k, env_v):
-    # Only ASCII-ish to be safe for $GITHUB_ENV
-    print(f"{env_k}={env_v}")
+def safe_print(k, v):
+    print(f"{k}={v}")
 
 def main():
-    # Default fallbacks so later steps don't explode if config is missing
-    if flag: safe_print("FLAG", flag)
+    # Always record the requested selectors so later steps can see them
+    if flag:  safe_print("FLAG", flag)
     if label: safe_print("BOARD_LABEL", label)
 
     try:
-        with open(MANIFEST, "r", encoding="utf-8") as f:
-            rows = json.load(f)
-            if not isinstance(rows, list):
-                eprint(f"[exporter] {MANIFEST} did not contain a JSON array.")
-                return  # keep job alive
+        rows = json.load(open(MANIFEST, "r", encoding="utf-8"))
+        if not isinstance(rows, list):
+            eprint(f"[exporter] {MANIFEST} is not a JSON array.")
+            return
     except Exception as ex:
         eprint(f"[exporter] Could not read {MANIFEST}: {ex}")
-        return  # keep job alive
+        return
 
     row = pick(rows, flag, label)
     if not row:
-        eprint(f"[exporter] Board not found. FLAG='{flag}', LABEL='{label}'. "
-               f"Available flags: {[r.get('flag') for r in rows if r.get('flag')]}")
-        return  # keep job alive
+        avail = [r.get('flag') for r in rows if r.get('flag')]
+        eprint(f"[exporter] Board not found. FLAG='{flag}' LABEL='{label}'. Available flags: {avail}")
+        return
 
-    # Top-level keys
-    for k in ("board_label","fqbn","flag","filesystem","partition","addr","core_version"):
+    # Top-level keys (normalize fbqn?FQBN)
+    # Accept either 'fqbn' or 'fbqn' in the manifest; always export FQBN
+    top_keys = ("board_label","fqbn","fbqn","flag","filesystem","partition","addr","core_version")
+    mapped   = {"fbqn": "fqbn"}  # normalization map
+    for k in top_keys:
         v = row.get(k)
-        if v is not None:
-            safe_print(k.upper(), v)
+        if v is None: 
+            continue
+        key = mapped.get(k, k).upper()
+        safe_print(key, v)
 
     # Display / libs (flattened)
     disp = row.get("display") or {}
     for k, v in flatten("display", disp):
         safe_print(k, v)
+
     libs = row.get("libs") or {}
+    # normalize legacy names from manifest (nimble_ver / esp_async_ver) into *_VERSION
+    if "nimble_ver" in libs and "nimble_version" not in libs:
+        libs["nimble_version"] = libs["nimble_ver"]
+    if "esp_async" in libs and isinstance(libs["esp_async"], dict):
+        ea = libs["esp_async"]
+        if "ver" in ea and "version" not in ea:
+            ea["version"] = ea["ver"]
+
     for k, v in flatten("libs", libs):
         safe_print(k, v)
 
