@@ -48,10 +48,25 @@ jobs:
             echo "::warning::FQBN empty; checking FBQN fallback"
             if [ -n "$FBQN" ]; then
               echo "FQBN=$FBQN" >> $GITHUB_ENV
-            else
-              echo "::error::Both FQBN and FBQN are empty; cannot compile."
-              exit 1
             fi
+          fi
+
+      - name: Last-resort FQBN mapping (unblock MARAUDER_V7)
+        run: |
+          if [ -z "$FQBN" ]; then
+            case "$FLAG" in
+              MARAUDER_V7)   echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              MARAUDER_MINI) echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              *) echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."; exit 1;;
+            esac
+            echo "::notice::Applied last-resort FQBN mapping for $FLAG"
+          fi
+
+      - name: Assert FQBN present
+        run: |
+          if [ -z "$FQBN" ]; then
+            echo "::error::FQBN is empty after exporter+fallback ? check boards_manifest (fqbn/fbqn)."
+            exit 1
           fi
 
       - name: Dump resolved env (debug)
@@ -101,7 +116,7 @@ jobs:
           ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
           ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
           echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
-          # NimBLE ? only add @version if non-empty to avoid CLI panic
+          # NimBLE ? avoid @ when empty to prevent CLI panic
           if [ -n "$NIMBLE_VER" ]; then
             arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
           else
@@ -160,14 +175,23 @@ jobs:
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       - name: Build (compile only)
+        working-directory: ${{ steps.prep.outputs.sketch_dir }}
+        env:
+          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
         run: |
-          EXTRA="-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
+          set -e
+          echo "FQBN=$FQBN"
+          echo "Sketch dir: $(pwd)"
+          ls -la
+          ls -la .tft_setup || true
+          ls -la .autogen || true
+
           arduino-cli compile \
             --fqbn "$FQBN" \
-            --build-property compiler.cpp.extra_flags="$EXTRA" \
+            --build-property compiler.cpp.extra_flags="$EXTRA_FLAGS" \
             --build-property build.partitions="$PARTITION" \
-            --output-dir build_out \
-            "${{ steps.prep.outputs.sketch_dir }}"
+            --output-dir "$GITHUB_WORKSPACE/build_out" \
+            .
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
