@@ -1,0 +1,5 @@
+module_label,GPS_RX,GPS_TX,GPS_PPS,GPS_EN,GPS_RST,NOTES
+NEO-6M,REQ,REQ,OPT,OPT,OPT,UART RX/TX, PPS optional
+NEO-M8N,REQ,REQ,OPT,OPT,OPT,Same as above, adds GLONASS
+GPS_Generic,REQ,REQ,,,,,
+GPS_Placeholder,REQ,REQ,OPT,OPT,OPT,Default template for GPS modules
