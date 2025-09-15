@@ -23,6 +23,32 @@ def flatten(prefix, obj):
         items.append((prefix.upper(), str(obj)))
     return items
 
+def load_rows():
+    try:
+        data = json.load(open(MANIFEST, "r", encoding="utf-8"))
+    except Exception as ex:
+        eprint(f"[exporter] Could not read {MANIFEST}: {ex}")
+        return []
+
+    # Accept common shapes:
+    # 1) [ {...}, {...} ]
+    # 2) { "boards": [ {...}, ... ] }
+    # 3) { "MARAUDER_V7": {..}, "MARAUDER_MINI": {..} }  (flag-keyed map)
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        if isinstance(data.get("boards"), list):
+            return data["boards"]
+        if all(isinstance(v, dict) for v in data.values()):
+            out = []
+            for k, v in data.items():
+                vv = dict(v)
+                vv.setdefault("flag", k)
+                out.append(vv)
+            return out
+    eprint(f"[exporter] Unrecognized JSON shape in {MANIFEST}.")
+    return []
+
 def pick(rows, flag, label):
     if flag:
         for r in rows:
@@ -38,17 +64,12 @@ def safe_print(k, v):
     print(f"{k}={v}")
 
 def main():
-    # Always record the requested selectors so later steps can see them
+    # Always record requested selectors so later steps can see them
     if flag:  safe_print("FLAG", flag)
     if label: safe_print("BOARD_LABEL", label)
 
-    try:
-        rows = json.load(open(MANIFEST, "r", encoding="utf-8"))
-        if not isinstance(rows, list):
-            eprint(f"[exporter] {MANIFEST} is not a JSON array.")
-            return
-    except Exception as ex:
-        eprint(f"[exporter] Could not read {MANIFEST}: {ex}")
+    rows = load_rows()
+    if not rows:
         return
 
     row = pick(rows, flag, label)
@@ -57,31 +78,26 @@ def main():
         eprint(f"[exporter] Board not found. FLAG='{flag}' LABEL='{label}'. Available flags: {avail}")
         return
 
-    # Top-level keys (normalize fbqn?FQBN)
-    # Accept either 'fqbn' or 'fbqn' in the manifest; always export FQBN
-    top_keys = ("board_label","fqbn","fbqn","flag","filesystem","partition","addr","core_version")
-    mapped   = {"fbqn": "fqbn"}  # normalization map
+    # Top-level keys (normalize fbqn?FQBN; accept case variations)
+    top_keys = ("board_label","fqbn","fbqn","FQBN","flag","filesystem","partition","addr","core_version")
+    mapped   = {"fbqn": "fqbn", "FQBN": "fqbn"}
     for k in top_keys:
-        v = row.get(k)
-        if v is None: 
-            continue
-        key = mapped.get(k, k).upper()
-        safe_print(key, v)
+        if k in row and row[k] is not None:
+            key = mapped.get(k, k).upper()
+            safe_print(key, row[k])
 
-    # Display / libs (flattened)
+    # Flatten display/libs. Also normalize nimble_ver -> nimble_version; esp_async.ver -> esp_async.version
     disp = row.get("display") or {}
     for k, v in flatten("display", disp):
         safe_print(k, v)
 
     libs = row.get("libs") or {}
-    # normalize legacy names from manifest (nimble_ver / esp_async_ver) into *_VERSION
     if "nimble_ver" in libs and "nimble_version" not in libs:
         libs["nimble_version"] = libs["nimble_ver"]
     if "esp_async" in libs and isinstance(libs["esp_async"], dict):
         ea = libs["esp_async"]
         if "ver" in ea and "version" not in ea:
             ea["version"] = ea["ver"]
-
     for k, v in flatten("libs", libs):
         safe_print(k, v)
 
