@@ -215,25 +215,27 @@ jobs:
 
           rsync -a --exclude '.git' --exclude '.DS_Store' "$SRC_DIR/" "$DEST/src/menus/"
 
-          cat > "$DEST/src/MarauderMenu.h" <<'H'
-#pragma once
-#include "menus/MenuTypes.h"
-#include "menus/ToolRegistry.h"
-#include "menus/RegistryInit.h"
-#include "menus/MenuFromRegistry.h"
-H
+          # Write umbrella header without heredoc
+          {
+            printf '%s\n' '#pragma once'
+            printf '%s\n' '#include "menus/MenuTypes.h"'
+            printf '%s\n' '#include "menus/ToolRegistry.h"'
+            printf '%s\n' '#include "menus/RegistryInit.h"'
+            printf '%s\n' '#include "menus/MenuFromRegistry.h"'
+          } > "$DEST/src/MarauderMenu.h"
 
-          cat > "$DEST/library.properties" <<'PROP'
-name=MarauderMenu
-version=0.1.0
-author=ESP32 Marauder Rewired
-maintainer=ESP32 Marauder Rewired
-sentence=Menu/registry components for ESP32 Marauder Rewired.
-paragraph=Local library staged by CI to preserve repo folder structure.
-category=Other
-architectures=*
-includes=MarauderMenu.h
-PROP
+          # Write library.properties without heredoc
+          {
+            printf 'name=MarauderMenu\n'
+            printf 'version=0.1.0\n'
+            printf 'author=ESP32 Marauder Rewired\n'
+            printf 'maintainer=ESP32 Marauder Rewired\n'
+            printf 'sentence=Menu/registry components for ESP32 Marauder Rewired.\n'
+            printf 'paragraph=Local library staged by CI to preserve repo folder structure.\n'
+            printf 'category=Other\n'
+            printf 'architectures=*\n'
+            printf 'includes=MarauderMenu.h\n'
+          } > "$DEST/library.properties"
 
           echo "Local library contents:"
           find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
