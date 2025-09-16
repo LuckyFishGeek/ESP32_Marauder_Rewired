@@ -150,9 +150,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          NIMBLE_VER="${LIBS_NIMBLE_VERSION:-$LIBS_NIMBLE_VER}"
+          NIMBLE_VER="${LIBS_NIMBLE_VERSION:-${LIBS_NIMBLE_VER-}}"
           ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
-          ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
+          ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-${LIBS_ESP_ASYNC_VER-}}"
           echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
           if [ -n "$NIMBLE_VER" ]; then
             arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
