@@ -146,30 +146,72 @@ jobs:
           cd "$LIBDIR"
           rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
 
-      - name: Install required libraries
+      - name: Extract pre-bundled libs (JSON-driven from scaffold/lib)
         shell: bash
         run: |
           set -euo pipefail
-          NIMBLE_VER="${LIBS_NIMBLE_VERSION:-${LIBS_NIMBLE_VER-}}"
-          ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
-          ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-${LIBS_ESP_ASYNC_VER-}}"
-          echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
-          if [ -n "$NIMBLE_VER" ]; then
-            arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
-          else
-            echo "::warning::NimBLE version empty; installing latest."
-            arduino-cli lib install NimBLE-Arduino
-          fi
+          JSON="scaffold/configs/libs/lib_list.json"
+          ZIPROOT="scaffold/lib"
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
-          cd "$LIBDIR"
-          rm -rf ESPAsyncWebServer || true
-          if [ -n "$ESPASYNC_VER" ]; then
-            git clone --depth 1 --branch "$ESPASYNC_VER" "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
-          else
-            echo "::warning::ESPAsyncWebServer version empty; using default branch."
-            git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
+
+          if [ ! -f "$JSON" ]; then
+            echo "::error ::$JSON not found"; exit 1
           fi
+
+          python3 - << 'PY'
+import json, os, sys, zipfile
+
+JSON_PATH = "scaffold/configs/libs/lib_list.json"
+ZIPROOT   = "scaffold/lib"
+LIBDIR    = os.path.expanduser("~/Arduino/libraries")
+
+def load_items(path):
+    data = json.load(open(path, "r", encoding="utf-8"))
+    items = []
+
+    # Supported shapes:
+    # 1) ["LibA.zip","LibB.zip", ...]
+    # 2) {"libs":[{"zip":"LibA.zip","desc":"..."},{"zip":"LibB.zip"}]}
+    # 3) {"libs":["LibA.zip","LibB.zip"]}
+    if isinstance(data, list):
+        for v in data:
+            if isinstance(v, str):
+                items.append((v.strip(), ""))
+    elif isinstance(data, dict):
+        libs = data.get("libs")
+        if isinstance(libs, list):
+            for v in libs:
+                if isinstance(v, str):
+                    items.append((v.strip(), ""))
+                elif isinstance(v, dict):
+                    z = (v.get("zip") or v.get("file") or v.get("path") or "").strip()
+                    d = (v.get("desc") or "").strip()
+                    if z:
+                        items.append((z, d))
+    return items
+
+items = load_items(JSON_PATH)
+if not items:
+    print(f"::warning ::No entries found in {JSON_PATH}")
+
+missing = []
+for zipname, desc in items:
+    src = os.path.join(ZIPROOT, zipname)
+    if not os.path.isfile(src):
+        missing.append(zipname)
+        continue
+    note = f" ({desc})" if desc else ""
+    print(f"Unpacking {zipname}{note}")
+    with zipfile.ZipFile(src) as zf:
+        zf.extractall(LIBDIR)
+
+if missing:
+    print("::warning ::Missing zip(s): " + ", ".join(missing))
+PY
+
+          echo "Installed libs in $LIBDIR:"
+          ls -lh "$LIBDIR" || true
 
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
