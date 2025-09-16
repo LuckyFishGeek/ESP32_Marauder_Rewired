@@ -30,7 +30,6 @@ jobs:
           pip install --upgrade pip
           pip install pyserial
 
-
       - name: Debug repo layout
         run: |
           pwd
@@ -60,20 +59,23 @@ jobs:
 
       - name: Ensure FQBN set (fbqn fallback)
         run: |
-          if [ -z "$FQBN" ]; then
-            echo "::warning::FQBN empty; checking FBQN fallback"
-            if [ -n "$FBQN" ]; then
-              echo "FQBN=$FBQN" >> $GITHUB_ENV
-            fi
+          if [ -z "$FQBN" ] && [ -n "$FBQN" ]; then
+            echo "FQBN=$FBQN" >> $GITHUB_ENV
           fi
 
-      - name: Last-resort FQBN mapping (unblock MARAUDER_V7)
+      - name: Last-resort FQBN mapping
         run: |
           if [ -z "$FQBN" ]; then
             case "$FLAG" in
-              MARAUDER_V7)   echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
-              MARAUDER_MINI) echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
-              *) echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."; exit 1;;
+              MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
+                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
+                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> $GITHUB_ENV ;;
+              MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
+                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
+              *)
+                echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."
+                exit 1;;
             esac
             echo "::notice::Applied last-resort FQBN mapping for $FLAG"
           fi
@@ -87,9 +89,8 @@ jobs:
 
       - name: Dump resolved env (debug)
         run: |
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)' || true
+          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_|DEFINES_BASE)=' || true
 
-      # Always use a pinned CLI version (avoid "latest")
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -101,7 +102,6 @@ jobs:
           arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
           arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-      # Hard-pin the ESP32 core version (your rule)
       - name: Force core version 2.0.11
         run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
 
@@ -127,19 +127,16 @@ jobs:
       - name: Install required libraries
         run: |
           set -e
-          # Resolve names from manifest (handle both *_VERSION and *_VER keys)
           NIMBLE_VER="${LIBS_NIMBLE_VERSION:-$LIBS_NIMBLE_VER}"
           ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
           ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
           echo "Resolved: NIMBLE_VER='${NIMBLE_VER}'  ESPASYNC_REPO='${ESPASYNC_REPO}'  ESPASYNC_VER='${ESPASYNC_VER}'"
-          # NimBLE ? avoid @ when empty to prevent CLI panic
           if [ -n "$NIMBLE_VER" ]; then
             arduino-cli lib install "NimBLE-Arduino@${NIMBLE_VER}"
           else
-            echo "::warning::LIBS_NIMBLE_VERSION/VER empty; installing latest NimBLE-Arduino (no pin)."
+            echo "::warning::NimBLE version empty; installing latest."
             arduino-cli lib install NimBLE-Arduino
           fi
-          # ESPAsyncWebServer from Git (repo+branch/tag)
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
           cd "$LIBDIR"
@@ -147,24 +144,11 @@ jobs:
           if [ -n "$ESPASYNC_VER" ]; then
             git clone --depth 1 --branch "$ESPASYNC_VER" "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           else
-            echo "::warning::LIBS_ESP_ASYNC_VERSION/VER empty; using default branch of ${ESPASYNC_REPO}."
+            echo "::warning::ESPAsyncWebServer version empty; using default branch."
             git clone --depth 1 "https://github.com/${ESPASYNC_REPO}" ESPAsyncWebServer
           fi
 
-      - name: Create ESP32MarauderRegistry local library
-        run: |
-          set -e
-          LIBDIR="$HOME/Arduino/libraries/ESP32MarauderRegistry"
-          mkdir -p "$LIBDIR/src/registry"
-          cp -r scaffold/registry/* "$LIBDIR/src/registry/" || true
-          cat > "$LIBDIR/library.properties" <<'PROP'
-          name=ESP32MarauderRegistry
-          version=0.0.3
-          architectures=*
-          includes=registry/ToolRegistry.h
-          PROP
-
-      ### STAGE & ASSERT THE SKETCH ###
+      # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
         run: |
@@ -179,7 +163,7 @@ jobs:
         run: |
           test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
-      ### AUTOGEN HEADERS INTO THE PREPARED DIR ###
+      # ---------- Autogen headers into the staged dir ----------
       - name: Generate config.h (JSON-driven)
         run: |
           python3 scaffold/tools/gen_user_config.py \
@@ -203,6 +187,19 @@ jobs:
             --tft-enabled "${DISPLAY_ENABLED}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
+      # ---------- Registry: autogen calls from modules_presets ----------
+      - name: Autogen RegistryInit from modules
+        run: |
+          OUTCPP="${{ steps.prep.outputs.sketch_dir }}/RegistryInit.autogen.cpp"
+          OUTHDR="${{ steps.prep.outputs.sketch_dir }}/.autogen/registered_modules.h"
+          python3 scaffold/tools/gen_registry_from_modules.py \
+            --modules-json scaffold/configs/modules/modules_presets.json \
+            --out-cpp "$OUTCPP" \
+            --out-h "$OUTHDR"
+          echo "Generated:"
+          ls -la "$OUTCPP" "$OUTHDR" || true
+
+      # ---------- Partitions / filesystem ----------
       - name: Resolve FS/Partition and install custom CSV if present
         id: fs
         shell: bash
@@ -212,18 +209,12 @@ jobs:
           PART_IN="${PARTITION:-}"
           CORE_VER="${CORE_VERSION:-2.0.11}"
 
-          # Where the esp32 core keeps partition CSVs
           CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
 
           FS="$FS_IN"
           PART="${PART_IN}"
+          if [ -n "$PART" ]; then PART="${PART%.csv}.csv"; fi
 
-          # Normalize: strip a trailing .csv once
-          if [ -n "$PART" ]; then
-            PART="${PART%.csv}.csv"
-          fi
-
-          # If a custom CSV exists in repo root ./partitions, copy it into the core
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
             if [ -f "$SRC" ]; then
@@ -235,21 +226,17 @@ jobs:
 
           echo "fs=$FS"   >> $GITHUB_OUTPUT
           echo "partition=$PART" >> $GITHUB_OUTPUT
-
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
-
+      # ---------- Compile ----------
       - name: Compile (Arduino CLI)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_INCLUDES: "-I$HOME/Arduino/libraries/ESP32MarauderRegistry/src"
-          SKETCH_DIR: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
+          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen ${DEFINES_BASE}
         run: |
           set -euo pipefail
-
-          # FQBN was asserted earlier; read it from env (not from a removed step)
           if [ -z "${FQBN:-}" ]; then
             echo "::error::FQBN is empty at compile time; check earlier steps."
             exit 1
@@ -257,37 +244,25 @@ jobs:
 
           FS="${{ steps.fs.outputs.fs }}"
           PART="${{ steps.fs.outputs.partition }}"
-
-          # Defines: exporter emits -D<FLAG> as DEFINES_BASE; also allow user-provided DEFINES
-          DEFS_BASE="${DEFINES_BASE:-}"
-          DEFS_EXTRA="${DEFINES:-}"
-          DEFS="$(printf '%s %s' "$DEFS_BASE" "$DEFS_EXTRA" | xargs || true)"
+          PART_PROP=""
+          if [ -n "$PART" ]; then
+            PART_PROP="--build-property build.partitions=${PART%.csv}"
+          fi
 
           echo "FQBN:       $FQBN"
           echo "Sketch dir: $(pwd)"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
-          echo "Defines:    ${DEFS:-<none>}"
           ls -la; ls -la .tft_setup || true; ls -la .autogen || true
 
-          ARGS=()
-          ARGS+=(--fqbn "$FQBN")
-          ARGS+=(--warnings none)
-          ARGS+=(--export-binaries)
-          ARGS+=(--build-property "compiler.cpp.extra_flags=${EXTRA_INCLUDES} ${DEFS}")
-
-          # Filesystem & partitions (guarded)
-          if [ -n "$FS" ]; then
-            ARGS+=(--build-property "board_build.filesystem=${FS}")
-          fi
-          if [ -n "$PART" ]; then
-            # Arduino CLI wants the name without .csv
-            PART_NAME="${PART%.csv}"
-            ARGS+=(--build-property "build.partitions=${PART_NAME}")
-          fi
-
-          printf 'arduino-cli compile args:\n  %q\n' "${ARGS[@]}"
-          arduino-cli compile "${ARGS[@]}" .
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --warnings none \
+            --export-binaries \
+            --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
+            ${PART_PROP} \
+            --output-dir "$GITHUB_WORKSPACE/build_out" \
+            .
 
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
