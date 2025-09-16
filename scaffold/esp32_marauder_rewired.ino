@@ -1,14 +1,18 @@
 #include <Arduino.h>
-#include <MarauderMenu.h>   // <? this is the trigger so Arduino builds the local lib
+#include <MarauderMenu.h>   // this brings in all menus/registries
 
 void setup() {
   Serial.begin(115200);
   delay(100);
+
+  // initialize registry
   init_tool_registry();
+
+  // show main menu
   showMainMenu();
 }
 
 void loop() {
-  // for now, nothing long-running ? just yield
+  // placeholder loop
   delay(10);
 }
