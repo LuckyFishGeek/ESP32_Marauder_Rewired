@@ -2,6 +2,7 @@
 #include "menus/MenuFromRegistry.h"
 #include "menus/ToolRegistry.h"
 #include "menus/RegistryInit.h"
+#Include <CustomFunctions.h>
 
 void setup() {
   Serial.begin(115200);
