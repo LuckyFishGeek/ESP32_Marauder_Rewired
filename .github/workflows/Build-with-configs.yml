@@ -119,33 +119,75 @@ jobs:
           rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
 
       - name: Extract pre-bundled libs (JSON-driven)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           JSON="scaffold/configs/libs/lib_list.json"
           ZIPROOT="scaffold/lib"
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
-          if [ ! -f "$JSON" ]; then
-            echo "::error ::$JSON not found"; exit 1
+
+          echo "== DEBUG: show JSON and ZIP directory =="
+          if [ -f "$JSON" ]; then
+            echo "--- $JSON ---"
+            cat "$JSON"
+            echo "--------------"
+          else
+            echo "::error ::$JSON not found"
+            exit 1
           fi
+
+          echo "== Listing $ZIPROOT =="
+          ls -la "$ZIPROOT" || { echo "::warning ::$ZIPROOT missing"; true; }
+
+          echo "== Parsing JSON =="
+          # Accept either:
+          #  - ["A.zip","B.zip"]
+          #  - {"libs":["A.zip","B.zip"]}
+          #  - [{"zip":"A.zip"}, {"zip":"B.zip"}]
+          #  - {"libs":[{"zip":"A.zip"}]}
           mapfile -t ZIPS < <(jq -r '
-            if type=="array" then .[]
-            elif type=="object" and .libs then .libs[]
+            if type=="array" then
+              .[] | (if type=="string" then . else .zip // empty end)
+            elif type=="object" and .libs then
+              .libs[] | (if type=="string" then . else .zip // empty end)
             else empty end
-            | (if type=="string" then . else .zip // empty end)
-            | select(. != null and . != "")
-          ' "$JSON")
+          ' "$JSON" 2>/dev/null || echo "")
+
+          if [ "${#ZIPS[@]}" -eq 0 ]; then
+            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}"
+            exit 1
+          fi
+
+          echo "== ZIP entries from JSON =="
+          for z in "${ZIPS[@]}"; do echo "  - $z"; done
+
+          echo "== Unpacking =="
+          any_installed=0
           for ZIP in "${ZIPS[@]}"; do
-            FILE="$ZIPROOT/$ZIP"
+            ZIP_TRIM="$(echo "$ZIP" | xargs)"
+            [ -z "$ZIP_TRIM" ] && continue
+            FILE="$ZIPROOT/$ZIP_TRIM"
             if [ -f "$FILE" ]; then
-              echo "Unpacking $ZIP"
+              echo "Unpacking $ZIP_TRIM -> $LIBDIR"
               unzip -o "$FILE" -d "$LIBDIR" >/dev/null
+              any_installed=1
             else
-              echo "::warning ::$ZIP not found in $ZIPROOT"
+              echo "::warning ::$ZIP_TRIM not found in $ZIPROOT"
             fi
           done
-          echo "Installed libs in $LIBDIR:"; ls -lh "$LIBDIR" || true
 
+          echo "== Result =="
+          if [ "$any_installed" -eq 0 ]; then
+            echo "::error ::No libraries were installed. Check zip names and paths."
+            echo "Contents of $ZIPROOT:"
+            ls -la "$ZIPROOT" || true
+            exit 1
+          fi
+
+          echo "Installed libs in $LIBDIR:"
+          find "$LIBDIR" -maxdepth 2 -type f -name 'library.properties' -print | sed 's/^/  /'
+    
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
