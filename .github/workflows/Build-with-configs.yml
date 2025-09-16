@@ -26,12 +26,16 @@ jobs:
           python-version: '3.x'
 
       - name: Install Python deps
+        shell: bash
         run: |
+          set -euo pipefail
           pip install --upgrade pip
           pip install pyserial
 
       - name: Debug repo layout
+        shell: bash
         run: |
+          set -euo pipefail
           pwd
           ls -la
           ls -la scaffold || true
@@ -40,7 +44,9 @@ jobs:
           sed -n '1,120p' scaffold/configs/boards/boards_manifest.json || true
 
       - name: Export board env from JSON manifest
+        shell: bash
         run: |
+          set -euo pipefail
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
           echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
           python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
@@ -48,8 +54,10 @@ jobs:
           cat exporter.err || true
 
       - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
+        shell: bash
         run: |
-          if [ -z "$FLAG" ]; then
+          set -euo pipefail
+          if [ -z "${FLAG:-}" ]; then
             if [ -n "${{ github.event.inputs.board_flag }}" ]; then
               echo "FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
             else
@@ -58,15 +66,19 @@ jobs:
           fi
 
       - name: Ensure FQBN set (fbqn fallback)
+        shell: bash
         run: |
-          if [ -z "$FQBN" ] && [ -n "$FBQN" ]; then
+          set -euo pipefail
+          if [ -z "${FQBN:-}" ] && [ -n "${FBQN:-}" ]; then
             echo "FQBN=$FBQN" >> $GITHUB_ENV
           fi
 
       - name: Last-resort FQBN mapping
+        shell: bash
         run: |
-          if [ -z "$FQBN" ]; then
-            case "$FLAG" in
+          set -euo pipefail
+          if [ -z "${FQBN:-}" ]; then
+            case "${FLAG:-}" in
               MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
                 echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
               MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
@@ -74,21 +86,25 @@ jobs:
               MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
                 echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
               *)
-                echo "::error::FQBN not found for FLAG='$FLAG' and no fallback rule defined."
+                echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
                 exit 1;;
             esac
             echo "::notice::Applied last-resort FQBN mapping for $FLAG"
           fi
 
       - name: Assert FQBN present
+        shell: bash
         run: |
-          if [ -z "$FQBN" ]; then
+          set -euo pipefail
+          if [ -z "${FQBN:-}" ]; then
             echo "::error::FQBN is empty after exporter+fallback ? check boards_manifest (fqbn/fbqn)."
             exit 1
           fi
 
       - name: Dump resolved env (debug)
+        shell: bash
         run: |
+          set -euo pipefail
           env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_|DEFINES_BASE)=' || true
 
       - name: Setup Arduino CLI
@@ -97,17 +113,21 @@ jobs:
           version: 0.35.3
 
       - name: Configure ESP32 board manager index
+        shell: bash
         run: |
+          set -euo pipefail
           arduino-cli config init
           arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
           arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
       - name: Force core version 2.0.11
+        shell: bash
         run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
 
       - name: Install ESP32 core (with retry)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           for i in 1 2 3; do
             arduino-cli core install esp32:esp32@${CORE_VERSION} \
               --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json && break || {
@@ -118,15 +138,18 @@ jobs:
           arduino-cli core list
 
       - name: Clean conflicting libraries (XPT touch/TFT leftovers)
+        shell: bash
         run: |
+          set -euo pipefail
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
           cd "$LIBDIR"
           rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
 
       - name: Install required libraries
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           NIMBLE_VER="${LIBS_NIMBLE_VERSION:-$LIBS_NIMBLE_VER}"
           ESPASYNC_REPO="${LIBS_ESP_ASYNC_REPO:-bigbrodude6119/ESPAsyncWebServer}"
           ESPASYNC_VER="${LIBS_ESP_ASYNC_VERSION:-$LIBS_ESP_ASYNC_VER}"
@@ -151,7 +174,9 @@ jobs:
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
+        shell: bash
         run: |
+          set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
           SRC_INO="$(ls scaffold/*.ino | head -n 1)"
@@ -160,12 +185,16 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
       - name: Assert sketch prepared
+        shell: bash
         run: |
+          set -euo pipefail
           test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
       # ---------- Autogen headers into the staged dir ----------
       - name: Generate config.h (JSON-driven)
+        shell: bash
         run: |
+          set -euo pipefail
           python3 scaffold/tools/gen_user_config.py \
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --defines-json scaffold/configs/defines/build_defines.json \
@@ -175,7 +204,9 @@ jobs:
             --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
       - name: Generate TFT_eSPI header (serial-only safe)
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
           python3 scaffold/tools/gen_tft_setup_json.py \
             --boards-json scaffold/configs/boards/boards_manifest.json \
@@ -187,101 +218,107 @@ jobs:
             --tft-enabled "${DISPLAY_ENABLED}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
+      # ---------- Ensure registry generator exists (guard) ----------
       - name: Ensure registry generator exists (guard)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           mkdir -p scaffold/tools
           if [ ! -f scaffold/tools/gen_registry_from_modules.py ]; then
             cat > scaffold/tools/gen_registry_from_modules.py <<'PY'
-          #!/usr/bin/env python3
-          import json, os, sys, re, argparse
-          
-          def norm_id(s: str) -> str:
-              s = (s or "").strip()
-              if not s: return ""
-              s = s.replace("-", "_").replace(" ", "_")
-              s = re.sub(r"[^a-zA-Z0-9_]", "", s)
-              if re.match(r"^\d", s): s = "_" + s
-              return s
-          
-          def load_modules(path: str):
-              with open(path, "r", encoding="utf-8") as f:
-                  data = json.load(f)
-              mods = []
-              if isinstance(data, list):
-                  mods = [m for m in data if isinstance(m, dict)]
-              elif isinstance(data, dict):
-                  if isinstance(data.get("modules"), list):
-                      mods = [m for m in data["modules"] if isinstance(m, dict)]
-                  else:
-                      for k, v in data.items():
-                          if isinstance(v, dict):
-                              vv = dict(v); vv.setdefault("id", k); mods.append(vv)
-              out = []
-              for m in mods:
-                  mid = norm_id(m.get("id") or m.get("name") or m.get("module") or "")
-                  if not mid:
-                      mid = norm_id(f'{m.get("category","")}_{m.get("name","")}')
-                  if not mid: continue
-                  if str(m.get("enabled", True)).lower() in ("false","0","no"): continue
-                  out.append({"id": mid, "name": m.get("name", mid)})
-              return out
-          
-          def main():
-              ap = argparse.ArgumentParser()
-              ap.add_argument("--modules-json", required=True)
-              ap.add_argument("--out-cpp", required=True)
-              ap.add_argument("--out-h", required=False)
-              ap.add_argument("--ns", default="RegistryInit")
-              args = ap.parse_args()
-          
-              mods = load_modules(args.modules_json)
-              os.makedirs(os.path.dirname(args.out_cpp), exist_ok=True)
-              if args.out_h:
-                  os.makedirs(os.path.dirname(args.out_h), exist_ok=True)
-                  with open(args.out_h, "w", encoding="utf-8") as h:
-                      h.write("// Autogenerated: registered_modules.h\n#pragma once\n\n")
-                      if mods:
-                          h.write("/* Enabled modules (sanitized IDs): */\n")
-                          for m in mods: h.write(f"//  - {m['id']}\n")
-                      else:
-                          h.write("// (no enabled modules discovered)\n")
-          
-              with open(args.out_cpp, "w", encoding="utf-8") as w:
-                  w.write("// Autogenerated: RegistryInit.autogen.cpp\n")
-                  w.write("// DO NOT EDIT BY HAND ? generated from modules_presets.json\n\n")
-                  w.write('#include "RegistryInit.h"\n\n')
-                  for m in mods:
-                      fid = m["id"]
-                      w.write(f'extern "C" void register_{fid}(void) __attribute__((weak));\n')
-                  w.write("\n")
-                  w.write(f"void {args.ns}::init() {{\n")
-                  if not mods:
-                      w.write("  // No modules enabled; nothing to register.\n")
-                  else:
-                      for m in mods:
-                          fid = m["id"]
-                          w.write(f"  if (register_{fid}) register_{fid}();\n")
-                  w.write("}\n")
-          
-              print(f"Generated {args.out_cpp} with {len(mods)} module calls.")
-              if args.out_h: print(f"Generated {args.out_h}")
-          
-          if __name__ == '__main__':
-              main()
-          PY
-                      chmod +x scaffold/tools/gen_registry_from_modules.py
-                      echo "::notice::Created scaffold/tools/gen_registry_from_modules.py on runner (guard)."
-                    fi
-          
-                - name: Verify registry generator path
-                  run: |
-                    ls -la scaffold/tools
-                    sed -n '1,40p' scaffold/tools/gen_registry_from_modules.py
+#!/usr/bin/env python3
+import json, os, sys, re, argparse
+
+def norm_id(s: str) -> str:
+    s = (s or "").strip()
+    if not s: return ""
+    s = s.replace("-", "_").replace(" ", "_")
+    s = re.sub(r"[^a-zA-Z0-9_]", "", s)
+    if re.match(r"^\d", s): s = "_" + s
+    return s
+
+def load_modules(path: str):
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    mods = []
+    if isinstance(data, list):
+        mods = [m for m in data if isinstance(m, dict)]
+    elif isinstance(data, dict):
+        if isinstance(data.get("modules"), list):
+            mods = [m for m in data["modules"] if isinstance(m, dict)]
+        else:
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    vv = dict(v); vv.setdefault("id", k); mods.append(vv)
+    out = []
+    for m in mods:
+        mid = norm_id(m.get("id") or m.get("name") or m.get("module") or "")
+        if not mid:
+            mid = norm_id(f'{m.get("category","")}_{m.get("name","")}')
+        if not mid: continue
+        if str(m.get("enabled", True)).lower() in ("false","0","no"): continue
+        out.append({"id": mid, "name": m.get("name", mid)})
+    return out
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--modules-json", required=True)
+    ap.add_argument("--out-cpp", required=True)
+    ap.add_argument("--out-h", required=False)
+    ap.add_argument("--ns", default="RegistryInit")
+    args = ap.parse_args()
+
+    mods = load_modules(args.modules_json)
+    os.makedirs(os.path.dirname(args.out_cpp), exist_ok=True)
+    if args.out_h:
+        os.makedirs(os.path.dirname(args.out_h), exist_ok=True)
+        with open(args.out_h, "w", encoding="utf-8") as h:
+            h.write("// Autogenerated: registered_modules.h\n#pragma once\n\n")
+            if mods:
+                h.write("/* Enabled modules (sanitized IDs): */\n")
+                for m in mods: h.write(f"//  - {m['id']}\n")
+            else:
+                h.write("// (no enabled modules discovered)\n")
+
+    with open(args.out_cpp, "w", encoding="utf-8") as w:
+        w.write("// Autogenerated: RegistryInit.autogen.cpp\n")
+        w.write("// DO NOT EDIT BY HAND ? generated from modules_presets.json\n\n")
+        w.write('#include "RegistryInit.h"\n\n')
+        for m in mods:
+            fid = m["id"]
+            w.write(f'extern "C" void register_{fid}(void) __attribute__((weak));\n')
+        w.write("\n")
+        w.write(f"void {args.ns}::init() {{\n")
+        if not mods:
+            w.write("  // No modules enabled; nothing to register.\n")
+        else:
+            for m in mods:
+                fid = m["id"]
+                w.write(f"  if (register_{fid}) register_{fid}();\n")
+        w.write("}\n")
+
+    print(f"Generated {args.out_cpp} with {len(mods)} module calls.")
+    if args.out_h: print(f"Generated {args.out_h}")
+
+if __name__ == '__main__':
+    main()
+PY
+            chmod +x scaffold/tools/gen_registry_from_modules.py
+            echo "::notice::Created scaffold/tools/gen_registry_from_modules.py on runner (guard)."
+          fi
+
+      - name: Verify registry generator path
+        shell: bash
+        run: |
+          set -euo pipefail
+          ls -la scaffold/tools
+          head -n 20 scaffold/tools/gen_registry_from_modules.py
 
       # ---------- Registry: autogen calls from modules_presets ----------
       - name: Autogen RegistryInit from modules
+        shell: bash
         run: |
+          set -euo pipefail
           OUTCPP="${{ steps.prep.outputs.sketch_dir }}/RegistryInit.autogen.cpp"
           OUTHDR="${{ steps.prep.outputs.sketch_dir }}/.autogen/registered_modules.h"
           python3 scaffold/tools/gen_registry_from_modules.py \
