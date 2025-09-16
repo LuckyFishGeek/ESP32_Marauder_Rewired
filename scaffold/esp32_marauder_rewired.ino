@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <CustomFunctions.h>
 
 // NOTE: do NOT use extern "C" here. We want normal C++ linkage so calls resolve.
 void init_tool_registry();
