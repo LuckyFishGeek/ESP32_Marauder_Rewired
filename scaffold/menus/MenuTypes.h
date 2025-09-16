@@ -1,8 +1,8 @@
 #pragma once
-#include <functional>
 #include <Arduino.h>
+#include <functional>
 
 struct SimpleMenuItem {
-  String label;
-  std::function<void(void)> onSelect;
+    String label;
+    std::function<void(void)> onSelect;
 };
