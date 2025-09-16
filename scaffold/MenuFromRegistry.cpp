@@ -1,34 +1,85 @@
 #include "MenuFromRegistry.h"
+#include "ToolRegistry.h"
+#include <Arduino.h>
 
-static std::vector<SimpleMenuItem> makeItems(const String& path){
-  std::vector<SimpleMenuItem> v;
-  for (auto &e : ToolRegistry::instance().getTools(path)){
-    v.push_back(SimpleMenuItem{ e.name, e.onLaunch });
+// ---------- Simple hierarchical navigator over registry paths ----------
+// Controls: w=up s=down e=enter b=back
+
+struct SimpleMenuItem {
+  String label;
+  std::function<void(void)> onSelect;
+};
+
+static void drawList(const String& title, const std::vector<String>& items, int idx){
+  Serial.println();
+  Serial.print("["); Serial.print(title); Serial.println("]");
+  for (int i=0;i<(int)items.size();++i){
+    Serial.print((i==idx) ? "> " : "  ");
+    Serial.println(items[i]);
   }
-  return v;
+  Serial.println("w=up s=down e=enter b=back");
 }
 
-SimpleMenu buildMenuFromRegistry(const String& path){
-  SimpleMenu m; m.path=path; m.items=makeItems(path); return m;
-}
+void runSerialNavigator(){
+  auto& reg = ToolRegistry::instance();
 
-void runSerialMenu(const String& path){
-  auto menu = buildMenuFromRegistry(path);
-  int idx = 0;
-  auto redraw = [&](){
-    Serial.println(); Serial.print("[Menu] "); Serial.println(menu.path);
-    for(size_t i=0;i<menu.items.size();++i){ Serial.print(i==idx?"> ":"  "); Serial.println(menu.items[i].label); }
-    Serial.println("w=up s=down e=enter b=back");
-  };
-  redraw();
-  while(true){
-    if(Serial.available()){
-      char c=Serial.read();
-      if(c=='w' && idx>0){ idx--; redraw(); }
-      else if(c=='s' && idx+1<(int)menu.items.size()){ idx++; redraw(); }
-      else if(c=='e' && !menu.items.empty()){ auto fn = menu.items[idx].onSelect; if(fn) fn(); redraw(); }
-      else if(c=='b'){ break; }
+  if (reg.getPaths().empty()){
+    Serial.println("Registry is empty (no paths). Did you call init_tool_registry()?");
+    return;
+  }
+
+  String prefix = "";
+  while (true){
+    auto children = reg.getChildPaths(prefix);
+    auto tools    = reg.getTools(prefix);
+
+    if (!children.empty()){
+      int idx=0; drawList(prefix.length()?prefix:"<root>", children, idx);
+      while (true){
+        if (Serial.available()){
+          char c=Serial.read();
+          if (c=='w' && idx>0){ idx--; drawList(prefix.length()?prefix:"<root>", children, idx); }
+          else if (c=='s' && idx+1<(int)children.size()){ idx++; drawList(prefix.length()?prefix:"<root>", children, idx); }
+          else if (c=='e'){ prefix = children[idx]; break; }
+          else if (c=='b'){
+            if (prefix.length()==0) return;
+            int slash = prefix.lastIndexOf('/');
+            prefix = (slash>=0) ? prefix.substring(0, slash) : "";
+            break;
+          }
+        }
+        delay(10);
+      }
+    } else if (!tools.empty()){
+      int idx=0;
+      std::vector<SimpleMenuItem> items;
+      items.reserve(tools.size());
+      for (auto &t : tools) items.push_back(SimpleMenuItem{ t.name, t.onLaunch });
+
+      while (true){
+        Serial.println();
+        Serial.print("["); Serial.print(prefix); Serial.println("]");
+        for (int i=0;i<(int)items.size();++i){
+          Serial.print((i==idx) ? "> " : "  ");
+          Serial.println(items[i].label);
+        }
+        Serial.println("w=up s=down e=enter b=back");
+
+        while (!Serial.available()) delay(10);
+        char c=Serial.read();
+        if (c=='w' && idx>0){ idx--; }
+        else if (c=='s' && idx+1<(int)items.size()){ idx++; }
+        else if (c=='e'){ auto fn = items[idx].onSelect; if(fn) fn(); }
+        else if (c=='b'){ 
+          int slash = prefix.lastIndexOf('/');
+          prefix = (slash>=0) ? prefix.substring(0, slash) : "";
+          break;
+        }
+      }
+    } else {
+      int slash = prefix.lastIndexOf('/');
+      if (slash<0) return;
+      prefix = (slash>=0) ? prefix.substring(0, slash) : "";
     }
-    delay(10);
   }
 }

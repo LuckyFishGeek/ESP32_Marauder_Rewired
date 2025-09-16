@@ -3,10 +3,19 @@
 #include "MenuFromRegistry.h"
 
 void setup() {
+  delay(50);
   Serial.begin(115200);
-  delay(500);
-  init_tool_registry();
-  runSerialMenu("Main Menu");
+  while(!Serial) { delay(10); }
+
+  init_tool_registry();   // from RegistryInit.cpp
+
+  // Option A: run a submenu directly
+  // runSerialMenu("WiFi/Sniffers");
+
+  // Option B: navigator (recommended)
+  runSerialNavigator();
 }
 
-void loop() {}
+void loop() {
+  delay(50);
+}
