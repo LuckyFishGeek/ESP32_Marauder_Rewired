@@ -1,9 +1,6 @@
 #pragma once
-#include "MenuTypes.h"
 #include <vector>
+#include "MenuTypes.h"
 
-namespace ToolRegistry {
-  void registerTool(const SimpleMenuItem& item);
-  const std::vector<SimpleMenuItem>& getTools();
-  void clearTools();
-}
+extern std::vector<Tool> toolRegistry;
+void register_tool(const Tool &tool);

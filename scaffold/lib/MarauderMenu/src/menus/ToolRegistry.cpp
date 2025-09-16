@@ -1,11 +1,7 @@
 #include "ToolRegistry.h"
 
-namespace {
-  static std::vector<SimpleMenuItem> tools;
-}
+std::vector<Tool> toolRegistry;
 
-namespace ToolRegistry {
-  void registerTool(const SimpleMenuItem& item) { tools.push_back(item); }
-  const std::vector<SimpleMenuItem>& getTools() { return tools; }
-  void clearTools() { tools.clear(); }
+void register_tool(const Tool &tool) {
+  toolRegistry.push_back(tool);
 }
