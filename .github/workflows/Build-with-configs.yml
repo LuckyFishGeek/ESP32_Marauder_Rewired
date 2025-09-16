@@ -216,7 +216,7 @@ jobs:
             --board-flag "$BOARD_FLAG" \
             --model "${DISPLAY_MODEL}" \
             --tft-enabled "${DISPLAY_ENABLED}" \
-            --out-dir "${{ steps.prep.outputs/sketch_dir }}/.tft_setup"
+            --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       # ---------- Ensure registry generator exists (guard; no heredocs) ----------
       - name: Ensure registry generator exists (guard)
