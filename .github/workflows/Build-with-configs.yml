@@ -194,15 +194,30 @@ jobs:
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
-        shell: bash
         run: |
-          set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
           SRC_INO="$(ls scaffold/*.ino | head -n 1)"
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+
+      - name: Promote menu sources to sketch root
+        shell: bash
+        run: |
+          set -euo pipefail
+          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          if [ -d "$SKETCH_DIR/menu" ]; then
+            echo "Promoting menu sources from $SKETCH_DIR/menu -> $SKETCH_DIR"
+            cp -f "$SKETCH_DIR/menu/"*.h "$SKETCH_DIR/" 2>/dev/null || true
+            cp -f "$SKETCH_DIR/menu/"*.cpp "$SKETCH_DIR/" 2>/dev/null || true
+          else
+            echo "No menu folder found in $SKETCH_DIR"
+          fi
+
+      - name: Assert sketch prepared
+        run: |
+          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
       - name: Assert sketch prepared
         shell: bash
