@@ -5,9 +5,6 @@
 // Keep the public surface small and stable; add new APIs here as needed.
 namespace Custom {
 
-  // Example utility: safe logging
-  void logln(const char* msg);
-
   // Example: startup banner
   void showBanner();
 

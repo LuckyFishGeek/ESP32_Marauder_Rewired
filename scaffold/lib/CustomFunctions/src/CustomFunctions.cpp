@@ -3,10 +3,6 @@
 
 namespace {
 
-  void logln(const char* msg) {
-  Serial.println(msg);
-  }
-
   void showBanner() {
   Serial.println(F("=== CustomFunctions Active ==="));
   }
