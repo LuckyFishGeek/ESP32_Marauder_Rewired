@@ -1,27 +1,29 @@
 #include <Arduino.h>
-#include "RegistryInit.h"       // sets up the registry and tool mapping
-#include "MenuTypes.h"          // defines SimpleMenuItem and menus
-#include "MenuFromRegistry.h"   // builds menus dynamically from registry
 
-// --- Global state ---
-MenuFromRegistry mainMenu;
+// Menu/registry system
+#include "menu/MenuTypes.h"
+#include "menu/MenuFromRegistry.h"
+#include "menu/ToolRegistry.h"
+#include "menu/RegistryInit.h"
 
 void setup() {
   Serial.begin(115200);
+  delay(100);
 
-  // Initialize modules/tools registry
-  initRegistry();
+  Serial.println("=== ESP32 Marauder Rewired ===");
+  Serial.println("Booting menu/registry system...");
 
-  // Build menu from registry
-  mainMenu.build();
+  // Initialize registries
+  initRegistries();
 
-  Serial.println("ESP32 Marauder Rewired initialized.");
+  // Example: show menu
+  showMainMenu();
 }
 
 void loop() {
-  // Update the UI/menu system
-  mainMenu.update();
+  // Run menu tasks
+  loopMenu();
 
-  // Your normal Marauder logic goes here (Wi-Fi scanning, attacks, etc.)
-  // For example: handleInputs(); processTools();
+  // Small delay to avoid WDT
+  delay(10);
 }
