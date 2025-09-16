@@ -1,97 +1,80 @@
-\
+#include <Arduino.h>
 #include "CustomFunctions.h"
 
 namespace {
+// accept RAM strings
+void _log(const char* s) { Serial.print(s); }
+void _logln(const char* s) { Serial.println(s); }
+// accept flash strings F("…")
+void _log(const __FlashStringHelper* s) { Serial.print(s); }
+void _logln(const __FlashStringHelper* s) { Serial.println(s); }
 
-  void showBanner() {
-  Serial.println(F("=== CustomFunctions Active ==="));
-  }
-
-  void printHeapInfo() {
-  Serial.printf("[Heap] Free: %u bytes\n", ESP.getFreeHeap());
-  }
-
-  // Internal state
-  Custom::LogFn g_logger = nullptr;
-  // Simple feature map (very small, fixed for now)
-  struct FeatureKV { const char* key; bool enabled; };
-  FeatureKV g_features[] = {
-    {"tft", false},
-    {"serial_menu", true},
-  };
-  constexpr size_t NFEATURES = sizeof(g_features)/sizeof(g_features[0]);
-
-  void logln(const char* s) {
-    if (g_logger) { g_logger(s); }
-    else { Serial.println(s); }
-  }
-
-  bool getFeature(const String& key) {
-    for (size_t i=0;i<NFEATURES;i++) {
-      if (key.equalsIgnoreCase(g_features[i].key)) return g_features[i].enabled;
-    }
-    return false;
-  }
-
-  void setFeatureKV(const String& key, bool on) {
-    for (size_t i=0;i<NFEATURES;i++) {
-      if (key.equalsIgnoreCase(g_features[i].key)) {
-        g_features[i].enabled = on;
-        return;
-      }
-    }
-    // ignore unknown keys silently for now
-  }
+// little banner
+void _banner() {
+  _logln(F("=== Menu ==="));
 }
 
+// draw a basic menu (project-agnostic)
+void _drawMenu() {
+  _banner();
+  _logln(F("1) Sub: Wi-Fi"));
+  _logln(F("2) Sub: Bluetooth"));
+  _logln(F("3) Sub: Storage"));
+  _logln(F("4) Sub: Settings"));
+  _logln(F("--------------------------"));
+  _logln(F("Type a number or 'menu' to redraw."));
+}
+} // anon ns
+
+// --------- public global logging wrappers -----------
+void log(const char* s) { _log(s); }
+void logln(const char* s) { _logln(s); }
+void log(const __FlashStringHelper* s) { _log(s); }
+void logln(const __FlashStringHelper* s) { _logln(s); }
+
+// --------- library-owned global menu function -----------
+void showMainMenu() {
+  _drawMenu();
+}
+
+// --------- namespaced helpers -----------
 namespace Custom {
 
 void init() {
-  // Minimal bring-up; nothing heavy here (safe before peripherals exist).
-  // You can seed features from compile-time defines if you want, e.g.:
-  // setFeature("tft", #ifdef TFT_PRESENT true #else false #endif);
-  logln(F("[CustomFunctions] init"));
-}
-
-void showMainMenu() {
-  // For now just print to serial; this unblocks link errors
-  // and gives a visible trace in CI.
-  logln(F("=== Menu ==="));
-  logln(F("1) sub"));
-  logln(F("2) sub"));
-  logln(F("3) sub"));
-  logln(F("4) sub"));
-  logln(F("--------------------------"));
-  logln(F("Use Serial to type a command (e.g., '1')"));
-}
-
-void tick() {
-  // Very simple serial command demo; safe no-op if nothing available.
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n');
-    cmd.trim();
-    handleCommand(cmd);
+  if (!Serial) {
+    Serial.begin(115200);
+    delay(50);
   }
 }
 
-void setLogger(LogFn fn) { g_logger = fn; }
+void tick() {
+  // place periodic tasks here if you want
+}
 
-void setFeature(const String& key, bool enabled) { setFeatureKV(key, enabled); }
+uint32_t uptimeSeconds() {
+  return static_cast<uint32_t>(millis() / 1000);
+}
 
-void handleCommand(const String& cmd) {
-  if (cmd.length() == 0) return;
+void handleCommand(const String& cmdIn) {
+  String cmd = cmdIn;
+  cmd.trim();
+  cmd.toLowerCase();
+
+  if (cmd == "menu" || cmd == "m") {
+    ::showMainMenu();
+    return;
+  }
+
   if (cmd == "1") {
-    logln(F("[Custom]  selected"));
+    _logln(F("[Custom] Wi-Fi selected"));
   } else if (cmd == "2") {
-    logln(F("[Custom]  selected"));
+    _logln(F("[Custom] Bluetooth selected"));
   } else if (cmd == "3") {
-    logln(F("[Custom]  selected"));
+    _logln(F("[Custom] Storage selected"));
   } else if (cmd == "4") {
-    logln(F("[Custom]  selected"));
-  } else if (cmd.equalsIgnoreCase("menu")) {
-    showMainMenu();
+    _logln(F("[Custom] Settings selected"));
   } else {
-    logln(F("[Custom] Unknown command. Type 'menu' to redraw."));
+    _logln(F("[Custom] Unknown command. Type 'menu'."));
   }
 }
 
