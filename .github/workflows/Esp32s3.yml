@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       board_flag:
-        description: "Board flag (default: MARAUDER_V7)"
+        description: "Board flag (default: CROWPANEL_S3)"
         required: false
-        default: "MARAUDER_V7"
+        default: "CROWPANEL_S3"
       board_label:
         description: "Optional board_label override"
         required: false
@@ -100,17 +100,16 @@ jobs:
             echo "FQBN=$FBQN" >> $GITHUB_ENV
           fi
 
-      - name: Last-resort FQBN mapping (CrowPanel S3 friendly)
-        shell: bash
+      - name: Last-resort FQBN mapping
         run: |
-          set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
             case "${FLAG:-}" in
-              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3|CROWPANEL_S3|CROWPANEL)
-                # Safe defaults for S3; tweak if your board needs PSRAM=enabled
-                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=16M,PSRAM=disabled" >> $GITHUB_ENV ;;
+              CROWPANEL_S3)
+                echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV ;;
               MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
                 echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
+                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> $GITHUB_ENV ;;
               MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
                 echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
               *)
