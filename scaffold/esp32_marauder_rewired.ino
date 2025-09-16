@@ -39,7 +39,7 @@ void loop() {
   // For now, keep the loop light so serial-only builds don't starve the watchdog.
   if (millis() - lastBeat > 1000) {
     lastBeat = millis();
-    // Comment this out if it’s too chatty
+    // Comment this out if it?s too chatty
     // Serial.println(F("[tick]"));
   }
   delay(10);
