@@ -126,68 +126,48 @@ jobs:
           ZIPROOT="scaffold/lib"
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
-
-          echo "== DEBUG: show JSON and ZIP directory =="
-          if [ -f "$JSON" ]; then
-            echo "--- $JSON ---"
-            cat "$JSON"
-            echo "--------------"
-          else
-            echo "::error ::$JSON not found"
-            exit 1
+      
+          if [ ! -f "$JSON" ]; then
+            echo "::error ::$JSON not found"; exit 1
           fi
-
-          echo "== Listing $ZIPROOT =="
-          ls -la "$ZIPROOT" || { echo "::warning ::$ZIPROOT missing"; true; }
-
-          echo "== Parsing JSON =="
-          # Accept either:
-          #  - ["A.zip","B.zip"]
-          #  - {"libs":["A.zip","B.zip"]}
-          #  - [{"zip":"A.zip"}, {"zip":"B.zip"}]
-          #  - {"libs":[{"zip":"A.zip"}]}
+      
+          echo "lib_list.json (first 200 bytes):"
+          head -c 200 "$JSON" || true
+          echo
+      
+          # Accept strings, objects with .zip, or objects with "# zip_file", with or without a top-level "libs"
           mapfile -t ZIPS < <(jq -r '
-            if type=="array" then
-              .[] | (if type=="string" then . else .zip // empty end)
-            elif type=="object" and .libs then
-              .libs[] | (if type=="string" then . else .zip // empty end)
+            def aszip:
+              if type=="string" then .
+              elif type=="object" then ( .zip // .["# zip_file"] // empty )
+              else empty end;
+            if type=="array" then map(aszip)[] 
+            elif type=="object" and .libs then (.libs | map(aszip)[]) 
             else empty end
-          ' "$JSON" 2>/dev/null || echo "")
-
+            | select(. != null and . != "")
+          ' "$JSON")
+      
           if [ "${#ZIPS[@]}" -eq 0 ]; then
-            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}"
+            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}, with items as strings or objects {\"zip\":...} / {\"# zip_file\":...}."
             exit 1
           fi
-
-          echo "== ZIP entries from JSON =="
+      
+          echo "Found ${#ZIPS[@]} zip(s) to install:"
           for z in "${ZIPS[@]}"; do echo "  - $z"; done
-
-          echo "== Unpacking =="
-          any_installed=0
+      
           for ZIP in "${ZIPS[@]}"; do
-            ZIP_TRIM="$(echo "$ZIP" | xargs)"
-            [ -z "$ZIP_TRIM" ] && continue
-            FILE="$ZIPROOT/$ZIP_TRIM"
+            FILE="$ZIPROOT/$ZIP"
             if [ -f "$FILE" ]; then
-              echo "Unpacking $ZIP_TRIM -> $LIBDIR"
+              echo "Unpacking $ZIP -> $LIBDIR"
               unzip -o "$FILE" -d "$LIBDIR" >/dev/null
-              any_installed=1
             else
-              echo "::warning ::$ZIP_TRIM not found in $ZIPROOT"
+              echo "::warning ::$ZIP not found under $ZIPROOT (skipping)"
             fi
           done
-
-          echo "== Result =="
-          if [ "$any_installed" -eq 0 ]; then
-            echo "::error ::No libraries were installed. Check zip names and paths."
-            echo "Contents of $ZIPROOT:"
-            ls -la "$ZIPROOT" || true
-            exit 1
-          fi
-
+      
           echo "Installed libs in $LIBDIR:"
-          find "$LIBDIR" -maxdepth 2 -type f -name 'library.properties' -print | sed 's/^/  /'
-    
+          find "$LIBDIR" -maxdepth 2 -type f | sed 's/^/  /' || true
+   
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
