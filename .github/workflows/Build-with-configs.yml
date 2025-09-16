@@ -45,10 +45,13 @@ jobs:
           set -euo pipefail
           pwd
           ls -la
+          echo "---- top-level libraries/ ----"
+          ls -la libraries || true
+          echo "---- scaffold/ ----"
           ls -la scaffold || true
-          ls -la scaffold/configs || true
+          echo "---- scaffold/configs/boards ----"
           ls -la scaffold/configs/boards || true
-          sed -n '1,120p' scaffold/configs/boards/boards_manifest.json || true
+          sed -n '1,160p' scaffold/configs/boards/boards_manifest.json || true
 
       - name: Export board env from JSON manifest
         shell: bash
@@ -57,8 +60,7 @@ jobs:
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
           echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
           python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
-          echo "----- exporter stderr -----"
-          cat exporter.err || true
+          echo "----- exporter stderr -----"; cat exporter.err || true
 
       - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
         shell: bash
@@ -96,7 +98,7 @@ jobs:
                 echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
                 exit 1;;
             esac
-            echo "::notice::Applied last-resort FQBN mapping for $FLAG"
+            echo "::notice::Applied last-resort FQBN mapping for ${FLAG:-<unset>}"
           fi
 
       - name: Assert FQBN present
@@ -144,7 +146,7 @@ jobs:
           done
           arduino-cli core list
 
-      - name: Clean conflicting libraries (XPT touch/TFT leftovers)
+      - name: Clean conflicting libraries (Touch/TFT leftovers)
         shell: bash
         run: |
           set -euo pipefail
@@ -191,18 +193,25 @@ jobs:
           set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
-          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+          # Prefer fixed INO at repo root if present; else take from scaffold/*.ino
+          if ls *.ino >/dev/null 2>&1; then
+            SRC_INO="$(ls *.ino | head -n 1)"
+          else
+            SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+          fi
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      - name: Stage MarauderMenu library (prefer repo lib/, fallback to sketch menus/)
+      - name: Stage MarauderMenu library (prefer repo libraries/, fallback to scaffold/lib/, else scaffold/menus)
         shell: bash
         run: |
           set -euo pipefail
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          REPO_LIB="scaffold/lib/MarauderMenu"
           DEST="$HOME/Arduino/libraries/MarauderMenu"
+
+          REPO_LIB="libraries/MarauderMenu"
+          SCAFFOLD_LIB="scaffold/lib/MarauderMenu"
 
           echo "Creating local library at: $DEST"
           rm -rf "$DEST"
@@ -211,11 +220,13 @@ jobs:
           if [ -d "$REPO_LIB" ]; then
             echo "::notice::Using repo-provided library at $REPO_LIB"
             rsync -a --delete "$REPO_LIB/" "$DEST/"
+          elif [ -d "$SCAFFOLD_LIB" ]; then
+            echo "::notice::Using scaffold-provided library at $SCAFFOLD_LIB"
+            rsync -a --delete "$SCAFFOLD_LIB/" "$DEST/"
           elif [ -d "$SKETCH_DIR/menus" ]; then
             echo "::notice::Fallback: building library from $SKETCH_DIR/menus"
             mkdir -p "$DEST/src/menus"
             rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$DEST/src/menus/"
-
             # Umbrella header
             cat > "$DEST/src/MarauderMenu.h" <<'H'
             #pragma once
@@ -224,7 +235,6 @@ jobs:
             #include "menus/RegistryInit.h"
             #include "menus/MenuFromRegistry.h"
             H
-
             # Minimal library.properties
             cat > "$DEST/library.properties" <<'PROP'
             name=MarauderMenu
@@ -238,7 +248,7 @@ jobs:
             includes=MarauderMenu.h
             PROP
           else
-            echo "::error::Neither $REPO_LIB nor $SKETCH_DIR/menus found."
+            echo "::error::No menu library sources found (libraries/MarauderMenu or scaffold/lib/MarauderMenu or scaffold/menus)."
             exit 1
           fi
 
@@ -288,7 +298,6 @@ jobs:
           FS_IN="${FILESYSTEM:-}"
           PART_IN="${PARTITION:-}"
           CORE_VER="${CORE_VERSION:-2.0.11}"
-
           CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
 
           FS="$FS_IN"
@@ -314,7 +323,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src"
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
