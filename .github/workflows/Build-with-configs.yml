@@ -119,33 +119,55 @@ jobs:
           rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
 
       - name: Extract pre-bundled libs (JSON-driven)
+        shell: bash
         run: |
-          set -e
+          set -euo pipefail
           JSON="scaffold/configs/libs/lib_list.json"
           ZIPROOT="scaffold/lib"
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
+      
           if [ ! -f "$JSON" ]; then
             echo "::error ::$JSON not found"; exit 1
           fi
+      
+          echo "lib_list.json (first 200 bytes):"
+          head -c 200 "$JSON" || true
+          echo
+      
+          # Accept strings, objects with .zip, or objects with "# zip_file", with or without a top-level "libs"
           mapfile -t ZIPS < <(jq -r '
-            if type=="array" then .[]
-            elif type=="object" and .libs then .libs[]
+            def aszip:
+              if type=="string" then .
+              elif type=="object" then ( .zip // .["# zip_file"] // empty )
+              else empty end;
+            if type=="array" then map(aszip)[] 
+            elif type=="object" and .libs then (.libs | map(aszip)[]) 
             else empty end
-            | (if type=="string" then . else .zip // empty end)
             | select(. != null and . != "")
           ' "$JSON")
+      
+          if [ "${#ZIPS[@]}" -eq 0 ]; then
+            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}, with items as strings or objects {\"zip\":...} / {\"# zip_file\":...}."
+            exit 1
+          fi
+      
+          echo "Found ${#ZIPS[@]} zip(s) to install:"
+          for z in "${ZIPS[@]}"; do echo "  - $z"; done
+      
           for ZIP in "${ZIPS[@]}"; do
             FILE="$ZIPROOT/$ZIP"
             if [ -f "$FILE" ]; then
-              echo "Unpacking $ZIP"
+              echo "Unpacking $ZIP -> $LIBDIR"
               unzip -o "$FILE" -d "$LIBDIR" >/dev/null
             else
-              echo "::warning ::$ZIP not found in $ZIPROOT"
+              echo "::warning ::$ZIP not found under $ZIPROOT (skipping)"
             fi
           done
-          echo "Installed libs in $LIBDIR:"; ls -lh "$LIBDIR" || true
-
+      
+          echo "Installed libs in $LIBDIR:"
+          find "$LIBDIR" -maxdepth 2 -type f | sed 's/^/  /' || true
+   
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
