@@ -54,9 +54,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
-          echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
-          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
+          echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> "$GITHUB_ENV"
+          echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> "$GITHUB_ENV"
+          python3 scaffold/tools/export_env_from_json.py >> "$GITHUB_ENV" 2>> exporter.err || true
           echo "----- exporter stderr -----"
           cat exporter.err || true
 
@@ -66,9 +66,9 @@ jobs:
           set -euo pipefail
           if [ -z "${FLAG:-}" ]; then
             if [ -n "${{ github.event.inputs.board_flag }}" ]; then
-              echo "FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
+              echo "FLAG=${{ github.event.inputs.board_flag }}" >> "$GITHUB_ENV"
             else
-              echo "FLAG=MARAUDER_V7" >> $GITHUB_ENV
+              echo "FLAG=MARAUDER_V7" >> "$GITHUB_ENV"
             fi
           fi
 
@@ -77,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ] && [ -n "${FBQN:-}" ]; then
-            echo "FQBN=$FBQN" >> $GITHUB_ENV
+            echo "FQBN=$FBQN" >> "$GITHUB_ENV"
           fi
 
       - name: Last-resort FQBN mapping
@@ -87,11 +87,11 @@ jobs:
           if [ -z "${FQBN:-}" ]; then
             case "${FLAG:-}" in
               MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
-                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
+                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> "$GITHUB_ENV" ;;
               MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
-                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> $GITHUB_ENV ;;
+                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> "$GITHUB_ENV" ;;
               MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
-                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
+                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> "$GITHUB_ENV" ;;
               *)
                 echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
                 exit 1;;
@@ -129,7 +129,7 @@ jobs:
 
       - name: Force core version 2.0.11
         shell: bash
-        run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
+        run: echo "CORE_VERSION=2.0.11" >> "$GITHUB_ENV"
 
       - name: Install ESP32 core (with retry)
         shell: bash
@@ -194,53 +194,48 @@ jobs:
           SRC_INO="$(ls scaffold/*.ino | head -n 1)"
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/" || true
-          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          echo "sketch_dir=$SKETCH_DIR" >> "$GITHUB_OUTPUT"
 
-      - name: Stage MarauderMenu library (prefer repo lib/, fallback to sketch menus/)
+      - name: Stage MarauderMenu library from staged sketch menus/
         shell: bash
         run: |
           set -euo pipefail
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          REPO_LIB="scaffold/lib/MarauderMenu"
+          SRC_DIR="$SKETCH_DIR/menus"
           DEST="$HOME/Arduino/libraries/MarauderMenu"
+          if [ ! -d "$SRC_DIR" ]; then
+            echo "::error::$SRC_DIR not found. Ensure your repo keeps menus under scaffold/menus/"
+            ls -la "$SKETCH_DIR" || true
+            exit 1
+          fi
 
           echo "Creating local library at: $DEST"
           rm -rf "$DEST"
-          mkdir -p "$DEST"
+          mkdir -p "$DEST/src/menus"
 
-          if [ -d "$REPO_LIB" ]; then
-            echo "::notice::Using repo-provided library at $REPO_LIB"
-            rsync -a --delete "$REPO_LIB/" "$DEST/"
-          elif [ -d "$SKETCH_DIR/menus" ]; then
-            echo "::notice::Fallback: building library from $SKETCH_DIR/menus"
-            mkdir -p "$DEST/src/menus"
-            rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$DEST/src/menus/"
+          rsync -a --exclude '.git' --exclude '.DS_Store' "$SRC_DIR/" "$DEST/src/menus/"
 
-            # Umbrella header
-            cat > "$DEST/src/MarauderMenu.h" <<'H'
-            #pragma once
-            #include "menus/MenuTypes.h"
-            #include "menus/ToolRegistry.h"
-            #include "menus/RegistryInit.h"
-            #include "menus/MenuFromRegistry.h"
-            H
+          # Write umbrella header without heredoc
+          {
+            printf '%s\n' '#pragma once'
+            printf '%s\n' '#include "menus/MenuTypes.h"'
+            printf '%s\n' '#include "menus/ToolRegistry.h"'
+            printf '%s\n' '#include "menus/RegistryInit.h"'
+            printf '%s\n' '#include "menus/MenuFromRegistry.h"'
+          } > "$DEST/src/MarauderMenu.h"
 
-            # Minimal library.properties
-            cat > "$DEST/library.properties" <<'PROP'
-            name=MarauderMenu
-            version=0.1.0
-            author=ESP32 Marauder Rewired
-            maintainer=ESP32 Marauder Rewired
-            sentence=Menu/registry components for ESP32 Marauder Rewired.
-            paragraph=Local library staged by CI to preserve repo folder structure.
-            category=Other
-            architectures=*
-            includes=MarauderMenu.h
-            PROP
-          else
-            echo "::error::Neither $REPO_LIB nor $SKETCH_DIR/menus found."
-            exit 1
-          fi
+          # Write library.properties without heredoc
+          {
+            printf 'name=MarauderMenu\n'
+            printf 'version=0.1.0\n'
+            printf 'author=ESP32 Marauder Rewired\n'
+            printf 'maintainer=ESP32 Marauder Rewired\n'
+            printf 'sentence=Menu/registry components for ESP32 Marauder Rewired.\n'
+            printf 'paragraph=Local library staged by CI to preserve repo folder structure.\n'
+            printf 'category=Other\n'
+            printf 'architectures=*\n'
+            printf 'includes=MarauderMenu.h\n'
+          } > "$DEST/library.properties"
 
           echo "Local library contents:"
           find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
@@ -304,8 +299,8 @@ jobs:
             fi
           fi
 
-          echo "fs=$FS"   >> $GITHUB_OUTPUT
-          echo "partition=$PART" >> $GITHUB_OUTPUT
+          echo "fs=$FS"   >> "$GITHUB_OUTPUT"
+          echo "partition=$PART" >> "$GITHUB_OUTPUT"
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
@@ -314,7 +309,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src"
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
@@ -347,5 +342,5 @@ jobs:
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
-          name: fw-${{ env.FLAG }}-${{ env.CORE_VERSION }}-${{ env.DISPLAY_MODEL || 'serial' }}
+          name: fw-${{ env.FLAG }}-${{ env.CORE_VERSION }}
           path: build_out
