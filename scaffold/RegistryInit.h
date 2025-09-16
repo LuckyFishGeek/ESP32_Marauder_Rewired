@@ -1,3 +1,8 @@
 #pragma once
-#include <Arduino.h>
-void init_tool_registry();
+#include "MenuTypes.h"
+
+// Forward declaration
+class RegistryInit {
+public:
+  static void init();
+};
