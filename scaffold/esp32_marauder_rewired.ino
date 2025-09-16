@@ -1,27 +1,27 @@
-// esp32_marauder_rewired.ino
 #include <Arduino.h>
+#include "RegistryInit.h"       // sets up the registry and tool mapping
+#include "MenuTypes.h"          // defines SimpleMenuItem and menus
+#include "MenuFromRegistry.h"   // builds menus dynamically from registry
 
-// Pull from scaffold/menu/
-#include "menu/RegistryInit.h"     // getRegistry()
-#include "menu/MenuTypes.h"        // SimpleMenuItem
-#include "menu/ToolRegistry.h"     // registerTools()
-#include "menu/MenuFromRegistry.h" // buildMenuFromRegistry()
+// --- Global state ---
+MenuFromRegistry mainMenu;
 
 void setup() {
   Serial.begin(115200);
-  delay(100);
 
-  // 1) Register all tools into the shared registry
-  registerTools();
+  // Initialize modules/tools registry
+  initRegistry();
 
-  // 2) Build the UI menu from the registry
-  buildMenuFromRegistry();
+  // Build menu from registry
+  mainMenu.build();
 
-  Serial.println(F("[Marauder] Boot complete"));
+  Serial.println("ESP32 Marauder Rewired initialized.");
 }
 
 void loop() {
-  // TODO: add your UI tick/input handling here
-  // For now, just idle so the sketch runs cleanly
-  delay(10);
+  // Update the UI/menu system
+  mainMenu.update();
+
+  // Your normal Marauder logic goes here (Wi-Fi scanning, attacks, etc.)
+  // For example: handleInputs(); processTools();
 }
