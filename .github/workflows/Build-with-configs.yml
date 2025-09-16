@@ -227,10 +227,10 @@ jobs:
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --displays-json scaffold/configs/displays/display_presets.json \
             --pins-json scaffold/configs/pins/pin_presets.json \
-            --board-label "$BOARD_LABEL" \
-            --board-flag "$BOARD_FLAG" \
-            --model "${DISPLAY_MODEL}" \
-            --tft-enabled "${DISPLAY_ENABLED}" \
+            --board-label "${BOARD_LABEL:-}" \
+            --board-flag "${BOARD_FLAG:-}" \
+            --model "${DISPLAY_MODEL:-}" \
+            --tft-enabled "${DISPLAY_ENABLED:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       # ---------- Partitions / filesystem ----------
