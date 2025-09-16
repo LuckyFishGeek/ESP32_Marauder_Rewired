@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include "RegistryInit.h"
-#include "MenuFromRegistry.h"
+#include "menu/RegistryInit.h"
+#include "menu/MenuFromRegistry.h"
 
 void setup() {
   delay(50);
