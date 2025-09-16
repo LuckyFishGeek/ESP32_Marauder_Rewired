@@ -1,10 +1,20 @@
 #include "ToolRegistry.h"
-#include "RegistryInit.h"
 
-void registerTools() {
-    auto& reg = getRegistry();
+namespace {
+  // internal storage
+  static std::vector<SimpleMenuItem> tools;
+}
 
-    reg.push_back({"WiFi Scanner", [](){ /* start WiFi scan */ }});
-    reg.push_back({"Bluetooth Scan", [](){ /* start BT scan */ }});
-    reg.push_back({"Packet Sniffer", [](){ /* start sniffer */ }});
+namespace ToolRegistry {
+  void registerTool(const SimpleMenuItem& item) {
+    tools.push_back(item);
+  }
+
+  const std::vector<SimpleMenuItem>& getTools() {
+    return tools;
+  }
+
+  void clearTools() {
+    tools.clear();
+  }
 }
