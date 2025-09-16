@@ -318,6 +318,29 @@ jobs:
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
+
+      - name: Force CrowPanel S3 (last write wins)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "FLAG=CROWPANEL_S3" >> $GITHUB_ENV
+          # 16MB flash, PSRAM on, S3 target
+          echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV
+          # sensible defaults for S3 16MB
+          echo "FILESYSTEM=spiffs" >> $GITHUB_ENV
+          echo "PARTITION=default_16MB.csv" >> $GITHUB_ENV
+          # nuke stray fallback var so it can’t reapply later
+          echo "FBQN=" >> $GITHUB_ENV
+          echo "::notice::CrowPanel S3 forced; any earlier FQBN will be ignored."
+
+      - name: Show final board config (sanity)
+        shell: bash
+        run: |
+          echo "FINAL FLAG=$FLAG"
+          echo "FINAL FQBN=$FQBN"
+          echo "FINAL FS=$FILESYSTEM"
+          echo "FINAL PART=$PARTITION"
+
       # ---------- Compile ----------
       - name: Compile (Arduino CLI)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
