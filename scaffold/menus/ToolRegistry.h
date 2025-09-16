@@ -1,9 +1,9 @@
 #pragma once
+#include <vector>
 #include "MenuTypes.h"
 
-// Register one tool/menu entry
-void register_tool(const SimpleMenuItem& item);
+// Accessor to the global registry
+std::vector<SimpleMenuItem>& tool_registry();
 
-// Query count and fetch by index (0..count-1)
-size_t tool_count();
-const SimpleMenuItem& tool_at(size_t idx);
+// Helper to add menu entries
+void register_tool(const String& label, std::function<void(void)> onSelect);

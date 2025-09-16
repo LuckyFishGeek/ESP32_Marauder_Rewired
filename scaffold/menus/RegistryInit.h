@@ -1,3 +1,4 @@
 #pragma once
-// Populate the registry with some demo items
+
+// Fill the registry with initial items
 void init_tool_registry();

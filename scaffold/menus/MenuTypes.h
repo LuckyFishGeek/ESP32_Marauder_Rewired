@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include <Arduino.h>
+#include <WString.h>
 
 struct SimpleMenuItem {
   String label;

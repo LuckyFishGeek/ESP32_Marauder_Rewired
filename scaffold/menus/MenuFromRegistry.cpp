@@ -1,15 +1,13 @@
+#include <Arduino.h>
 #include "MenuFromRegistry.h"
 #include "ToolRegistry.h"
 
 void showMainMenu() {
   Serial.println();
-  Serial.println(F("=== Marauder Main Menu (demo) ==="));
-  for (size_t i = 0; i < tool_count(); ++i) {
-    const auto& it = tool_at(i);
-    Serial.print(F("  "));
-    Serial.print(i);
-    Serial.print(F(": "));
+  Serial.println(F("==== ESP32 Marauder (menus in sketch) ===="));
+  for (const auto& it : tool_registry()) {
     Serial.println(it.label);
   }
-  Serial.println(F("(Serial-demo only)"));
+  Serial.println(F("-----------------------------------------"));
+  Serial.println(F("Type 1..4 in Serial Monitor to simulate a pick."));
 }
