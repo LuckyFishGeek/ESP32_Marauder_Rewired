@@ -22,7 +22,7 @@ void setup() {
 
 void loop() {
   // Run menu tasks
-  loopMenu();
+  loop();
 
   // Small delay to avoid WDT
   delay(10);
