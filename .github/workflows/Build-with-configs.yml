@@ -99,12 +99,6 @@ jobs:
             exit 1
           fi
 
-      - name: Dump resolved env (debug)
-        shell: bash
-        run: |
-          set -euo pipefail
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)=' || true
-
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -187,7 +181,7 @@ jobs:
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      - name: Stage menus/registry folders as a local Arduino library
+      - name: Stage menus as local Arduino library
         shell: bash
         run: |
           set -euo pipefail
@@ -199,16 +193,14 @@ jobs:
           rm -rf "$LIBROOT"
           mkdir -p "$SRCDIR"
 
-          # NOTE: use 'menus' (plural). Keep others if they exist.
-          for d in menus menu registries registry ui; do
-            if [ -d "$SKETCH_DIR/$d" ]; then
-              echo "  -> copying $d/"
-              mkdir -p "$SRCDIR/$d"
-              rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/$d/" "$SRCDIR/$d/"
-            fi
-          done
+          if [ -d "$SKETCH_DIR/menus" ]; then
+            rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$SRCDIR/menus/"
+          else
+            echo "::error ::$SKETCH_DIR/menus not found."
+            ls -la "$SKETCH_DIR" || true
+            exit 1
+          fi
 
-          # minimal library.properties (point at menus/)
           cat > "$LIBROOT/library.properties" <<'PROP'
           name=MarauderMenu
           version=0.1.0
@@ -293,7 +285,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src -I$HOME/Arduino/libraries/MarauderMenu/src/menus"
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src"
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
@@ -312,7 +304,10 @@ jobs:
           echo "Sketch dir: $(pwd)"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
+          echo "EXTRA_FLAGS: ${EXTRA_FLAGS}"
           ls -la; ls -la .tft_setup || true; ls -la .autogen || true
+          echo "Library MarauderMenu files:"
+          find "$HOME/Arduino/libraries/MarauderMenu" -maxdepth 3 -type f | sed 's/^/  /' || true
 
           arduino-cli compile \
             --fqbn "$FQBN" \
