@@ -6,23 +6,20 @@
 #include "menus/RegistryInit.h"
 #include "menus/MenuFromRegistry.h"
 
+
+
+
 void setup() {
-  Serial.begin(115200);
-  delay(100);
-
-  // If your CustomFunctions library has an initializer, uncomment:
-  // Custom::init();
-
-  init_tool_registry();
-  showMainMenu();
+  Custom::init();
+  showMainMenu();        // global function provided by the library
 }
 
 void loop() {
-  // If your custom lib expects serial commands, you can forward them:
-  // if (Serial.available()) {
-  //   String cmd = Serial.readStringUntil('\n');
-  //   Custom::handleCommand(cmd);
-  // }
-
+  // optional: forward serial input into the command handler
+  if (Serial.available()) {
+    String line = Serial.readStringUntil('\n');
+    Custom::handleCommand(line);
+  }
+  Custom::tick();
   delay(10);
 }
