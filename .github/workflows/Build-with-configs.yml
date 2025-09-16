@@ -273,7 +273,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen ${DEFINES_BASE}"
+          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
