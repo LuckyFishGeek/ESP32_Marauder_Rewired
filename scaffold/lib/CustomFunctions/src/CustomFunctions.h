@@ -1,27 +1,17 @@
 #pragma once
 #include <Arduino.h>
 
-// All project-specific functions live in this library.
-// Keep the public surface small and stable; add new APIs here as needed.
 namespace Custom {
 
-  // Initialize any project‑level state (e.g., registry, IO, display hookup).
-  void init();
+// Example utility: safe logging
+void logln(const char* msg);
 
-  // Draw/print the main menu (safe even when no display is present).
-  void showMainMenu();
+// Example: startup banner
+void showBanner();
 
-  // Optional periodic tick to handle UI polling, timers, etc.
-  void tick();
+// Example: free heap report
+void printHeapInfo();
 
-  // ----- Extension points you can wire up later -----
-  // Example: attach a printf-like sink for UI logging
-  typedef void (*LogFn)(const char*);
-  void setLogger(LogFn fn);
+// Add more helpers here...
 
-  // Example: feature toggles you may want to drive from JSON/env
-  void setFeature(const String& key, bool enabled);
-
-  // Example: expose a simple command hook (for button/serial actions)
-  void handleCommand(const String& cmd);
-}
+} // namespace Custom
