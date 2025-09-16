@@ -1,10 +1,10 @@
 #include <Arduino.h>
 
 // Menu/registry system
-#include "menu/MenuTypes.h"
-#include "menu/MenuFromRegistry.h"
-#include "menu/ToolRegistry.h"
-#include "menu/RegistryInit.h"
+#include "menus/MenuTypes.h"
+#include "menus/MenuFromRegistry.h"
+#include "menus/ToolRegistry.h"
+#include "menus/RegistryInit.h"
 
 void setup() {
   Serial.begin(115200);
