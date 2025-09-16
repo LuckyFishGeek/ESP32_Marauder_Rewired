@@ -27,162 +27,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq unzip rsync
 
-      - name: Ensure Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Install Python dependencies
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m pip install --upgrade pip
-          pip install pyserial
-
-      - name: Debug repo layout
-        shell: bash
-        run: |
-          set -euo pipefail
-          pwd
-          ls -la
-          ls -la scaffold || true
-          ls -la scaffold/configs || true
-          ls -la scaffold/configs/boards || true
-          sed -n '1,120p' scaffold/configs/boards/boards_manifest.json || true
-
-      - name: Export board env from JSON manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> "$GITHUB_ENV"
-          echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> "$GITHUB_ENV"
-          python3 scaffold/tools/export_env_from_json.py >> "$GITHUB_ENV" 2>> exporter.err || true
-          echo "----- exporter stderr -----"
-          cat exporter.err || true
-
-      - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FLAG:-}" ]; then
-            if [ -n "${{ github.event.inputs.board_flag }}" ]; then
-              echo "FLAG=${{ github.event.inputs.board_flag }}" >> "$GITHUB_ENV"
-            else
-              echo "FLAG=MARAUDER_V7" >> "$GITHUB_ENV"
-            fi
-          fi
-
-      - name: Ensure FQBN set (fbqn fallback)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ] && [ -n "${FBQN:-}" ]; then
-            echo "FQBN=$FBQN" >> "$GITHUB_ENV"
-          fi
-
-      - name: Last-resort FQBN mapping
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ]; then
-            case "${FLAG:-}" in
-              MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
-                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> "$GITHUB_ENV" ;;
-              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
-                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> "$GITHUB_ENV" ;;
-              MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
-                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> "$GITHUB_ENV" ;;
-              *)
-                echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
-                exit 1;;
-            esac
-            echo "::notice::Applied last-resort FQBN mapping for $FLAG"
-          fi
-
-      - name: Assert FQBN present
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ]; then
-            echo "::error::FQBN is empty after exporter+fallback ? check boards_manifest (fqbn/fbqn)."
-            exit 1
-          fi
-
-      - name: Dump resolved env (debug)
-        shell: bash
-        run: |
-          set -euo pipefail
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)=' || true
-
-      - name: Setup Arduino CLI
-        uses: arduino/setup-arduino-cli@v2
-        with:
-          version: 0.35.3
-
-      - name: Configure ESP32 board manager index
-        shell: bash
-        run: |
-          set -euo pipefail
-          arduino-cli config init
-          arduino-cli config set board_manager.additional_urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-          arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-
-      - name: Force core version 2.0.11
-        shell: bash
-        run: echo "CORE_VERSION=2.0.11" >> "$GITHUB_ENV"
-
-      - name: Install ESP32 core (with retry)
-        shell: bash
-        run: |
-          set -euo pipefail
-          for i in 1 2 3; do
-            arduino-cli core install esp32:esp32@${CORE_VERSION} \
-              --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json && break || {
-                echo "Install attempt $i failed; retrying in 5s..."
-                sleep 5
-              }
-          done
-          arduino-cli core list
-
-      - name: Clean conflicting libraries (XPT touch/TFT leftovers)
-        shell: bash
-        run: |
-          set -euo pipefail
-          LIBDIR="$HOME/Arduino/libraries"
-          mkdir -p "$LIBDIR"
-          cd "$LIBDIR"
-          rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
-
-      - name: Extract pre-bundled libs (JSON-driven)
-        shell: bash
-        run: |
-          set -euo pipefail
-          JSON="scaffold/configs/libs/lib_list.json"
-          ZIPROOT="scaffold/lib"
-          LIBDIR="$HOME/Arduino/libraries"
-          mkdir -p "$LIBDIR"
-          if [ ! -f "$JSON" ]; then
-            echo "::error ::$JSON not found"; exit 1
-          fi
-          mapfile -t ZIPS < <(jq -r '
-            if type=="array" then .[]
-            elif type=="object" and .libs then .libs[]
-            else empty end
-            | (if type=="string" then . else .zip // empty end)
-            | select(. != null and . != "")
-          ' "$JSON")
-          for ZIP in "${ZIPS[@]}"; do
-            FILE="$ZIPROOT/$ZIP"
-            if [ -f "$FILE" ]; then
-              echo "Unpacking $ZIP"
-              unzip -o "$FILE" -d "$LIBDIR" >/dev/null
-            else
-              echo "::warning ::$ZIP not found in $ZIPROOT"
-            fi
-          done
-          echo "Installed libs in $LIBDIR:"
-          ls -lh "$LIBDIR" || true
-
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
@@ -191,10 +35,9 @@ jobs:
           set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
-          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
-          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
-          cp -r scaffold/* "$SKETCH_DIR/" || true
-          echo "sketch_dir=$SKETCH_DIR" >> "$GITHUB_OUTPUT"
+          cp esp32_marauder_rewired.ino "$SKETCH_DIR/"
+          cp -r menus "$SKETCH_DIR/"
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
       - name: Stage MarauderMenu library from staged sketch menus/
         shell: bash
@@ -204,8 +47,7 @@ jobs:
           SRC_DIR="$SKETCH_DIR/menus"
           DEST="$HOME/Arduino/libraries/MarauderMenu"
           if [ ! -d "$SRC_DIR" ]; then
-            echo "::error::$SRC_DIR not found. Ensure your repo keeps menus under scaffold/menus/"
-            ls -la "$SKETCH_DIR" || true
+            echo "::error::$SRC_DIR not found."
             exit 1
           fi
 
@@ -213,9 +55,9 @@ jobs:
           rm -rf "$DEST"
           mkdir -p "$DEST/src/menus"
 
-          rsync -a --exclude '.git' --exclude '.DS_Store' "$SRC_DIR/" "$DEST/src/menus/"
+          rsync -a "$SRC_DIR/" "$DEST/src/menus/"
 
-          # Write umbrella header without heredoc
+          # Umbrella header
           {
             printf '%s\n' '#pragma once'
             printf '%s\n' '#include "menus/MenuTypes.h"'
@@ -224,14 +66,22 @@ jobs:
             printf '%s\n' '#include "menus/MenuFromRegistry.h"'
           } > "$DEST/src/MarauderMenu.h"
 
-          # Write library.properties without heredoc
+          # Unity link unit
+          {
+            printf '#define MARAUDER_MENU_UNITY_BUILD 1\n'
+            printf '#include "menus/MenuFromRegistry.cpp"\n'
+            printf '#include "menus/ToolRegistry.cpp"\n'
+            printf '#include "menus/RegistryInit.cpp"\n'
+          } > "$DEST/src/link_units.cpp"
+
+          # library.properties
           {
             printf 'name=MarauderMenu\n'
             printf 'version=0.1.0\n'
             printf 'author=ESP32 Marauder Rewired\n'
             printf 'maintainer=ESP32 Marauder Rewired\n'
             printf 'sentence=Menu/registry components for ESP32 Marauder Rewired.\n'
-            printf 'paragraph=Local library staged by CI to preserve repo folder structure.\n'
+            printf 'paragraph=Local library staged by CI.\n'
             printf 'category=Other\n'
             printf 'architectures=*\n'
             printf 'includes=MarauderMenu.h\n'
@@ -239,108 +89,3 @@ jobs:
 
           echo "Local library contents:"
           find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
-
-      - name: Assert sketch prepared
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
-
-      # ---------- Autogen headers into the staged dir ----------
-      - name: Generate config.h (JSON-driven)
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 scaffold/tools/gen_user_config.py \
-            --boards-json scaffold/configs/boards/boards_manifest.json \
-            --defines-json scaffold/configs/defines/build_defines.json \
-            --modules-json scaffold/configs/modules/modules_presets.json \
-            --board-flag "${BOARD_FLAG:-}" \
-            --board-label "${BOARD_LABEL:-}" \
-            --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
-
-      - name: Generate TFT_eSPI header (serial-only safe)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
-          python3 scaffold/tools/gen_tft_setup_json.py \
-            --boards-json scaffold/configs/boards/boards_manifest.json \
-            --displays-json scaffold/configs/displays/display_presets.json \
-            --pins-json scaffold/configs/pins/pin_presets.json \
-            --board-label "${BOARD_LABEL:-}" \
-            --board-flag "${BOARD_FLAG:-}" \
-            --model "${DISPLAY_MODEL:-}" \
-            --tft-enabled "${DISPLAY_ENABLED:-}" \
-            --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
-
-      # ---------- Partitions / filesystem ----------
-      - name: Resolve FS/Partition and install custom CSV if present
-        id: fs
-        shell: bash
-        run: |
-          set -euo pipefail
-          FS_IN="${FILESYSTEM:-}"
-          PART_IN="${PARTITION:-}"
-          CORE_VER="${CORE_VERSION:-2.0.11}"
-
-          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
-
-          FS="$FS_IN"
-          PART="${PART_IN}"
-          if [ -n "$PART" ]; then PART="${PART%.csv}.csv"; fi
-
-          if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            if [ -f "$SRC" ]; then
-              mkdir -p "$CORE_PART_DIR"
-              cp -f "$SRC" "$CORE_PART_DIR/$PART"
-              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
-            fi
-          fi
-
-          echo "fs=$FS"   >> "$GITHUB_OUTPUT"
-          echo "partition=$PART" >> "$GITHUB_OUTPUT"
-          echo "Filesystem: ${FS:-<core default>}"
-          echo "Partition:  ${PART:-<core default>}"
-
-      # ---------- Compile ----------
-      - name: Compile (Arduino CLI)
-        working-directory: ${{ steps.prep.outputs.sketch_dir }}
-        shell: bash
-        env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src"
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ]; then
-            echo "::error::FQBN is empty at compile time; check earlier steps."
-            exit 1
-          fi
-
-          FS="${{ steps.fs.outputs.fs }}"
-          PART="${{ steps.fs.outputs.partition }}"
-          PART_PROP=""
-          if [ -n "$PART" ]; then
-            PART_PROP="--build-property build.partitions=${PART%.csv}"
-          fi
-
-          echo "FQBN:       $FQBN"
-          echo "Sketch dir: $(pwd)"
-          echo "Filesystem: ${FS:-<default>}"
-          echo "Partition:  ${PART:-<default>}"
-          ls -la; ls -la .tft_setup || true; ls -la .autogen || true
-
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --warnings none \
-            --export-binaries \
-            --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
-            ${PART_PROP} \
-            --output-dir "$GITHUB_WORKSPACE/build_out" \
-            .
-
-      - name: Upload firmware artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: fw-${{ env.FLAG }}-${{ env.CORE_VERSION }}
-          path: build_out

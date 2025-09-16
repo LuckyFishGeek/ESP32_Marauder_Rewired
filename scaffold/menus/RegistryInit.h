@@ -1,2 +1,1 @@
-#pragma once
-void init_tool_registry();
+// RegistryInit.h header

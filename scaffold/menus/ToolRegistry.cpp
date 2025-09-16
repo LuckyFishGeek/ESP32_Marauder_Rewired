@@ -1,1 +1,1 @@
-// Implementation of ToolRegistry
+// ToolRegistry.cpp implementation

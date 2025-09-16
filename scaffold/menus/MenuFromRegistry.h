@@ -1,2 +1,1 @@
-#pragma once
-void showMainMenu();
+// MenuFromRegistry.h header

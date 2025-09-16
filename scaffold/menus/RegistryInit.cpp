@@ -1,2 +1,1 @@
-// Implementation of RegistryInit
-void init_tool_registry() {}
+// RegistryInit.cpp implementation

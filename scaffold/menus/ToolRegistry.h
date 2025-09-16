@@ -1,1 +1,1 @@
-#pragma once
+// ToolRegistry.h header

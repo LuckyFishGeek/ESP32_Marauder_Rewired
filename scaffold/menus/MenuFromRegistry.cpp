@@ -1,1 +1,1 @@
-// Implementation of MenuFromRegistry
+// MenuFromRegistry.cpp implementation
