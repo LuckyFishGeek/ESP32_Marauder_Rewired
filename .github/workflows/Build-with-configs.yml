@@ -99,12 +99,6 @@ jobs:
             exit 1
           fi
 
-      - name: Dump resolved env (debug)
-        shell: bash
-        run: |
-          set -euo pipefail
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)=' || true
-
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
         with:
@@ -199,16 +193,14 @@ jobs:
           rm -rf "$LIBROOT"
           mkdir -p "$SRCDIR"
 
-          # copy the menus folder from the staged sketch (preserve structure)
           if [ -d "$SKETCH_DIR/menus" ]; then
             rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$SRCDIR/menus/"
           else
-            echo "::error ::$SKETCH_DIR/menus not found. Make sure menus/ exists next to your .ino before this step."
+            echo "::error ::$SKETCH_DIR/menus not found."
             ls -la "$SKETCH_DIR" || true
             exit 1
           fi
 
-          # minimal library.properties
           cat > "$LIBROOT/library.properties" <<'PROP'
           name=MarauderMenu
           version=0.1.0
@@ -289,7 +281,7 @@ jobs:
           echo "Partition:  ${PART:-<core default>}"
 
       # ---------- Compile ----------
-- name: Compile (Arduino CLI)
+      - name: Compile (Arduino CLI)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
@@ -325,6 +317,7 @@ jobs:
             ${PART_PROP} \
             --output-dir "$GITHUB_WORKSPACE/build_out" \
             .
+
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
