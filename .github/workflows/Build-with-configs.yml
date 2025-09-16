@@ -233,32 +233,32 @@ PY
           test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
       # ---------- Autogen headers into the staged dir ----------
-      - name: Generate config.h (JSON-driven)
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 scaffold/tools/gen_user_config.py \
-            --boards-json scaffold/configs/boards/boards_manifest.json \
-            --defines-json scaffold/configs/defines/build_defines.json \
-            --modules-json scaffold/configs/modules/modules_presets.json \
-            --board-flag "$BOARD_FLAG" \
-            --board-label "$BOARD_LABEL" \
-            --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
+    - name: Generate config.h (JSON-driven)
+      shell: bash
+      run: |
+        set -euo pipefail
+        python3 scaffold/tools/gen_user_config.py \
+          --boards-json scaffold/configs/boards/boards_manifest.json \
+          --defines-json scaffold/configs/defines/build_defines.json \
+          --modules-json scaffold/configs/modules/modules_presets.json \
+          --board-flag "$BOARD_FLAG" \
+          --board-label "$BOARD_LABEL" \
+          --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
-      - name: Generate TFT_eSPI header (serial-only safe)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
-          python3 scaffold/tools/gen_tft_setup_json.py \
-            --boards-json scaffold/configs/boards/boards_manifest.json \
-            --displays-json scaffold/configs/displays/display_presets.json \
-            --pins-json scaffold/configs/pins/pin_presets.json \
-            --board-label "$BOARD_LABEL" \
-            --board-flag "$BOARD_FLAG" \
-            --model "${DISPLAY_MODEL}" \
-            --tft-enabled "${DISPLAY_ENABLED}" \
-            --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
+    - name: Generate TFT_eSPI header (serial-only safe)
+      shell: bash
+      run: |
+        set -euo pipefail
+        mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
+        python3 scaffold/tools/gen_tft_setup_json.py \
+          --boards-json scaffold/configs/boards/boards_manifest.json \
+          --displays-json scaffold/configs/displays/display_presets.json \
+          --pins-json scaffold/configs/pins/pin_presets.json \
+          --board-label "$BOARD_LABEL" \
+          --board-flag "$BOARD_FLAG" \
+          --model "${DISPLAY_MODEL}" \
+          --tft-enabled "${DISPLAY_ENABLED}" \
+          --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       # ---------- Ensure registry generator exists (guard; no heredocs) ----------
       - name: Ensure registry generator exists (guard)
@@ -322,39 +322,39 @@ PY
 
       # ---------- Compile ----------
       - name: Compile (Arduino CLI)
-        working-directory: ${{ steps.prep.outputs.sketch_dir }}
-        shell: bash
-        env:
-          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen ${DEFINES_BASE}
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ]; then
-            echo "::error::FQBN is empty at compile time; check earlier steps."
-            exit 1
-          fi
-
-          FS="${{ steps.fs.outputs.fs }}"
-          PART="${{ steps.fs.outputs.partition }}"
-          PART_PROP=""
-          if [ -n "$PART" ]; then
-            PART_PROP="--build-property build.partitions=${PART%.csv}"
-          fi
-
-          echo "FQBN:       $FQBN"
-          echo "Sketch dir: $(pwd)"
-          echo "Filesystem: ${FS:-<default>}"
-          echo "Partition:  ${PART:-<default>}"
-          ls -la; ls -la .tft_setup || true; ls -la .autogen || true
-
-          arduino-cli compile \
-            --fqbn "$FQBN" \
-            --warnings none \
-            --export-binaries \
-            --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
-            ${PART_PROP} \
-            --output-dir "$GITHUB_WORKSPACE/build_out" \
-            .
-
+              working-directory: ${{ steps.prep.outputs.sketch_dir }}
+              shell: bash
+              env:
+                EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen ${DEFINES_BASE}"
+              run: |
+                set -euo pipefail
+      
+                if [ -z "${FQBN:-}" ]; then
+                  echo "::error::FQBN is empty at compile time; check earlier steps."
+                  exit 1
+                fi
+      
+                FS="${{ steps.fs.outputs.fs }}"
+                PART="${{ steps.fs.outputs.partition }}"
+                PART_PROP=""
+                if [ -n "$PART" ]; then
+                  PART_PROP="--build-property build.partitions=${PART%.csv}"
+                fi
+      
+                echo "FQBN:       $FQBN"
+                echo "Sketch dir: $(pwd)"
+                echo "Filesystem: ${FS:-<default>}"
+                echo "Partition:  ${PART:-<default>}"
+                ls -la; ls -la .tft_setup || true; ls -la .autogen || true
+      
+                arduino-cli compile \
+                  --fqbn "$FQBN" \
+                  --warnings none \
+                  --export-binaries \
+                  --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
+                  ${PART_PROP} \
+                  --output-dir "$GITHUB_WORKSPACE/build_out" \
+                  .
       - name: Upload firmware artifact
         uses: actions/upload-artifact@v4
         with:
