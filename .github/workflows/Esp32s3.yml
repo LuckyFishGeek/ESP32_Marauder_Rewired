@@ -119,6 +119,20 @@ jobs:
             echo "::notice::Applied last-resort FQBN mapping for $FLAG"
           fi
 
+      - name: Final board override (CrowPanel S3)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # If you want CrowPanel S3, force it here so the manifest can't undo it
+          if [ "${FLAG:-}" = "CROWPANEL_S3" ] || [ -z "${FLAG:-}" ]; then
+            echo "FLAG=CROWPANEL_S3" >> $GITHUB_ENV
+            echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV
+            # Optional: set sane defaults for FS/partitions on 16MB S3
+            echo "FILESYSTEM=spiffs" >> $GITHUB_ENV
+            echo "PARTITION=default_16MB.csv" >> $GITHUB_ENV
+            echo "::notice::Forced CrowPanel S3 mapping (esp32s3, 16MB, PSRAM enabled)"
+          fi
+
       - name: Assert FQBN present
         shell: bash
         run: |
