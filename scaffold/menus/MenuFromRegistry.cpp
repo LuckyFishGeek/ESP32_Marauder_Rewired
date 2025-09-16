@@ -1,18 +1,4 @@
 #include "MenuFromRegistry.h"
-<<<<<<< Updated upstream
-#include "RegistryInit.h"   // if needed
-#include "ToolRegistry.h"   // if you plan to fetch items
-
-// If you already have some renderer function, call it here.
-// For now, keep it trivial so the build passes; we can expand later.
-void showMainMenu() {
-  // Minimal placeholder so compile succeeds
-  Serial.println(F("[menu] showMainMenu() placeholder"));
-  // TODO: pull items from registry and draw them when display stack is ready
-  // Example (later):
-  // auto items = getMainMenuItems();
-  // drawMenu(items);
-=======
 #include "ToolRegistry.h"
 #include <Arduino.h>
 
@@ -47,5 +33,4 @@ void showMainMenu() {
   Serial.println(F("(Menu is serial-only in CI; send selection via serial when interactive)"));
   // No blocking input in CI; this is a safe stub that doesn't attempt to read Serial.
   // In a real device you would read Serial or the input layer and call tools[idx].onSelect()
->>>>>>> Stashed changes
 }
