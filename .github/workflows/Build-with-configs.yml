@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_|DEFINES_BASE)=' || true
+          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)=' || true
 
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -155,7 +155,6 @@ jobs:
           if [ ! -f "$JSON" ]; then
             echo "::error ::$JSON not found"; exit 1
           fi
-          # Parse JSON safely with jq; supports ["a.zip",..] or {"libs":[...]} with strings/objects
           mapfile -t ZIPS < <(jq -r '
             if type=="array" then .[]
             elif type=="object" and .libs then .libs[]
@@ -175,26 +174,12 @@ jobs:
           echo "Installed libs in $LIBDIR:"
           ls -lh "$LIBDIR" || true
 
-      # ---------- Ensure registry generator exists ----------
-      - name: Ensure registry generator exists (guard)
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p scaffold/tools
-          if [ ! -f scaffold/tools/gen_registry_from_modules.py ]; then
-            echo "::warning::Registry generator missing locally; fetching from repo URL."
-            curl -fsSL \
-              https://raw.githubusercontent.com/AirysDark/ESP32_Marauder_Rewired/main/scaffold/tools/gen_registry_from_modules.py \
-              -o scaffold/tools/gen_registry_from_modules.py
-            chmod +x scaffold/tools/gen_registry_from_modules.py
-          fi
-          ls -la scaffold/tools
-          python3 --version
-
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
         id: prep
+        shell: bash
         run: |
+          set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
           SRC_INO="$(ls scaffold/*.ino | head -n 1)"
@@ -216,10 +201,6 @@ jobs:
           fi
 
       - name: Assert sketch prepared
-        run: |
-          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
-
-      - name: Assert sketch prepared
         shell: bash
         run: |
           set -euo pipefail
@@ -234,8 +215,8 @@ jobs:
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --defines-json scaffold/configs/defines/build_defines.json \
             --modules-json scaffold/configs/modules/modules_presets.json \
-            --board-flag "$BOARD_FLAG" \
-            --board-label "$BOARD_LABEL" \
+            --board-flag "${BOARD_FLAG:-}" \
+            --board-label "${BOARD_LABEL:-}" \
             --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
       - name: Generate TFT_eSPI header (serial-only safe)
@@ -288,7 +269,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: -I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
