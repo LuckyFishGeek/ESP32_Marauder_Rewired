@@ -8,22 +8,19 @@
 
 void setup() {
   Serial.begin(115200);
-  delay(100);
+  delay(200);
 
-  Serial.println("=== ESP32 Marauder Rewired ===");
-  Serial.println("Booting menu/registry system...");
+  Serial.println(F("=== ESP32 Marauder Rewired ==="));
+  Serial.println(F("Booting menu/registry system..."));
 
   // Initialize registries
-  initRegistries();
+  init_tool_registry();
 
-  // Example: show menu
+  // Show the menu (Serial-only for now)
   showMainMenu();
 }
 
 void loop() {
-  // Run menu tasks
-  loop();
-
-  // Small delay to avoid WDT
-  delay(10);
+  // TODO: when you wire up UI input, poll it here and dispatch selections
+  delay(50); // keep WDT happy
 }
