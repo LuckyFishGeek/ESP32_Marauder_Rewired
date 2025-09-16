@@ -20,13 +20,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Ensure system deps
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq unzip rsync
+
       - name: Ensure Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
       - name: Install Python dependencies
+        shell: bash
         run: |
+          set -euo pipefail
           python3 -m pip install --upgrade pip
           pip install pyserial
 
@@ -98,6 +107,12 @@ jobs:
             echo "::error::FQBN is empty after exporter+fallback ? check boards_manifest (fqbn/fbqn)."
             exit 1
           fi
+
+      - name: Dump resolved env (debug)
+        shell: bash
+        run: |
+          set -euo pipefail
+          env | sort | grep -E '^(FLAG|BOARD_LABEL|FQBN|CORE_VERSION|FILESYSTEM|PARTITION|ADDR|DISPLAY_|LIBS_)=' || true
 
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
@@ -181,40 +196,54 @@ jobs:
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      - name: Stage menus as local Arduino library
+      - name: Stage MarauderMenu library (prefer repo lib/, fallback to sketch menus/)
         shell: bash
         run: |
           set -euo pipefail
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          LIBROOT="$HOME/Arduino/libraries/MarauderMenu"
-          SRCDIR="$LIBROOT/src"
+          REPO_LIB="scaffold/lib/MarauderMenu"
+          DEST="$HOME/Arduino/libraries/MarauderMenu"
 
-          echo "Creating local library at: $LIBROOT"
-          rm -rf "$LIBROOT"
-          mkdir -p "$SRCDIR"
+          echo "Creating local library at: $DEST"
+          rm -rf "$DEST"
+          mkdir -p "$DEST"
 
-          if [ -d "$SKETCH_DIR/menus" ]; then
-            rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$SRCDIR/menus/"
+          if [ -d "$REPO_LIB" ]; then
+            echo "::notice::Using repo-provided library at $REPO_LIB"
+            rsync -a --delete "$REPO_LIB/" "$DEST/"
+          elif [ -d "$SKETCH_DIR/menus" ]; then
+            echo "::notice::Fallback: building library from $SKETCH_DIR/menus"
+            mkdir -p "$DEST/src/menus"
+            rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$DEST/src/menus/"
+
+            # Umbrella header
+            cat > "$DEST/src/MarauderMenu.h" <<'H'
+            #pragma once
+            #include "menus/MenuTypes.h"
+            #include "menus/ToolRegistry.h"
+            #include "menus/RegistryInit.h"
+            #include "menus/MenuFromRegistry.h"
+            H
+
+            # Minimal library.properties
+            cat > "$DEST/library.properties" <<'PROP'
+            name=MarauderMenu
+            version=0.1.0
+            author=ESP32 Marauder Rewired
+            maintainer=ESP32 Marauder Rewired
+            sentence=Menu/registry components for ESP32 Marauder Rewired.
+            paragraph=Local library staged by CI to preserve repo folder structure.
+            category=Other
+            architectures=*
+            includes=MarauderMenu.h
+            PROP
           else
-            echo "::error ::$SKETCH_DIR/menus not found."
-            ls -la "$SKETCH_DIR" || true
+            echo "::error::Neither $REPO_LIB nor $SKETCH_DIR/menus found."
             exit 1
           fi
 
-          cat > "$LIBROOT/library.properties" <<'PROP'
-          name=MarauderMenu
-          version=0.1.0
-          author=ESP32 Marauder Rewired
-          maintainer=ESP32 Marauder Rewired
-          sentence=Menu/registry components for ESP32 Marauder Rewired.
-          paragraph=Local library staged by CI to preserve repo folder structure.
-          category=Other
-          architectures=*
-          includes=menus/MenuFromRegistry.h
-          PROP
-
           echo "Local library contents:"
-          find "$LIBROOT" -maxdepth 3 -type f | sed 's/^/  /'
+          find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
 
       - name: Assert sketch prepared
         shell: bash
@@ -222,7 +251,7 @@ jobs:
           set -euo pipefail
           test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
 
-      # ---------- Autogen headers ----------
+      # ---------- Autogen headers into the staged dir ----------
       - name: Generate config.h (JSON-driven)
         shell: bash
         run: |
@@ -285,7 +314,7 @@ jobs:
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
         env:
-          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen -I$HOME/Arduino/libraries/MarauderMenu/src"
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
@@ -304,10 +333,7 @@ jobs:
           echo "Sketch dir: $(pwd)"
           echo "Filesystem: ${FS:-<default>}"
           echo "Partition:  ${PART:-<default>}"
-          echo "EXTRA_FLAGS: ${EXTRA_FLAGS}"
           ls -la; ls -la .tft_setup || true; ls -la .autogen || true
-          echo "Library MarauderMenu files:"
-          find "$HOME/Arduino/libraries/MarauderMenu" -maxdepth 3 -type f | sed 's/^/  /' || true
 
           arduino-cli compile \
             --fqbn "$FQBN" \
