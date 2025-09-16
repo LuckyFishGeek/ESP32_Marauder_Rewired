@@ -45,13 +45,10 @@ jobs:
           set -euo pipefail
           pwd
           ls -la
-          echo "---- top-level libraries/ ----"
-          ls -la libraries || true
-          echo "---- scaffold/ ----"
           ls -la scaffold || true
-          echo "---- scaffold/configs/boards ----"
+          ls -la scaffold/configs || true
           ls -la scaffold/configs/boards || true
-          sed -n '1,160p' scaffold/configs/boards/boards_manifest.json || true
+          sed -n '1,200p' scaffold/configs/boards/boards_manifest.json || true
 
       - name: Export board env from JSON manifest
         shell: bash
@@ -60,7 +57,8 @@ jobs:
           echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
           echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
           python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
-          echo "----- exporter stderr -----"; cat exporter.err || true
+          echo "----- exporter stderr -----"
+          cat exporter.err || true
 
       - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
         shell: bash
@@ -98,7 +96,7 @@ jobs:
                 echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
                 exit 1;;
             esac
-            echo "::notice::Applied last-resort FQBN mapping for ${FLAG:-<unset>}"
+            echo "::notice::Applied last-resort FQBN mapping for $FLAG"
           fi
 
       - name: Assert FQBN present
@@ -146,7 +144,7 @@ jobs:
           done
           arduino-cli core list
 
-      - name: Clean conflicting libraries (Touch/TFT leftovers)
+      - name: Clean conflicting libraries (XPT touch/TFT leftovers)
         shell: bash
         run: |
           set -euo pipefail
@@ -193,64 +191,54 @@ jobs:
           set -euo pipefail
           SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
-          # Prefer fixed INO at repo root if present; else take from scaffold/*.ino
-          if ls *.ino >/dev/null 2>&1; then
-            SRC_INO="$(ls *.ino | head -n 1)"
-          else
-            SRC_INO="$(ls scaffold/*.ino | head -n 1)"
-          fi
+          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          echo "::notice::Staged sketch to $SKETCH_DIR"
+          ls -la "$SKETCH_DIR"
 
-      - name: Stage MarauderMenu library (prefer repo libraries/, fallback to scaffold/lib/, else scaffold/menus)
+      # ---------- Turn menus/ into a local Arduino library ----------
+      - name: Stage MarauderMenu library from sketch menus/
         shell: bash
         run: |
           set -euo pipefail
           SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
+          SRC_DIR="$SKETCH_DIR/menus"
           DEST="$HOME/Arduino/libraries/MarauderMenu"
 
-          REPO_LIB="libraries/MarauderMenu"
-          SCAFFOLD_LIB="scaffold/lib/MarauderMenu"
+          if [ ! -d "$SRC_DIR" ]; then
+            echo "::error::menus/ folder not found in $SKETCH_DIR (expected all .h/.cpp here)."
+            exit 1
+          fi
 
           echo "Creating local library at: $DEST"
           rm -rf "$DEST"
-          mkdir -p "$DEST"
+          mkdir -p "$DEST/src/menus"
 
-          if [ -d "$REPO_LIB" ]; then
-            echo "::notice::Using repo-provided library at $REPO_LIB"
-            rsync -a --delete "$REPO_LIB/" "$DEST/"
-          elif [ -d "$SCAFFOLD_LIB" ]; then
-            echo "::notice::Using scaffold-provided library at $SCAFFOLD_LIB"
-            rsync -a --delete "$SCAFFOLD_LIB/" "$DEST/"
-          elif [ -d "$SKETCH_DIR/menus" ]; then
-            echo "::notice::Fallback: building library from $SKETCH_DIR/menus"
-            mkdir -p "$DEST/src/menus"
-            rsync -a --exclude '.git' --exclude '.DS_Store' "$SKETCH_DIR/menus/" "$DEST/src/menus/"
-            # Umbrella header
-            cat > "$DEST/src/MarauderMenu.h" <<'H'
-            #pragma once
-            #include "menus/MenuTypes.h"
-            #include "menus/ToolRegistry.h"
-            #include "menus/RegistryInit.h"
-            #include "menus/MenuFromRegistry.h"
-            H
-            # Minimal library.properties
-            cat > "$DEST/library.properties" <<'PROP'
-            name=MarauderMenu
-            version=0.1.0
-            author=ESP32 Marauder Rewired
-            maintainer=ESP32 Marauder Rewired
-            sentence=Menu/registry components for ESP32 Marauder Rewired.
-            paragraph=Local library staged by CI to preserve repo folder structure.
-            category=Other
-            architectures=*
-            includes=MarauderMenu.h
-            PROP
-          else
-            echo "::error::No menu library sources found (libraries/MarauderMenu or scaffold/lib/MarauderMenu or scaffold/menus)."
-            exit 1
-          fi
+          rsync -a --exclude '.git' --exclude '.DS_Store' "$SRC_DIR/" "$DEST/src/menus/"
+
+          # Umbrella header
+          cat > "$DEST/src/MarauderMenu.h" <<'H'
+#pragma once
+#include "menus/MenuTypes.h"
+#include "menus/ToolRegistry.h"
+#include "menus/RegistryInit.h"
+#include "menus/MenuFromRegistry.h"
+H
+
+          # Minimal library.properties
+          cat > "$DEST/library.properties" <<'P'
+name=MarauderMenu
+version=0.1.0
+author=ESP32 Marauder Rewired
+maintainer=ESP32 Marauder Rewired
+sentence=Menu/registry components for ESP32 Marauder Rewired.
+paragraph=Local library staged by CI to preserve repo folder structure.
+category=Other
+architectures=*
+includes=MarauderMenu.h
+P
 
           echo "Local library contents:"
           find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
@@ -298,6 +286,7 @@ jobs:
           FS_IN="${FILESYSTEM:-}"
           PART_IN="${PARTITION:-}"
           CORE_VER="${CORE_VERSION:-2.0.11}"
+
           CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
 
           FS="$FS_IN"
