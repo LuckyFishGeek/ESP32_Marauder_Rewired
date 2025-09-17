@@ -1,16 +1,43 @@
-name: esp32s3 (JSON)
+name: debug backup (JSON)
 
 on:
   workflow_dispatch:
     inputs:
-      board_flag:
-        description: "Board flag (default: CROWPANEL_S3)"
-        required: false
-        default: "CROWPANEL_S3"
-      board_label:
-        description: "Optional board_label override"
-        required: false
-        default: ""
+      board_choice:
+        description: "Select a board"
+        required: true
+        default: "Marauder v7"
+        type: choice
+        options:
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - OG Marauder
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder Mini
+          - ESP32 LDDB
+          - Marauder Dev Board Pro
+          - M5StickCPlus
+          - M5StickCPlus 2
+          - Rev Feather
+          - Marauder v7
+          - Marauder CYD 2432S028
+          - Marauder CYD 2432S024 GUITION
+          - Marauder CYD 2432S028 2 USB
+          - Marauder v7.1
+          - M5Cardputer
+          - ESP32-C5-DevKitC-1
+          - Generic ESP32 Dev Module
+      core_choice:
+        description: "ESP32 core version"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - 2.0.10
+          - 3.3.0
 
 jobs:
   build:
@@ -54,9 +81,114 @@ jobs:
           arduino-cli core update-index --additional-urls \
             https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
-      - name: Force core version 2.0.11
+      # --- Inputs -> ENV priming ---
+      - name: Seed selector env from inputs
         shell: bash
-        run: echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
+        run: |
+          set -euo pipefail
+          echo "BOARD_LABEL=${{ github.event.inputs.board_choice }}" >> $GITHUB_ENV
+          echo "CORE_CHOICE=${{ github.event.inputs.core_choice }}" >> $GITHUB_ENV
+
+      # --- Manifest probe (board row preview) ---
+      - name: Manifest probe (board row preview)
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAN="scaffold/configs/boards/boards_manifest.json"
+          if [ ! -f "$MAN" ]; then
+            echo "::error::Missing $MAN"; exit 1
+          fi
+          echo ">> Looking up BOARD_LABEL='${BOARD_LABEL:-}' in $MAN"
+          jq -r '
+            def rows:
+              if type=="array" then .
+              elif type=="object" and .boards then .boards
+              elif type=="object" then [ to_entries[] | {flag:.key} + (.value) ]
+              else [] end;
+            rows
+            | map(select((.board_label//"")==env.BOARD_LABEL))
+            | .[0] // {}
+          ' "$MAN"
+
+      # --- Export board env ---
+      - name: Export board env from JSON manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="exporter.env"
+          ERR="exporter.err"
+
+          echo "BOARD_LABEL=${BOARD_LABEL}" >> $GITHUB_ENV
+          python3 scaffold/tools/export_env_from_json.py > "$OUT" 2> "$ERR" || true
+
+          echo "----- exporter stderr -----"
+          cat "$ERR" || true
+          echo "----- exporter env (first 20 lines) -----"
+          sed -n '1,20p' "$OUT" || true
+
+          cat "$OUT" >> $GITHUB_ENV
+
+          if grep -q '^BOARD_FLAG=' "$OUT"; then
+            echo "BOARD_FLAG_SOURCE=exporter" >> $GITHUB_ENV
+          else
+            echo "BOARD_FLAG_SOURCE=unset" >> $GITHUB_ENV
+          fi
+
+      # --- Ensure BOARD_FLAG fallback ---
+      - name: Ensure BOARD_FLAG from label (fallback only if exporter missed it)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${BOARD_FLAG_SOURCE:-unset}" = "exporter" ] && [ -n "${BOARD_FLAG:-}" ]; then
+            echo "BOARD_FLAG already provided by exporter: ${BOARD_FLAG}"
+            exit 0
+          fi
+
+          case "${BOARD_LABEL}" in
+            "Marauder v7") echo "BOARD_FLAG=MARAUDER_V7" >> $GITHUB_ENV ;;
+            "Marauder v7.1") echo "BOARD_FLAG=MARAUDER_V7_1" >> $GITHUB_ENV ;;
+            "Marauder v6") echo "BOARD_FLAG=MARAUDER_V6" >> $GITHUB_ENV ;;
+            "Marauder v6.1") echo "BOARD_FLAG=MARAUDER_V6_1" >> $GITHUB_ENV ;;
+            "Marauder Kit") echo "BOARD_FLAG=MARAUDER_KIT" >> $GITHUB_ENV ;;
+            "Marauder Mini") echo "BOARD_FLAG=MARAUDER_MINI" >> $GITHUB_ENV ;;
+            "OG Marauder") echo "BOARD_FLAG=MARAUDER_OG" >> $GITHUB_ENV ;;
+            "Flipper Zero WiFi Dev Board") echo "BOARD_FLAG=FLIPPER_WIFI_DEV" >> $GITHUB_ENV ;;
+            "Flipper Zero Multi Board S3") echo "BOARD_FLAG=MARAUDER_MULTIBOARD_S3" >> $GITHUB_ENV ;;
+            "ESP32 LDDB") echo "BOARD_FLAG=ESP32_LDDB" >> $GITHUB_ENV ;;
+            "Marauder Dev Board Pro") echo "BOARD_FLAG=MARAUDER_DEVPRO" >> $GITHUB_ENV ;;
+            "M5StickCPlus") echo "BOARD_FLAG=M5STICKCPLUS" >> $GITHUB_ENV ;;
+            "M5StickCPlus 2") echo "BOARD_FLAG=M5STICKCPLUS2" >> $GITHUB_ENV ;;
+            "Rev Feather") echo "BOARD_FLAG=MARAUDER_REV_FEATHER" >> $GITHUB_ENV ;;
+            "Marauder CYD 2432S028") echo "BOARD_FLAG=MARAUDER_CYD_2432S028" >> $GITHUB_ENV ;;
+            "Marauder CYD 2432S024 GUITION") echo "BOARD_FLAG=MARAUDER_CYD_2432S024" >> $GITHUB_ENV ;;
+            "Marauder CYD 2432S028 2 USB") echo "BOARD_FLAG=MARAUDER_CYD_2432S028_DUALUSB" >> $GITHUB_ENV ;;
+            "M5Cardputer") echo "BOARD_FLAG=MARAUDER_CARDPUTER" >> $GITHUB_ENV ;;
+            "ESP32-C5-DevKitC-1") echo "BOARD_FLAG=ESP32C5_DEVKITC1" >> $GITHUB_ENV ;;
+            "Generic ESP32 Dev Module") echo "BOARD_FLAG=GENERIC_ESP32" >> $GITHUB_ENV ;;
+            *) echo "::warning::No fallback BOARD_FLAG mapping for '${BOARD_LABEL}'" ;;
+          esac
+
+          echo "BOARD_FLAG_SOURCE=fallback" >> $GITHUB_ENV
+
+      # --- Core selection ---
+      - name: Resolve core version (auto/manual)
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${CORE_CHOICE:-auto}" in
+            auto)
+              if [ -n "${CORE_VERSION:-}" ]; then
+                echo "::notice::Using core from manifest: $CORE_VERSION"
+              else
+                echo "CORE_VERSION=2.0.11" >> $GITHUB_ENV
+                echo "::warning::Manifest had no CORE_VERSION; defaulting to 2.0.11"
+              fi
+              ;;
+            *)
+              echo "CORE_VERSION=${CORE_CHOICE}" >> $GITHUB_ENV
+              echo "::notice::Overriding core to ${CORE_CHOICE}"
+              ;;
+          esac
 
       - name: Install ESP32 core (with retry)
         shell: bash
@@ -71,66 +203,21 @@ jobs:
           done
           arduino-cli core list
 
-      - name: Export board env from JSON manifest
+      # --- FQBN fallback ---
+      - name: FQBN fallback mapping (family-based)
         shell: bash
         run: |
           set -euo pipefail
-          echo "BOARD_FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
-          echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
-          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
-          echo "----- exporter stderr -----"; cat exporter.err || true
-
-      - name: Ensure FLAG present (fallback to input or MARAUDER_V7)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FLAG:-}" ]; then
-            if [ -n "${{ github.event.inputs.board_flag }}" ]; then
-              echo "FLAG=${{ github.event.inputs.board_flag }}" >> $GITHUB_ENV
-            else
-              echo "FLAG=MARAUDER_V7" >> $GITHUB_ENV
-            fi
-          fi
-
-      - name: Ensure FQBN set (fbqn fallback)
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [ -z "${FQBN:-}" ] && [ -n "${FBQN:-}" ]; then
-            echo "FQBN=$FBQN" >> $GITHUB_ENV
-          fi
-
-      - name: Last-resort FQBN mapping
-        run: |
           if [ -z "${FQBN:-}" ]; then
-            case "${FLAG:-}" in
-              CROWPANEL_S3)
-                echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV ;;
-              MARAUDER_V7|MARAUDER_V6|MARAUDER_V6_1|MARAUDER_KIT|MARAUDER_MINI)
-                echo "FQBN=esp32:esp32:d32:PartitionScheme=min_spiffs" >> $GITHUB_ENV ;;
-              MARAUDER_CARDPUTER|MARAUDER_MULTIBOARD_S3)
-                echo "FQBN=esp32:esp32:esp32s3:PartitionScheme=min_spiffs,FlashSize=8M" >> $GITHUB_ENV ;;
-              MARAUDER_REV_FEATHER|MARAUDER_FLIPPER)
-                echo "FQBN=esp32:esp32:esp32s2:PartitionScheme=min_spiffs,FlashSize=4M,PSRAM=enabled" >> $GITHUB_ENV ;;
+            case "${BOARD_LABEL:-}" in
+              *Cardputer*|*S3*)
+                echo "FQBN=esp32:esp32:esp32s3" >> $GITHUB_ENV ;;
+              *Feather*|*S2*)
+                echo "FQBN=esp32:esp32:esp32s2" >> $GITHUB_ENV ;;
               *)
-                echo "::error::FQBN not found for FLAG='${FLAG:-<empty>}' and no fallback rule defined."
-                exit 1;;
+                echo "FQBN=esp32:esp32:d32" >> $GITHUB_ENV ;;
             esac
-            echo "::notice::Applied last-resort FQBN mapping for $FLAG"
-          fi
-
-      - name: Final board override (CrowPanel S3)
-        shell: bash
-        run: |
-          set -euo pipefail
-          # If you want CrowPanel S3, force it here so the manifest can't undo it
-          if [ "${FLAG:-}" = "CROWPANEL_S3" ] || [ -z "${FLAG:-}" ]; then
-            echo "FLAG=CROWPANEL_S3" >> $GITHUB_ENV
-            echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV
-            # Optional: set sane defaults for FS/partitions on 16MB S3
-            echo "FILESYSTEM=spiffs" >> $GITHUB_ENV
-            echo "PARTITION=default_16MB.csv" >> $GITHUB_ENV
-            echo "::notice::Forced CrowPanel S3 mapping (esp32s3, 16MB, PSRAM enabled)"
+            echo "::notice::Applied family FQBN fallback for ${BOARD_LABEL:-unknown}"
           fi
 
       - name: Assert FQBN present
@@ -138,11 +225,12 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${FQBN:-}" ]; then
-            echo "::error::FQBN is empty after exporter+fallback — check boards_manifest (fqbn/fbqn)."
+            echo "::error::FQBN empty after exporter+fallback — check manifest row for '${BOARD_LABEL:-}'."
             exit 1
           fi
 
-      - name: Clean conflicting libraries (XPT touch/TFT leftovers)
+      # --- Clean & unzip libraries from repo ---
+      - name: Clean conflicting libraries (touch/TFT leftovers)
         shell: bash
         run: |
           set -euo pipefail
@@ -151,7 +239,7 @@ jobs:
           cd "$LIBDIR"
           rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
 
-      - name: Extract pre-bundled libs (JSON-driven; tolerant keys)
+      - name: Extract pre-bundled libs (JSON-driven)
         shell: bash
         run: |
           set -euo pipefail
@@ -167,7 +255,6 @@ jobs:
           echo "lib_list.json (first 200 bytes):"
           head -c 200 "$JSON" || true; echo
 
-          # Accept strings, objects with .zip, or objects with "# zip_file", with/without top-level "libs"
           mapfile -t ZIPS < <(jq -r '
             def aszip:
               if type=="string" then .
@@ -180,28 +267,27 @@ jobs:
           ' "$JSON")
 
           if [ "${#ZIPS[@]}" -eq 0 ]; then
-            echo "::error ::No ZIP entries found in $JSON. Expected array or {\"libs\":[...]}; items may be strings or {\"zip\":...}/{\"# zip_file\":...}."
+            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}, items as strings or {zip}/{\"# zip_file\"}."
             exit 1
           fi
 
-          echo "Found ${#ZIPS[@]} zip(s) to install:"
+          echo "Found ${#ZIPS[@]} zip(s):"
           for z in "${ZIPS[@]}"; do echo "  - $z"; done
 
-          # Use LANG=C to avoid unzip choking on exotic filenames; ignore errors per zip
           for ZIP in "${ZIPS[@]}"; do
             FILE="$ZIPROOT/$ZIP"
             if [ -f "$FILE" ]; then
               echo "Unpacking $ZIP -> $LIBDIR"
-              LANG=C unzip -o "$FILE" -d "$LIBDIR" >/dev/null || echo "::warning ::unzip reported issues for $ZIP (continuing)"
+              unzip -o "$FILE" -d "$LIBDIR" >/dev/null
             else
-              echo "::warning ::$ZIP not found under $ZIPROOT (skipping)"
+              echo "::warning ::$ZIP not found at $ZIPROOT"
             fi
           done
 
-          echo "Installed libs in $LIBDIR:"
+          echo "Installed libs under $LIBDIR:"
           find "$LIBDIR" -maxdepth 2 -type f | sed 's/^/  /' || true
 
-      # ---------- Stage sketch ----------
+      # --- Stage sketch ---
       - name: Prepare Sketch Folder
         id: prep
         shell: bash
@@ -211,56 +297,12 @@ jobs:
           rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
           SRC_INO="$(ls scaffold/*.ino | head -n 1)"
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
-          cp -r scaffold/* "$SKETCH_DIR/" || true
+          rsync -a scaffold/ "$SKETCH_DIR/"
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          echo "Top-level sketch dir:"
+          ls -la "$SKETCH_DIR"
 
-      # ---------- Stage menus/ as a local library (no heredocs) ----------
-      - name: Stage MarauderMenu library (from sketch/menus)
-        shell: bash
-        run: |
-          set -euo pipefail
-          SKETCH_DIR="${{ steps.prep.outputs.sketch_dir }}"
-          SRC_DIR="$SKETCH_DIR/menus"
-          DEST="$HOME/Arduino/libraries/MarauderMenu"
-          if [ ! -d "$SRC_DIR" ]; then
-            echo "::error::Expected $SRC_DIR to exist (put your .h/.cpp in scaffold/menus)."
-            ls -la "$SKETCH_DIR" || true
-            exit 1
-          fi
-
-          rm -rf "$DEST"
-          mkdir -p "$DEST/src/menus"
-          rsync -a "$SRC_DIR/" "$DEST/src/menus/"
-
-          mkdir -p "$DEST/src"
-          printf '%s\n' \
-            '#pragma once' \
-            '#include "menus/MenuTypes.h"' \
-            '#include "menus/ToolRegistry.h"' \
-            '#include "menus/RegistryInit.h"' \
-            '#include "menus/MenuFromRegistry.h"' \
-            > "$DEST/src/MarauderMenu.h"
-
-          printf '%s\n' \
-            'name=MarauderMenu' \
-            'version=0.1.0' \
-            'author=ESP32 Marauder Rewired' \
-            'maintainer=ESP32 Marauder Rewired' \
-            'sentence=Menu/registry components for ESP32 Marauder Rewired.' \
-            'category=Other' \
-            'architectures=*' \
-            'includes=MarauderMenu.h' \
-            > "$DEST/library.properties"
-
-          echo "Local library contents:"; find "$DEST" -maxdepth 3 -type f | sed 's/^/  /'
-
-      - name: Assert sketch prepared
-        shell: bash
-        run: |
-          set -euo pipefail
-          test -f "${{ steps.prep.outputs.sketch_dir }}/esp32_marauder_rewired.ino" || { echo "::error ::prepared .ino missing"; ls -la "${{ steps.prep.outputs.sketch_dir }}" || true; exit 1; }
-
-      # ---------- Autogen headers into the staged dir ----------
+      # --- Autogen headers into staged dir ---
       - name: Generate config.h (JSON-driven)
         shell: bash
         run: |
@@ -288,7 +330,7 @@ jobs:
             --tft-enabled "${DISPLAY_ENABLED:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
-      # ---------- Partitions / filesystem ----------
+      # --- Partitions / filesystem ---
       - name: Resolve FS/Partition and install custom CSV if present
         id: fs
         shell: bash
@@ -318,30 +360,7 @@ jobs:
           echo "Filesystem: ${FS:-<core default>}"
           echo "Partition:  ${PART:-<core default>}"
 
-
-      - name: Force CrowPanel S3 (last write wins)
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "FLAG=CROWPANEL_S3" >> $GITHUB_ENV
-          # 16MB flash, PSRAM on, S3 target
-          echo "FQBN=esp32:esp32:esp32s3:FlashSize=16M,PSRAM=enabled,PartitionScheme=default_16MB" >> $GITHUB_ENV
-          # sensible defaults for S3 16MB
-          echo "FILESYSTEM=spiffs" >> $GITHUB_ENV
-          echo "PARTITION=default_16MB.csv" >> $GITHUB_ENV
-          # nuke stray fallback var so it can’t reapply later
-          echo "FBQN=" >> $GITHUB_ENV
-          echo "::notice::CrowPanel S3 forced; any earlier FQBN will be ignored."
-
-      - name: Show final board config (sanity)
-        shell: bash
-        run: |
-          echo "FINAL FLAG=$FLAG"
-          echo "FINAL FQBN=$FQBN"
-          echo "FINAL FS=$FILESYSTEM"
-          echo "FINAL PART=$PARTITION"
-
-      # ---------- Compile ----------
+      # --- Compile ---
       - name: Compile (Arduino CLI)
         working-directory: ${{ steps.prep.outputs.sketch_dir }}
         shell: bash
@@ -376,20 +395,47 @@ jobs:
             --output-dir "$GITHUB_WORKSPACE/build_out" \
             .
 
-      - name: Inspect ELF for symbols
+      # --- Log + artifacts ---
+      - name: Inspect ELF and save build log
         shell: bash
         run: |
           set -euo pipefail
-          ELF=$(find build_out -name "*.elf" | head -n 1)
-          if [ -f "$ELF" ]; then
-            echo "Checking symbols in $ELF"
-            nm "$ELF" | grep -E "showMainMenu|init_tool_registry" || true
-          else
-            echo "::warning::No ELF found to inspect"
-          fi
+          LOG="build_log.txt"
+          {
+            echo "===== ESP32 Marauder Rewired Build Log ====="
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Inputs:"
+            echo "  board_choice = ${{ github.event.inputs.board_choice }}"
+            echo "  core_choice  = ${{ github.event.inputs.core_choice }}"
+            echo
+            echo "Resolved environment:"
+            echo "  BOARD_LABEL        = ${BOARD_LABEL:-<unset>}"
+            echo "  BOARD_FLAG         = ${BOARD_FLAG:-<unset>}"
+            echo "  BOARD_FLAG_SOURCE  = ${BOARD_FLAG_SOURCE:-<unset>}"
+            echo "  FQBN               = ${FQBN:-<unset>}"
+            echo "  CORE_VERSION       = ${CORE_VERSION:-<unset>}"
+            echo "  FILESYSTEM         = ${FILESYSTEM:-<unset>}"
+            echo "  PARTITION          = ${PARTITION:-<unset>}"
+            echo
+            ELF=$(find "$GITHUB_WORKSPACE/build_out" -name "*.elf" | head -n 1 || true)
+            if [ -n "$ELF" ] && [ -f "$ELF" ]; then
+              echo "ELF: $ELF"
+              echo "--- Symbols (showMainMenu/init_tool_registry) ---"
+              nm "$ELF" | grep -E "showMainMenu|init_tool_registry" || echo "<none>"
+            else
+              echo "No ELF found."
+            fi
+            echo "==============================================="
+          } | tee "$LOG"
 
-      - name: Upload firmware artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: fw-${{ env.FLAG }}-${{ env.CORE_VERSION }}
+          name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
           path: build_out
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-debug-log
+          path: build_log.txt
