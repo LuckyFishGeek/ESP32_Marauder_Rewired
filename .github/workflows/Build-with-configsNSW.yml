@@ -1,4 +1,4 @@
-name: Build-with-configs (JSON)
+name: debug (JSON)
 
 on:
   workflow_dispatch:
