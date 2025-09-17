@@ -7,7 +7,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -18,7 +18,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile2",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -29,7 +29,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -40,7 +40,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -51,7 +51,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -84,7 +84,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -95,7 +95,7 @@
     "partition": "ota_1m_fs.csv",
     "profile": "Profile5",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -106,7 +106,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -128,7 +128,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -139,7 +139,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -150,7 +150,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile8",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -161,7 +161,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -172,7 +172,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -183,7 +183,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -194,7 +194,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile2",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -216,7 +216,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -227,7 +227,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile8",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -238,7 +238,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile8",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -304,7 +304,7 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -315,7 +315,7 @@
     "partition": "marauder_default.csv",
     "profile": "Marauder Dev Board Pro",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "2.0.11"
   },
   {
@@ -425,19 +425,8 @@
     "partition": "marauder_default.csv",
     "profile": "ESP32-C5-DevKitC-1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "3.3.0"
-  },
-  {
-    "board_label": "Generic ESP32",
-    "fqbn": "esp32:esp32:esp32",
-    "flag": "GENERIC_ESP32",
-    "filesystem": "spiffs",
-    "partition": "marauder_default.csv",
-    "profile": "Profile1",
-    "tft_enabled": false,
-    "tft_header": NaN,
-    "core_version": "2.0.11"
   },
   {
     "board_label": "ESP32-CS Board",
@@ -447,13 +436,13 @@
     "partition": "marauder_default.csv",
     "profile": "Profile1",
     "tft_enabled": false,
-    "tft_header": NaN,
+    "tft_header": null,
     "core_version": "3.3.0"
   },
   {
     "board_label": "AirysDark build",
     "fqbn": "esp32:esp32:esp32s3",
-    "flag": "ESP32_S3_DEV",
+    "flag": "AIRYSDARK_S3",
     "filesystem": "spiffs",
     "partition": "hugeapp_1m_fs.csv",
     "profile": "AirysDark",
