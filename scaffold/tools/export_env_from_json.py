@@ -54,7 +54,7 @@ def pick(rows, flag, label):
     Select a board row from the manifest.
 
     Priority:
-      1. Exact board_label match (like CSV flow)
+      1. Exact board_label match
       2. Exact flag match
       3. Default to MARAUDER_V7 if both selectors are empty
     """
@@ -77,7 +77,7 @@ def safe_print(k, v):
 
 def main():
     # Always record requested selectors so later steps can see them
-    if flag:  safe_print("FLAG", flag)
+    if flag:  safe_print("BOARD_FLAG", flag)
     if label: safe_print("BOARD_LABEL", label)
 
     rows = load_rows()
@@ -90,19 +90,23 @@ def main():
         eprint(f"[exporter] Board not found. FLAG='{flag}' LABEL='{label}'. Available flags: {avail}")
         return
 
-    # Top-level keys (normalize fbqn?FQBN; accept case variations)
-    top_keys = ("board_label","fqbn","fbqn","FQBN","flag","filesystem","partition","addr","core_version")
-    mapped   = {"fbqn": "fqbn", "FQBN": "fqbn"}
+    # Top-level keys
+    top_keys = (
+        "board_label","fqbn","fbqn","FQBN","flag",
+        "filesystem","partition","addr","core_version"
+    )
+    mapped   = {"fbqn": "fqbn", "FQBN": "fqbn", "flag": "BOARD_FLAG"}
     for k in top_keys:
         if k in row and row[k] is not None:
             key = mapped.get(k, k).upper()
             safe_print(key, row[k])
 
-    # Flatten display/libs. Also normalize nimble_ver -> nimble_version; esp_async.ver -> esp_async.version
+    # Flatten display
     disp = row.get("display") or {}
     for k, v in flatten("display", disp):
         safe_print(k, v)
 
+    # Flatten libs with some normalization
     libs = row.get("libs") or {}
     if "nimble_ver" in libs and "nimble_version" not in libs:
         libs["nimble_version"] = libs["nimble_ver"]
