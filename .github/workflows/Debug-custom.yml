@@ -87,12 +87,10 @@ on:
           - EPD2IN13
           - EPD7IN5
           - RA8875
-
       tft_size:
         description: "TFT resolution override (format: WxH, e.g. 240x320). Leave blank or 'none' for auto-detect."
         required: false
         default: "none"
-      
       core_choice:
         description: "ESP32 core version"
         required: true
@@ -181,6 +179,11 @@ jobs:
           echo "CUSTOM_PINS=${{ github.event.inputs.custom_pins }}" >> $GITHUB_ENV
           echo "FILESYSTEM_OVERRIDE=${{ github.event.inputs.filesystem }}" >> $GITHUB_ENV
           echo "TFT_MODEL_INPUT=${{ github.event.inputs.tft_model }}" >> $GITHUB_ENV
+          if [[ -z "${{ github.event.inputs.tft_size }}" || "${{ github.event.inputs.tft_size }}" == "none" ]]; then
+            echo "TFT_SIZE=" >> $GITHUB_ENV
+          else
+            echo "TFT_SIZE=${{ github.event.inputs.tft_size }}" >> $GITHUB_ENV
+          fi
 
       # --- Manifest debug and exporter enforcement ---
       - name: Manifest probe (board row preview)
@@ -353,7 +356,7 @@ jobs:
             echo "DISPLAY_ENABLED=" >> $GITHUB_ENV
           fi
 
-      # ---------- Autogen headers ----------
+      # ---------- Autogen config.h ----------
       - name: Generate config.h
         shell: bash
         run: |
@@ -370,6 +373,7 @@ jobs:
             --filesystem "${FILESYSTEM}" \
             --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
+      # ---------- Autogen TFT_eSPI headers ----------
       - name: Generate TFT_eSPI header
         shell: bash
         run: |
@@ -384,6 +388,7 @@ jobs:
             --model "${DISPLAY_MODEL:-}" \
             --tft-enabled "${DISPLAY_ENABLED:-}" \
             --pins-override "${CUSTOM_PINS:-}" \
+            --tft-size "${TFT_SIZE:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       - name: Show generated TFT_eSPI header
@@ -494,19 +499,21 @@ jobs:
             echo "  modules_csv      = ${{ github.event.inputs.modules_csv }}"
             echo "  custom_pins      = ${{ github.event.inputs.custom_pins }}"
             echo "  tft_model        = ${{ github.event.inputs.tft_model }}"
+            echo "  tft_size         = ${{ github.event.inputs.tft_size }}"
             echo "  filesystem       = ${{ github.event.inputs.filesystem }}"
             echo "  core_choice      = ${{ github.event.inputs.core_choice }}"
             echo "  partition_choice = ${{ github.event.inputs.partition_choice }}"
             echo
             echo "Resolved environment:"
-            echo "  BOARD_LABEL   = ${BOARD_LABEL}"
-            echo "  BOARD_FLAG    = ${BOARD_FLAG}"
-            echo "  FQBN          = ${FQBN}"
-            echo "  CORE_VERSION  = ${CORE_VERSION}"
-            echo "  FILESYSTEM    = ${FILESYSTEM}"
-            echo "  PARTITION     = ${PARTITION}"
-            echo "  DISPLAY_MODEL = ${DISPLAY_MODEL:-<none>}"
-            echo "  DISPLAY_ENABLED = ${DISPLAY_ENABLED:-<none>}"
+            echo "  BOARD_LABEL      = ${BOARD_LABEL}"
+            echo "  BOARD_FLAG       = ${BOARD_FLAG}"
+            echo "  FQBN             = ${FQBN}"
+            echo "  CORE_VERSION     = ${CORE_VERSION}"
+            echo "  FILESYSTEM       = ${FILESYSTEM}"
+            echo "  PARTITION        = ${PARTITION}"
+            echo "  DISPLAY_MODEL    = ${DISPLAY_MODEL:-<none>}"
+            echo "  DISPLAY_ENABLED  = ${DISPLAY_ENABLED:-<none>}"
+            echo "  TFT_SIZE         = ${TFT_SIZE:-<none>}"
             echo
             ELF=$(find "$GITHUB_WORKSPACE/build_out" -name "*.elf" | head -n 1 || true)
             if [ -n "$ELF" ]; then
@@ -523,7 +530,7 @@ jobs:
           BUNDLE_DIR="$GITHUB_WORKSPACE/source_bundle"
           OUTZIP="$GITHUB_WORKSPACE/source-${BOARD_LABEL}.zip"
           rm -rf "$BUNDLE_DIR"; mkdir -p "$BUNDLE_DIR"
-      
+
           # Copy the staged sketch sources (.ino/.h/.hpp/.c/.cpp) only
           rsync -a \
             --include='*/' \
@@ -531,46 +538,48 @@ jobs:
             --include='*.c'   --include='*.cpp' \
             --exclude='*' \
             "$SKETCH/" "$BUNDLE_DIR/sketch/"
-      
-          # Also include the generated headers we rely on
+
+          # Include the generated headers we rely on
           mkdir -p "$BUNDLE_DIR/generated"
           cp -f "$SKETCH/.tft_setup/User_Setup_Autogen.h" "$BUNDLE_DIR/generated/" 2>/dev/null || true
           cp -f "$SKETCH/.tft_setup/User_Setup_Select.h"  "$BUNDLE_DIR/generated/" 2>/dev/null || true
           cp -f "$SKETCH/.autogen/config.h"               "$BUNDLE_DIR/generated/" 2>/dev/null || true
-      
+
           # Optional: include the chosen partition CSV for traceability
           if [ -n "${PARTITION:-}" ] && [ -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" ]; then
             mkdir -p "$BUNDLE_DIR/partitions"
             cp -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" "$BUNDLE_DIR/partitions/"
           fi
-      
+
           (cd "$BUNDLE_DIR" && zip -r "$OUTZIP" . >/dev/null)
           echo "::notice::Created $OUTZIP"
-            - name: Upload build artifacts
-              uses: actions/upload-artifact@v4
-              with:
-                name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
-                path: build_out
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
+          path: build_out
 
       - name: Collect build outputs
+        shell: bash
         run: |
+          set -euo pipefail
           OUTDIR="${{ github.workspace }}/_artifact_out"
           mkdir -p "$OUTDIR"
-  
-          # Copy firmware .bin files
-          find ${{ github.workspace }}/ESP32_Marauder_Rewired/_build -type f -name "*.bin" -exec cp {} "$OUTDIR/" \;
-  
-          # Copy autogen TFT headers
-          cp -r ${{ github.workspace }}/ESP32_Marauder_Rewired/_build/esp32_marauder_rewired/.tft_setup "$OUTDIR/tft_setup" || true
-  
-          # Copy patched configs.h
-          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/configs.h "$OUTDIR/configs_patched.h" || true
-  
-          # Copy build logs
-          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/build_out/*.elf "$OUTDIR/" || true
-          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/build_out/*.map "$OUTDIR/" || true
-  
-          # Make a single zip
+
+          # Firmware .bin files
+          find "${{ github.workspace }}/build_out" -type f -name "*.bin" -exec cp {} "$OUTDIR/" \;
+
+          # Autogen TFT headers + patched config.h
+          cp -r "${{ steps.prep.outputs.sketch_dir }}/.tft_setup" "$OUTDIR/tft_setup" || true
+          cp -f "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h" "$OUTDIR/configs_patched.h" || true
+
+          # Build logs + maps
+          cp -f "${{ github.workspace }}/build_out/"*.elf "$OUTDIR/" 2>/dev/null || true
+          cp -f "${{ github.workspace }}/build_out/"*.map "$OUTDIR/" 2>/dev/null || true
+          cp -f "${{ github.workspace }}/build_log.txt" "$OUTDIR/" 2>/dev/null || true
+
+          # Single zip
           cd "$OUTDIR"
           zip -r "${{ github.workspace }}/fw_full_bundle.zip" .
 
