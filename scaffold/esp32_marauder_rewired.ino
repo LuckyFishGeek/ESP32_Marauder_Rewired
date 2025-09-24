@@ -1,6 +1,8 @@
 #include "config.h"              // must come first so TFT_eSPI sees width/height
 #include <Arduino.h>
-#include <CustomFunctions.h>     // declares void showMainMenu();
+#include <CustomFunctions.h>
+#include ".tft_setup/User_Setup_Select.h"
+#include <TFT_eSPI.h>
 #include "menus/MenuTypes.h"
 #include "menus/ToolRegistry.h"
 #include "menus/RegistryInit.h"
