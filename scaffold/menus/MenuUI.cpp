@@ -1,4 +1,4 @@
-#include "config.h"
+#include ".autogen/config.h"
 #include "MenuUI.h"
 
 void MenuUI::begin(TFT_eSPI* tft, uint8_t rotation) {
