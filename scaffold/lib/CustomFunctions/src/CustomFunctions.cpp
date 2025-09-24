@@ -36,7 +36,12 @@ void logln(const __FlashStringHelper* s) { _logln(s); }
 void showMainMenu() {
   _drawMenu();
 }
-
+//--------void init_tool_registry();---------
+void init_tool_registry() {
+  static bool initialized = false;
+  if (initialized) return;
+  initialized = true;
+}
 // --------- namespaced helpers -----------
 namespace Custom {
 

@@ -7,6 +7,7 @@ namespace Custom {
   void tick();                         // call often in loop() if you want
   void handleCommand(const String&);   // parse a serial command
   uint32_t uptimeSeconds();
+  void init_tool_registry();
 }
 
 // ---- Legacy/global helpers (intentionally global so old code compiles) ----

@@ -13,7 +13,8 @@ void setup() {
   while (!Serial) { /* wait for USB serial, if applicable */ }
   Serial.println(F("[INIT] ESP32 Marauder Rewired (menu wiring)"));
 
-
+  // Register tools, pages, etc. (safe no-op if already done)
+  init_tool_registry();
 
   // Let the CustomFunctions library draw and drive the main menu.
   showMainMenu();
