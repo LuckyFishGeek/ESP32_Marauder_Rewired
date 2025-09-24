@@ -1,4 +1,4 @@
-#include "config.h"              // must come first so TFT_eSPI sees width/height
+#include ".autogen/config.h"              // must come first so TFT_eSPI sees width/height
 #include <Arduino.h>
 #include <CustomFunctions.h>     // declares void showMainMenu();
 #include "menus/MenuTypes.h"
