@@ -510,42 +510,41 @@ jobs:
           } | tee "$LOG"
 
       - name: Make source bundle (INO/H/CPP + generated headers)
-      - name: Make source bundle (INO/H/CPP + generated headers)
-  shell: bash
-  run: |
-    set -euo pipefail
-    SKETCH="${{ steps.prep.outputs.sketch_dir }}"
-    BUNDLE_DIR="$GITHUB_WORKSPACE/source_bundle"
-    OUTZIP="$GITHUB_WORKSPACE/source-${BOARD_LABEL}.zip"
-    rm -rf "$BUNDLE_DIR"; mkdir -p "$BUNDLE_DIR"
-
-    # Copy the staged sketch sources (.ino/.h/.hpp/.c/.cpp) only
-    rsync -a \
-      --include='*/' \
-      --include='*.ino' --include='*.h' --include='*.hpp' \
-      --include='*.c'   --include='*.cpp' \
-      --exclude='*' \
-      "$SKETCH/" "$BUNDLE_DIR/sketch/"
-
-    # Also include the generated headers we rely on
-    mkdir -p "$BUNDLE_DIR/generated"
-    cp -f "$SKETCH/.tft_setup/User_Setup_Autogen.h" "$BUNDLE_DIR/generated/" 2>/dev/null || true
-    cp -f "$SKETCH/.tft_setup/User_Setup_Select.h"  "$BUNDLE_DIR/generated/" 2>/dev/null || true
-    cp -f "$SKETCH/.autogen/config.h"               "$BUNDLE_DIR/generated/" 2>/dev/null || true
-
-    # Optional: include the chosen partition CSV for traceability
-    if [ -n "${PARTITION:-}" ] && [ -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" ]; then
-      mkdir -p "$BUNDLE_DIR/partitions"
-      cp -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" "$BUNDLE_DIR/partitions/"
-    fi
-
-    (cd "$BUNDLE_DIR" && zip -r "$OUTZIP" . >/dev/null)
-    echo "::notice::Created $OUTZIP"
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
-          path: build_out
+        shell: bash
+        run: |
+          set -euo pipefail
+          SKETCH="${{ steps.prep.outputs.sketch_dir }}"
+          BUNDLE_DIR="$GITHUB_WORKSPACE/source_bundle"
+          OUTZIP="$GITHUB_WORKSPACE/source-${BOARD_LABEL}.zip"
+          rm -rf "$BUNDLE_DIR"; mkdir -p "$BUNDLE_DIR"
+      
+          # Copy the staged sketch sources (.ino/.h/.hpp/.c/.cpp) only
+          rsync -a \
+            --include='*/' \
+            --include='*.ino' --include='*.h' --include='*.hpp' \
+            --include='*.c'   --include='*.cpp' \
+            --exclude='*' \
+            "$SKETCH/" "$BUNDLE_DIR/sketch/"
+      
+          # Also include the generated headers we rely on
+          mkdir -p "$BUNDLE_DIR/generated"
+          cp -f "$SKETCH/.tft_setup/User_Setup_Autogen.h" "$BUNDLE_DIR/generated/" 2>/dev/null || true
+          cp -f "$SKETCH/.tft_setup/User_Setup_Select.h"  "$BUNDLE_DIR/generated/" 2>/dev/null || true
+          cp -f "$SKETCH/.autogen/config.h"               "$BUNDLE_DIR/generated/" 2>/dev/null || true
+      
+          # Optional: include the chosen partition CSV for traceability
+          if [ -n "${PARTITION:-}" ] && [ -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" ]; then
+            mkdir -p "$BUNDLE_DIR/partitions"
+            cp -f "${GITHUB_WORKSPACE}/partitions/${PARTITION}" "$BUNDLE_DIR/partitions/"
+          fi
+      
+          (cd "$BUNDLE_DIR" && zip -r "$OUTZIP" . >/dev/null)
+          echo "::notice::Created $OUTZIP"
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
+                path: build_out
 
       - name: Upload build log
         uses: actions/upload-artifact@v4
