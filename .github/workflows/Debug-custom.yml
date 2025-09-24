@@ -87,6 +87,12 @@ on:
           - EPD2IN13
           - EPD7IN5
           - RA8875
+
+      tft_size:
+        description: "TFT resolution override (format: WxH, e.g. 240x320). Leave blank or 'none' for auto-detect."
+        required: false
+        default: "none"
+      
       core_choice:
         description: "ESP32 core version"
         required: true
