@@ -153,6 +153,10 @@ def write_headers(out_dir, defines_tokens, tft_pins, touch_pins):
         v = tft_pins.get(src) or tft_pins.get(dst)
         add_pin(dst, v)
 
+    # 👉 NEW: always add backlight ON state if pin defined
+    if "TFT_BL" in tft_pins and tft_pins["TFT_BL"]:
+        lines.append("#define TFT_BACKLIGHT_ON HIGH")
+
     tc = touch_pins.get("TOUCH_CS") or touch_pins.get("CS") or touch_pins.get("TOUCH_CS_PIN")
     if tc:
         add_pin("TOUCH_CS", tc)
