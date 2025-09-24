@@ -1,34 +1,98 @@
-name: debug (JSON strict)
+name: debug custom (JSON strict)
 
 on:
   workflow_dispatch:
     inputs:
-      board_choice:
-        description: "Select a board"
-        required: true
-        default: "Marauder v7"
+      board_label:
         type: choice
+        description: 'Select a common Arduino-ESP32 board (or choose "Other (enter FQBN)")'
+        default: 'Generic ESP32 Dev Module'
         options:
-          - Flipper Zero WiFi Dev Board
-          - Flipper Zero Multi Board S3
-          - OG Marauder
-          - Marauder v6
-          - Marauder v6.1
-          - Marauder Kit
-          - Marauder Mini
-          - ESP32 LDDB
-          - Marauder Dev Board Pro
-          - M5StickCPlus
-          - M5StickCPlus 2
-          - Rev Feather
-          - Marauder v7
-          - Marauder CYD 2432S028
-          - Marauder CYD 2432S024 GUITION
-          - Marauder CYD 2432S028 2 USB
-          - Marauder v7.1
-          - M5Cardputer
-          - ESP32-C5-DevKitC-1
           - Generic ESP32 Dev Module
+          - DOIT ESP32 DEVKIT V1
+          - NodeMCU-32S
+          - ESP32 DevKitC V4
+          - ESP32 WROOM-DA Module
+          - ESP32 WROVER Module
+          - ESP32 WROVER Kit (all versions)
+          - ESP32 PICO-D4
+          - AI Thinker ESP32-CAM
+          - Lolin D32
+          - Lolin D32 Pro
+          - FireBeetle2 ESP32-E
+          - Heltec WiFi Kit 32 (V3)
+          - ESP32-S2 Dev Module
+          - ESP32-S2 Saola-1
+          - Adafruit Feather ESP32-S2
+          - ESP32-S3 Dev Module
+          - Adafruit Feather ESP32-S3 (2MB PSRAM)
+          - M5StickC / M5StickC-Plus
+          - M5Stamp S3
+          - Other (enter FQBN)
+          - AirysDark build
+
+      fqbn_override:
+        description: 'If "Other", paste exact FQBN (e.g., esp32:esp32:nodemcu-32s or esp32:esp32:esp32s3:PSRAM=enabled)'
+        required: false
+        default: ''
+
+      profile_name:
+        type: choice
+        description: 'Profile from modules_presets.csv (Auto picks from manifest.json)'
+        default: 'Auto (from board)'
+        options:
+          - Auto (from board)
+          - Minimal
+          - Standard
+          - Full
+          - Wardriver
+          - Scanner
+          - BLE-only
+          - Displayless
+          - Debug
+          - Custom
+
+      modules_csv:
+        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
+        required: false
+        default: ''
+
+      custom_pins:
+        description: >
+          Free-form pin overrides. Examples:
+          "gps_pin=34,33"
+          "tft_pin=19,23,18,5,21,22"
+          "wifi_pin=19,23,18,5"
+          (space-separated key=value lists)
+        required: false
+        default: ''
+
+      tft_model:
+        type: choice
+        description: 'Select TFT/Display model (from display_presets.csv)'
+        default: 'None'
+        options:
+          - None
+          - ILI9341
+          - ILI9488
+          - ST7789
+          - ST7735
+          - ILI9225
+          - ILI9163
+          - SSD1306
+          - SH1106
+          - SSD1331
+          - GC9A01
+          - ST7796
+          - HX8357
+          - ILI9486
+          - ILI9481
+          - ILI9806
+          - EPD2IN9
+          - EPD2IN13
+          - EPD7IN5
+          - RA8875
+
       core_choice:
         description: "ESP32 core version"
         required: true
@@ -38,6 +102,14 @@ on:
           - auto
           - 2.0.10
           - 3.3.0
+
+
+      filesystem:
+        type: choice
+        description: 'Filesystem override (blank = default/manifest)'
+        default: ''
+        options: ['', 'spiffs', 'littlefs']
+                  
       partition_choice:
         description: "Partition table"
         required: true
