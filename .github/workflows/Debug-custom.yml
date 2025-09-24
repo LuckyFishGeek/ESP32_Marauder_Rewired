@@ -38,7 +38,7 @@ on:
 
       profile_name:
         type: choice
-        description: 'Profile from modules_presets.csv (Auto picks from manifest.json)'
+        description: 'Profile from modules_presets.json (Auto picks from manifest.json)'
         default: 'Auto (from board)'
         options:
           - Auto (from board)
@@ -62,14 +62,15 @@ on:
           Free-form pin overrides. Examples:
           "gps_pin=34,33"
           "tft_pin=19,23,18,5,21,22"
-          "wifi_pin=19,23,18,5"
-          (space-separated key=value lists)
+          "tft_mosi=23 tft_sclk=18 tft_dc=21 tft_rst=22 tft_cs=5 tft_bl=4"
+          "touch_cs=27 touch_irq=36"
+          (space-separated key=value list; values can be CSV)
         required: false
         default: ''
 
       tft_model:
         type: choice
-        description: 'Select TFT/Display model (from display_presets.csv)'
+        description: 'Select TFT/Display model (from display_presets.json)'
         default: 'None'
         options:
           - None
@@ -103,13 +104,12 @@ on:
           - 2.0.10
           - 3.3.0
 
-
       filesystem:
         type: choice
         description: 'Filesystem override (blank = default/manifest)'
         default: ''
         options: ['', 'spiffs', 'littlefs']
-                  
+
       partition_choice:
         description: "Partition table"
         required: true
@@ -175,9 +175,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "BOARD_LABEL=${{ github.event.inputs.board_choice }}" >> $GITHUB_ENV
+          echo "BOARD_LABEL=${{ github.event.inputs.board_label }}" >> $GITHUB_ENV
           echo "CORE_CHOICE=${{ github.event.inputs.core_choice }}" >> $GITHUB_ENV
           echo "PARTITION_CHOICE=${{ github.event.inputs.partition_choice }}" >> $GITHUB_ENV
+          echo "FQBN_OVERRIDE=${{ github.event.inputs.fqbn_override }}" >> $GITHUB_ENV
+          echo "PROFILE_NAME=${{ github.event.inputs.profile_name }}" >> $GITHUB_ENV
+          echo "MODULES_CSV=${{ github.event.inputs.modules_csv }}" >> $GITHUB_ENV
+          echo "CUSTOM_PINS=${{ github.event.inputs.custom_pins }}" >> $GITHUB_ENV
+          echo "FILESYSTEM_OVERRIDE=${{ github.event.inputs.filesystem }}" >> $GITHUB_ENV
+          echo "TFT_MODEL_INPUT=${{ github.event.inputs.tft_model }}" >> $GITHUB_ENV
+
+      # (Optional) Special mapping for AirysDark build
+      # - name: AirysDark build mapping (optional)
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     if [ "${BOARD_LABEL}" = "AirysDark build" ]; then
+      #       echo "BOARD_LABEL=AirysDark S3" >> $GITHUB_ENV
+      #       echo "PROFILE_NAME=Full" >> $GITHUB_ENV
+      #     fi
 
       # --- Manifest debug and exporter enforcement ---
       - name: Manifest probe (board row preview)
@@ -208,6 +224,14 @@ jobs:
           python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>exporter.err || true
           echo "----- exporter stderr -----"
           cat exporter.err || true
+
+          # Allow "Other (enter FQBN)" to override FQBN
+          if [ "${BOARD_LABEL}" = "Other (enter FQBN)" ] && [ -n "${FQBN_OVERRIDE}" ]; then
+            echo "FQBN=${FQBN_OVERRIDE}" >> $GITHUB_ENV
+            if ! grep -q "^BOARD_FLAG=" $GITHUB_ENV; then
+              echo "BOARD_FLAG=CUSTOM_OTHER" >> $GITHUB_ENV
+            fi
+          fi
 
           # Strict checks
           for var in BOARD_FLAG FQBN CORE_VERSION PARTITION FILESYSTEM; do
@@ -314,6 +338,34 @@ jobs:
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
           ls -la "$SKETCH_DIR"
 
+      # ---------- Apply filesystem override (if provided) ----------
+      - name: Apply filesystem override (if provided)
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${FILESYSTEM_OVERRIDE}" in
+            "" )  echo "::notice::Using filesystem from manifest: ${FILESYSTEM}" ;;
+            spiffs|littlefs)
+                 sed -i "s/^FILESYSTEM=.*/FILESYSTEM=${FILESYSTEM_OVERRIDE}/" "$GITHUB_ENV" \
+                 || echo "FILESYSTEM=${FILESYSTEM_OVERRIDE}" >> "$GITHUB_ENV"
+                 echo "::notice::Overriding filesystem to ${FILESYSTEM_OVERRIDE}"
+                 ;;
+            * )  echo "::warning::Invalid filesystem override '${FILESYSTEM_OVERRIDE}', keeping '${FILESYSTEM}'" ;;
+          esac
+
+      # ---------- Resolve TFT model/enable flags ----------
+      - name: Resolve TFT model/enable from input
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -n "${TFT_MODEL_INPUT}" ] && [ "${TFT_MODEL_INPUT}" != "None" ]; then
+            echo "DISPLAY_MODEL=${TFT_MODEL_INPUT}" >> $GITHUB_ENV
+            echo "DISPLAY_ENABLED=true" >> $GITHUB_ENV
+          else
+            echo "DISPLAY_MODEL=" >> $GITHUB_ENV
+            echo "DISPLAY_ENABLED=" >> $GITHUB_ENV
+          fi
+
       # ---------- Autogen headers ----------
       - name: Generate config.h
         shell: bash
@@ -325,6 +377,10 @@ jobs:
             --modules-json scaffold/configs/modules/modules_presets.json \
             --board-flag "${BOARD_FLAG}" \
             --board-label "${BOARD_LABEL}" \
+            --profile "${PROFILE_NAME}" \
+            --modules-override "${MODULES_CSV}" \
+            --pins-override "${CUSTOM_PINS}" \
+            --filesystem "${FILESYSTEM}" \
             --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
       - name: Generate TFT_eSPI header
@@ -340,6 +396,7 @@ jobs:
             --board-flag "${BOARD_FLAG}" \
             --model "${DISPLAY_MODEL:-}" \
             --tft-enabled "${DISPLAY_ENABLED:-}" \
+            --pins-override "${CUSTOM_PINS:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
       # ---------- Partitions ----------
@@ -437,17 +494,25 @@ jobs:
             echo "===== ESP32 Marauder Rewired Build Log ====="
             echo "Run: $GITHUB_RUN_ID"
             echo "Inputs:"
-            echo "  board_choice     = ${{ github.event.inputs.board_choice }}"
+            echo "  board_label      = ${{ github.event.inputs.board_label }}"
+            echo "  fqbn_override    = ${{ github.event.inputs.fqbn_override }}"
+            echo "  profile_name     = ${{ github.event.inputs.profile_name }}"
+            echo "  modules_csv      = ${{ github.event.inputs.modules_csv }}"
+            echo "  custom_pins      = ${{ github.event.inputs.custom_pins }}"
+            echo "  tft_model        = ${{ github.event.inputs.tft_model }}"
+            echo "  filesystem       = ${{ github.event.inputs.filesystem }}"
             echo "  core_choice      = ${{ github.event.inputs.core_choice }}"
             echo "  partition_choice = ${{ github.event.inputs.partition_choice }}"
             echo
             echo "Resolved environment:"
-            echo "  BOARD_LABEL  = ${BOARD_LABEL}"
-            echo "  BOARD_FLAG   = ${BOARD_FLAG}"
-            echo "  FQBN         = ${FQBN}"
-            echo "  CORE_VERSION = ${CORE_VERSION}"
-            echo "  FILESYSTEM   = ${FILESYSTEM}"
-            echo "  PARTITION    = ${PARTITION}"
+            echo "  BOARD_LABEL   = ${BOARD_LABEL}"
+            echo "  BOARD_FLAG    = ${BOARD_FLAG}"
+            echo "  FQBN          = ${FQBN}"
+            echo "  CORE_VERSION  = ${CORE_VERSION}"
+            echo "  FILESYSTEM    = ${FILESYSTEM}"
+            echo "  PARTITION     = ${PARTITION}"
+            echo "  DISPLAY_MODEL = ${DISPLAY_MODEL:-<none>}"
+            echo "  DISPLAY_ENABLED = ${DISPLAY_ENABLED:-<none>}"
             echo
             ELF=$(find "$GITHUB_WORKSPACE/build_out" -name "*.elf" | head -n 1 || true)
             if [ -n "$ELF" ]; then
