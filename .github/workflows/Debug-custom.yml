@@ -1,0 +1,397 @@
+name: debug (JSON strict)
+
+on:
+  workflow_dispatch:
+    inputs:
+      board_choice:
+        description: "Select a board"
+        required: true
+        default: "Marauder v7"
+        type: choice
+        options:
+          - Flipper Zero WiFi Dev Board
+          - Flipper Zero Multi Board S3
+          - OG Marauder
+          - Marauder v6
+          - Marauder v6.1
+          - Marauder Kit
+          - Marauder Mini
+          - ESP32 LDDB
+          - Marauder Dev Board Pro
+          - M5StickCPlus
+          - M5StickCPlus 2
+          - Rev Feather
+          - Marauder v7
+          - Marauder CYD 2432S028
+          - Marauder CYD 2432S024 GUITION
+          - Marauder CYD 2432S028 2 USB
+          - Marauder v7.1
+          - M5Cardputer
+          - ESP32-C5-DevKitC-1
+          - Generic ESP32 Dev Module
+      core_choice:
+        description: "ESP32 core version"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - 2.0.10
+          - 3.3.0
+      partition_choice:
+        description: "Partition table"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - Marauder Default (SPIFFS)
+          - Marauder Default (LittleFS)
+          - Min OTA (SPIFFS)
+          - Min OTA (LittleFS)
+          - OTA 1M App + 1M FS (SPIFFS)
+          - Huge App + 1M FS (SPIFFS)
+          - OTA Dual 1M/1M + 2M FS (SPIFFS)
+          - App 2M + FS 2M (SPIFFS)
+          - WiFi Capture Big FS (SPIFFS ~3MB)
+          - Marauder SPIFFS OTA (Tiny FS)
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure system deps
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y jq unzip rsync
+
+      - name: Ensure Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --upgrade pip
+          pip install pyserial
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+        with:
+          version: 0.35.3
+
+      - name: Configure ESP32 board manager
+        shell: bash
+        run: |
+          set -euo pipefail
+          arduino-cli config init
+          arduino-cli config set board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index --additional-urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+
+      # --- Inputs -> ENV priming ---
+      - name: Seed selector env from inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "BOARD_LABEL=${{ github.event.inputs.board_choice }}" >> $GITHUB_ENV
+          echo "CORE_CHOICE=${{ github.event.inputs.core_choice }}" >> $GITHUB_ENV
+          echo "PARTITION_CHOICE=${{ github.event.inputs.partition_choice }}" >> $GITHUB_ENV
+
+      # --- Manifest debug and exporter enforcement ---
+      - name: Manifest probe (board row preview)
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAN="scaffold/configs/boards/boards_manifest.json"
+          if [ ! -f "$MAN" ]; then
+            echo "::error::Missing $MAN"; exit 1
+          fi
+          echo ">> Looking up BOARD_LABEL='${BOARD_LABEL:-}' in $MAN"
+          jq -r '
+            def rows:
+              if type=="array" then .
+              elif type=="object" and .boards then .boards
+              elif type=="object" then [ to_entries[] | {flag:.key} + (.value) ]
+              else [] end;
+            rows
+            | map(select((.board_label//"")==env.BOARD_LABEL))
+            | .[0] // {}
+          ' "$MAN"
+
+      - name: Export board env from JSON manifest (strict)
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "BOARD_LABEL=${BOARD_LABEL}" >> $GITHUB_ENV
+          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>exporter.err || true
+          echo "----- exporter stderr -----"
+          cat exporter.err || true
+
+          # Strict checks
+          for var in BOARD_FLAG FQBN CORE_VERSION PARTITION FILESYSTEM; do
+            if ! grep -q "^${var}=" $GITHUB_ENV; then
+              echo "::error::${var} missing from exporter for BOARD_LABEL='${BOARD_LABEL}'"
+              exit 1
+            fi
+          done
+
+      # --- Core selection: auto/manual ---
+      - name: Resolve core version (auto/manual)
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${CORE_CHOICE:-auto}" in
+            auto)
+              echo "::notice::Using core from manifest: ${CORE_VERSION}"
+              ;;
+            *)
+              echo "CORE_VERSION=${CORE_CHOICE}" >> $GITHUB_ENV
+              echo "::notice::Overriding core to ${CORE_CHOICE}"
+              ;;
+          esac
+
+      - name: Install ESP32 core (with retry)
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3; do
+            arduino-cli core install "esp32:esp32@${CORE_VERSION}" \
+              --additional-urls https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json && break || {
+                echo "Install attempt $i failed; retrying in 5s..."
+                sleep 5
+              }
+          done
+          arduino-cli core list
+
+      # --- Libraries ---
+      - name: Clean conflicting libraries
+        shell: bash
+        run: |
+          set -euo pipefail
+          LIBDIR="$HOME/Arduino/libraries"
+          mkdir -p "$LIBDIR"
+          cd "$LIBDIR"
+          rm -rf XPT2049Touch XPT2046_Touchscreen TFT_eSPI || true
+
+      - name: Extract pre-bundled libs (JSON-driven)
+        shell: bash
+        run: |
+          set -euo pipefail
+          JSON="scaffold/configs/libs/lib_list.json"
+          ZIPROOT="scaffold/lib"
+          LIBDIR="$HOME/Arduino/libraries"
+          mkdir -p "$LIBDIR"
+
+          if [ ! -f "$JSON" ]; then
+            echo "::error::$JSON not found"; exit 1
+          fi
+
+          echo "lib_list.json (first 200 bytes):"
+          head -c 200 "$JSON" || true; echo
+
+          mapfile -t ZIPS < <(jq -r '
+            def aszip:
+              if type=="string" then .
+              elif type=="object" then ( .zip // .["# zip_file"] // empty )
+              else empty end;
+            if type=="array" then map(aszip)[]
+            elif type=="object" and .libs then (.libs | map(aszip)[])
+            else empty end
+            | select(. != null and . != "")
+          ' "$JSON")
+
+          if [ "${#ZIPS[@]}" -eq 0 ]; then
+            echo "::error::No ZIP entries found in $JSON"
+            exit 1
+          fi
+
+          echo "Found ${#ZIPS[@]} zip(s):"
+          for z in "${ZIPS[@]}"; do echo "  - $z"; done
+
+          for ZIP in "${ZIPS[@]}"; do
+            FILE="$ZIPROOT/$ZIP"
+            if [ -f "$FILE" ]; then
+              echo "Unpacking $ZIP -> $LIBDIR"
+              unzip -o "$FILE" -d "$LIBDIR" >/dev/null
+            else
+              echo "::warning::$ZIP not found at $ZIPROOT"
+            fi
+          done
+
+      # ---------- Stage sketch ----------
+      - name: Prepare Sketch Folder
+        id: prep
+        shell: bash
+        run: |
+          set -euo pipefail
+          SKETCH_DIR="${PWD}/_build/esp32_marauder_rewired"
+          rm -rf "$SKETCH_DIR"; mkdir -p "$SKETCH_DIR"
+          SRC_INO="$(ls scaffold/*.ino | head -n 1)"
+          cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
+          rsync -a scaffold/ "$SKETCH_DIR/"
+          echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
+          ls -la "$SKETCH_DIR"
+
+      # ---------- Autogen headers ----------
+      - name: Generate config.h
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scaffold/tools/gen_user_config.py \
+            --boards-json scaffold/configs/boards/boards_manifest.json \
+            --defines-json scaffold/configs/defines/build_defines.json \
+            --modules-json scaffold/configs/modules/modules_presets.json \
+            --board-flag "${BOARD_FLAG}" \
+            --board-label "${BOARD_LABEL}" \
+            --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
+
+      - name: Generate TFT_eSPI header
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
+          python3 scaffold/tools/gen_tft_setup_json.py \
+            --boards-json scaffold/configs/boards/boards_manifest.json \
+            --displays-json scaffold/configs/displays/display_presets.json \
+            --pins-json scaffold/configs/pins/pin_presets.json \
+            --board-label "${BOARD_LABEL}" \
+            --board-flag "${BOARD_FLAG}" \
+            --model "${DISPLAY_MODEL:-}" \
+            --tft-enabled "${DISPLAY_ENABLED:-}" \
+            --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
+
+      # ---------- Partitions ----------
+      - name: Resolve partition (auto/manual) and install CSV
+        id: fs
+        shell: bash
+        run: |
+          set -euo pipefail
+          map_choice_to_file() {
+            case "$1" in
+              "Marauder Default (SPIFFS)") echo "marauder_default.csv" ;;
+              "Marauder Default (LittleFS)") echo "marauder_littlefs.csv" ;;
+              "Min OTA (SPIFFS)") echo "min_spiffs_ota.csv" ;;
+              "Min OTA (LittleFS)") echo "min_littlefs_ota.csv" ;;
+              "OTA 1M App + 1M FS (SPIFFS)") echo "ota_1m_fs.csv" ;;
+              "Huge App + 1M FS (SPIFFS)") echo "hugeapp_1m_fs.csv" ;;
+              "OTA Dual 1M/1M + 2M FS (SPIFFS)") echo "ota_dual_1m_1m.csv" ;;
+              "App 2M + FS 2M (SPIFFS)") echo "app_2m_fs_2m.csv" ;;
+              "WiFi Capture Big FS (SPIFFS ~3MB)") echo "wifi_capture_bigfs.csv" ;;
+              "Marauder SPIFFS OTA (Tiny FS)") echo "marauder_spiffs_ota.csv" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          PART_CHOICE="${PARTITION_CHOICE:-auto}"
+
+          if [ "$PART_CHOICE" = "auto" ]; then
+            PARTITION_FILE="${PARTITION%.csv}.csv"
+            echo "::notice::Using partition from manifest: $PARTITION_FILE"
+          else
+            PARTITION_FILE="$(map_choice_to_file "$PART_CHOICE")"
+            if [ -z "$PARTITION_FILE" ]; then
+              echo "::error::Unknown partition choice: $PART_CHOICE"
+              exit 1
+            fi
+            echo "::notice::Overriding partition to $PARTITION_FILE"
+          fi
+
+          echo "PARTITION=$PARTITION_FILE" >> $GITHUB_ENV
+
+          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VERSION}/tools/partitions"
+          mkdir -p "$CORE_PART_DIR"
+          SRC="${GITHUB_WORKSPACE}/partitions/$PARTITION_FILE"
+
+          if [ -f "$SRC" ]; then
+            cp -f "$SRC" "$CORE_PART_DIR/$PARTITION_FILE"
+            echo "Installed custom partition CSV to $CORE_PART_DIR/$PARTITION_FILE"
+          else
+            echo "::notice::No custom CSV at partitions/$PARTITION_FILE; relying on core built-ins."
+          fi
+
+          echo "fs=$FILESYSTEM" >> $GITHUB_OUTPUT
+          echo "partition=$PARTITION_FILE" >> $GITHUB_OUTPUT
+
+      # ---------- Compile ----------
+      - name: Compile (Arduino CLI)
+        working-directory: ${{ steps.prep.outputs.sketch_dir }}
+        shell: bash
+        env:
+          EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
+        run: |
+          set -euo pipefail
+          echo "FQBN: $FQBN"
+          echo "Sketch dir: $(pwd)"
+          echo "Filesystem: $FILESYSTEM"
+          echo "Partition:  $PARTITION"
+
+          arduino-cli compile \
+            --fqbn "$FQBN" \
+            --warnings none \
+            --export-binaries \
+            --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
+            --build-property build.partitions=${PARTITION%.csv} \
+            --output-dir "$GITHUB_WORKSPACE/build_out" \
+            .
+
+      - name: Log partition CSV head
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          CSV_PATH="${GITHUB_WORKSPACE}/partitions/${PARTITION:-}"
+          if [ -f "$CSV_PATH" ]; then
+            sed -n '1,20p' "$CSV_PATH"
+          else
+            echo "CSV not found in repo."
+          fi
+
+      - name: Inspect ELF and save build log
+        shell: bash
+        run: |
+          set -euo pipefail
+          LOG="build_log.txt"
+          {
+            echo "===== ESP32 Marauder Rewired Build Log ====="
+            echo "Run: $GITHUB_RUN_ID"
+            echo "Inputs:"
+            echo "  board_choice     = ${{ github.event.inputs.board_choice }}"
+            echo "  core_choice      = ${{ github.event.inputs.core_choice }}"
+            echo "  partition_choice = ${{ github.event.inputs.partition_choice }}"
+            echo
+            echo "Resolved environment:"
+            echo "  BOARD_LABEL  = ${BOARD_LABEL}"
+            echo "  BOARD_FLAG   = ${BOARD_FLAG}"
+            echo "  FQBN         = ${FQBN}"
+            echo "  CORE_VERSION = ${CORE_VERSION}"
+            echo "  FILESYSTEM   = ${FILESYSTEM}"
+            echo "  PARTITION    = ${PARTITION}"
+            echo
+            ELF=$(find "$GITHUB_WORKSPACE/build_out" -name "*.elf" | head -n 1 || true)
+            if [ -n "$ELF" ]; then
+              echo "ELF: $ELF"
+              nm "$ELF" | grep -E "showMainMenu|init_tool_registry" || echo "<none>"
+            fi
+          } | tee "$LOG"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
+          path: build_out
+
+      - name: Upload build log
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-debug-log
+          path: build_log.txt
