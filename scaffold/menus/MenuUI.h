@@ -1,5 +1,5 @@
 #pragma once
-#include "config.h"
+#include ".autogen/config.h"
 #include <TFT_eSPI.h>
 
 // Brand/Version shown on splash
