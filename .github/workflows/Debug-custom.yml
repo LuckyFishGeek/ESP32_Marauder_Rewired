@@ -398,6 +398,14 @@ jobs:
             --pins-override "${CUSTOM_PINS:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
+
+      - name: Show generated TFT_eSPI header
+        shell: bash
+        run: |
+          echo "----- User_Setup_Autogen.h -----"
+          sed -n '1,200p' "${{ steps.prep.outputs.sketch_dir }}/.tft_setup/User_Setup_Autogen.h" || true
+
+
       # ---------- Partitions ----------
       - name: Resolve partition (auto/manual) and install CSV
         id: fs
