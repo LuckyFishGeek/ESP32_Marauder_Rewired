@@ -69,7 +69,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y jq unzip rsync
+          sudo apt-get install -y jq unzip rsync zip
 
       - name: Ensure Python
         uses: actions/setup-python@v5
@@ -384,11 +384,62 @@ jobs:
             fi
           } | tee "$LOG"
 
+      # ---------- Create SD "update.bin" ----------
+      - name: Create SD update file (single update.bin)
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="$GITHUB_WORKSPACE/build_out"
+          mkdir -p "$GITHUB_WORKSPACE/release"
+
+          # Pick the application image (.bin) – exclude bootloader/partitions/fs images
+          APP_BIN="$(find "$OUT" -maxdepth 1 -type f -name '*.bin' \
+                     | grep -Ev '(bootloader|partitions|spiffs|littlefs)' \
+                     | head -n 1 || true)"
+
+          if [ -z "$APP_BIN" ]; then
+            echo "::error::No application .bin found to package as update.bin"
+            ls -la "$OUT" || true
+            exit 1
+          fi
+
+          cp -f "$APP_BIN" "$GITHUB_WORKSPACE/release/update.bin"
+          echo "Packaged: $(basename "$APP_BIN") -> release/update.bin"
+
+      # ---------- Optional: auto-zip for specific boards ----------
+      - name: Zip update for selected boards
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$GITHUB_WORKSPACE/release"
+          case "${BOARD_LABEL}" in
+            "Marauder v7"|"Marauder v7.1")
+              ZIPNAME="update-${BOARD_LABEL// /_}.zip"
+              zip -9 "$ZIPNAME" update.bin >/dev/null
+              echo "Created $ZIPNAME"
+              ;;
+            *) echo "No zip rule for BOARD_LABEL='${BOARD_LABEL}' (skipping)";;
+          esac
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
           path: build_out
+
+      - name: Upload update.bin (SD-card)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sd-update-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
+          path: release/update.bin
+
+      - name: Upload zipped update (if any)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sd-update-zip-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
+          path: release/*.zip
+          if-no-files-found: ignore
 
       - name: Upload build log
         uses: actions/upload-artifact@v4
