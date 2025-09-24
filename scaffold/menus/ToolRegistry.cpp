@@ -1,4 +1,4 @@
-#include ".autogen/config.h"
+#include "config.h"
 #include <Arduino.h>
 #include <vector>
 #include "ToolRegistry.h"

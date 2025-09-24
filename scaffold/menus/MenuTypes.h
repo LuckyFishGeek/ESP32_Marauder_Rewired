@@ -1,5 +1,5 @@
 #pragma once
-#include ".autogen/config.h"
+#include "config.h"
 #include <functional>
 #include <WString.h>
 
