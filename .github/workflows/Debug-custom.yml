@@ -546,6 +546,12 @@ jobs:
                 name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
                 path: build_out
 
+      - name: Upload source bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-${{ env.BOARD_LABEL }}
+          path: source-*.zip
+
       - name: Upload build log
         uses: actions/upload-artifact@v4
         with:
