@@ -546,6 +546,34 @@ jobs:
                 name: fw-${{ env.BOARD_LABEL }}-${{ env.CORE_VERSION }}
                 path: build_out
 
+      - name: Collect build outputs
+        run: |
+          OUTDIR="${{ github.workspace }}/_artifact_out"
+          mkdir -p "$OUTDIR"
+  
+          # Copy firmware .bin files
+          find ${{ github.workspace }}/ESP32_Marauder_Rewired/_build -type f -name "*.bin" -exec cp {} "$OUTDIR/" \;
+  
+          # Copy autogen TFT headers
+          cp -r ${{ github.workspace }}/ESP32_Marauder_Rewired/_build/esp32_marauder_rewired/.tft_setup "$OUTDIR/tft_setup" || true
+  
+          # Copy patched configs.h
+          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/configs.h "$OUTDIR/configs_patched.h" || true
+  
+          # Copy build logs
+          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/build_out/*.elf "$OUTDIR/" || true
+          cp ${{ github.workspace }}/ESP32_Marauder_Rewired/build_out/*.map "$OUTDIR/" || true
+  
+          # Make a single zip
+          cd "$OUTDIR"
+          zip -r "${{ github.workspace }}/fw_full_bundle.zip" .
+
+      - name: Upload full firmware bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: fw-full-bundle
+          path: fw_full_bundle.zip
+
       - name: Upload source bundle
         uses: actions/upload-artifact@v4
         with:
