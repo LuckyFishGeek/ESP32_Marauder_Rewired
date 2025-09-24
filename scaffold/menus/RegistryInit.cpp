@@ -1,21 +1,18 @@
+#include "config.h"
+#include <Arduino.h>
 #include "RegistryInit.h"
 #include "ToolRegistry.h"
-#include "MenuTypes.h"
 
-// Example no-op handlers (replace with your actual handlers as desired)
-static void noop_action() {
-  // placeholder
-}
+static void demo_wifi()   { Serial.println("WiFi tools selected"); }
+static void demo_bt()     { Serial.println("Bluetooth tools selected"); }
+static void demo_storage(){ Serial.println("Storage selected"); }
+static void demo_settings(){ Serial.println("Settings selected"); }
 
 void init_tool_registry() {
-  static bool initialized = false;
-  if (initialized) return;
-  initialized = true;
-
-  registry_clear();
-
-  // Register a couple of safe placeholder tools so menu population has content.
-  registry_add(ToolEntry("about", "About / Info", ToolKind::Page, noop_action));
-  registry_add(ToolEntry("wifi_scan", "WiFi Scanner", ToolKind::Action, noop_action));
-  registry_add(ToolEntry("ble_scan", "BLE Scanner", ToolKind::Action, noop_action));
+  auto& reg = tool_registry();
+  reg.clear();
+  register_tool("1) WiFi tools",    demo_wifi);
+  register_tool("2) Bluetooth",     demo_bt);
+  register_tool("3) Storage",       demo_storage);
+  register_tool("4) Settings",      demo_settings);
 }

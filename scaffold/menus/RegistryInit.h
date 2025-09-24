@@ -1,5 +1,5 @@
 #pragma once
-#include <Arduino.h>
+#include "config.h"
 
-// Call once at boot to populate the simple tool registry.
+// Fill the registry with initial items
 void init_tool_registry();

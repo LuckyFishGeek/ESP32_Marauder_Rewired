@@ -1,10 +1,14 @@
+#include "config.h"
+#include <Arduino.h>
 #include "MenuFromRegistry.h"
 #include "ToolRegistry.h"
 
-void buildMainMenu(MenuUI& out) {
-  out.clear();
-  // Convert all registered tools into simple menu items.
-  for (const auto& t : registry_all()) {
-    out.add(MenuItem(t.label, t.id));
+void showMainMenu() {
+  Serial.println();
+  Serial.println(F("==== ESP32 Marauder (menus in sketch) ===="));
+  for (const auto& it : tool_registry()) {
+    Serial.println(it.label);
   }
+  Serial.println(F("-----------------------------------------"));
+  Serial.println(F("Type 1..4 in Serial Monitor to simulate a pick."));
 }
