@@ -1,4 +1,4 @@
-name: debug backup (JSON)
+name: debug (JSON strict)
 
 on:
   workflow_dispatch:
@@ -38,10 +38,28 @@ on:
           - auto
           - 2.0.10
           - 3.3.0
+      partition_choice:
+        description: "Partition table"
+        required: true
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - Marauder Default (SPIFFS)
+          - Marauder Default (LittleFS)
+          - Min OTA (SPIFFS)
+          - Min OTA (LittleFS)
+          - OTA 1M App + 1M FS (SPIFFS)
+          - Huge App + 1M FS (SPIFFS)
+          - OTA Dual 1M/1M + 2M FS (SPIFFS)
+          - App 2M + FS 2M (SPIFFS)
+          - WiFi Capture Big FS (SPIFFS ~3MB)
+          - Marauder SPIFFS OTA (Tiny FS)
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -87,14 +105,17 @@ jobs:
           set -euo pipefail
           echo "BOARD_LABEL=${{ github.event.inputs.board_choice }}" >> $GITHUB_ENV
           echo "CORE_CHOICE=${{ github.event.inputs.core_choice }}" >> $GITHUB_ENV
+          echo "PARTITION_CHOICE=${{ github.event.inputs.partition_choice }}" >> $GITHUB_ENV
 
-      # --- Manifest probe (preview the row we will load) ---
+      # --- Manifest debug and exporter enforcement ---
       - name: Manifest probe (board row preview)
         shell: bash
         run: |
           set -euo pipefail
           MAN="scaffold/configs/boards/boards_manifest.json"
-          test -f "$MAN" || { echo "::error::Missing $MAN"; exit 1; }
+          if [ ! -f "$MAN" ]; then
+            echo "::error::Missing $MAN"; exit 1
+          fi
           echo ">> Looking up BOARD_LABEL='${BOARD_LABEL:-}' in $MAN"
           jq -r '
             def rows:
@@ -102,63 +123,42 @@ jobs:
               elif type=="object" and .boards then .boards
               elif type=="object" then [ to_entries[] | {flag:.key} + (.value) ]
               else [] end;
-            rows | map(select((.board_label//"")==env.BOARD_LABEL)) | .[0] // {}
+            rows
+            | map(select((.board_label//"")==env.BOARD_LABEL))
+            | .[0] // {}
           ' "$MAN"
 
-      # --- Export env from manifest (authoritative) ---
-      - name: Export board env from JSON manifest
+      - name: Export board env from JSON manifest (strict)
         shell: bash
         run: |
           set -euo pipefail
-          : > exporter.err
-          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>> exporter.err || true
+          echo "BOARD_LABEL=${BOARD_LABEL}" >> $GITHUB_ENV
+          python3 scaffold/tools/export_env_from_json.py >> $GITHUB_ENV 2>exporter.err || true
           echo "----- exporter stderr -----"
           cat exporter.err || true
 
-      # Map exporter FLAG -> BOARD_FLAG (no fallbacks allowed)
-      - name: Normalize env from exporter (strict)
+          # Strict checks
+          for var in BOARD_FLAG FQBN CORE_VERSION PARTITION FILESYSTEM; do
+            if ! grep -q "^${var}=" $GITHUB_ENV; then
+              echo "::error::${var} missing from exporter for BOARD_LABEL='${BOARD_LABEL}'"
+              exit 1
+            fi
+          done
+
+      # --- Core selection: auto/manual ---
+      - name: Resolve core version (auto/manual)
         shell: bash
         run: |
           set -euo pipefail
-          # If exporter emitted FLAG, mirror to BOARD_FLAG
-          if [ -n "${FLAG:-}" ]; then
-            echo "BOARD_FLAG=$FLAG" >> $GITHUB_ENV
-            echo "BOARD_FLAG_SOURCE=exporter" >> $GITHUB_ENV
-          fi
-
-          # Core version: 'auto' uses manifest; explicit overrides it
           case "${CORE_CHOICE:-auto}" in
             auto)
-              if [ -n "${CORE_VERSION:-}" ]; then
-                echo "::notice::Using core from manifest: $CORE_VERSION"
-              else
-                echo "::error::CORE_VERSION is empty in manifest for '${BOARD_LABEL:-}'."
-                exit 1
-              fi
+              echo "::notice::Using core from manifest: ${CORE_VERSION}"
               ;;
             *)
               echo "CORE_VERSION=${CORE_CHOICE}" >> $GITHUB_ENV
               echo "::notice::Overriding core to ${CORE_CHOICE}"
               ;;
           esac
-
-      # Strict asserts: everything must come from the manifest / exporter
-      - name: Assert required fields from manifest
-        shell: bash
-        run: |
-          set -euo pipefail
-          MERR=0
-          if [ -z "${BOARD_LABEL:-}" ];  then echo "::error::BOARD_LABEL empty";  MERR=1; fi
-          if [ -z "${BOARD_FLAG:-}" ];   then echo "::error::BOARD_FLAG empty (exporter must emit FLAG)"; MERR=1; fi
-          if [ -z "${FQBN:-}" ];         then echo "::error::FQBN empty (manifest must provide fqbn/fbqn)"; MERR=1; fi
-          if [ -z "${CORE_VERSION:-}" ]; then echo "::error::CORE_VERSION empty"; MERR=1; fi
-          if [ $MERR -ne 0 ]; then
-            echo "----- Debug env dump -----"
-            env | sort | grep -E '^(BOARD_LABEL|BOARD_FLAG|FLAG|FQBN|CORE_VERSION|FILESYSTEM|PARTITION)=' || true
-            echo "----- exporter.err -----"
-            cat exporter.err || true
-            exit 1
-          fi
 
       - name: Install ESP32 core (with retry)
         shell: bash
@@ -173,7 +173,8 @@ jobs:
           done
           arduino-cli core list
 
-      - name: Clean conflicting libraries (touch/TFT leftovers)
+      # --- Libraries ---
+      - name: Clean conflicting libraries
         shell: bash
         run: |
           set -euo pipefail
@@ -191,7 +192,9 @@ jobs:
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
 
-          test -f "$JSON" || { echo "::error ::$JSON not found"; exit 1; }
+          if [ ! -f "$JSON" ]; then
+            echo "::error::$JSON not found"; exit 1
+          fi
 
           echo "lib_list.json (first 200 bytes):"
           head -c 200 "$JSON" || true; echo
@@ -208,7 +211,7 @@ jobs:
           ' "$JSON")
 
           if [ "${#ZIPS[@]}" -eq 0 ]; then
-            echo "::error ::No ZIP entries found in $JSON. Expected array of zips or {\"libs\":[...]}, items as strings or {zip}/{\"# zip_file\"}."
+            echo "::error::No ZIP entries found in $JSON"
             exit 1
           fi
 
@@ -221,12 +224,9 @@ jobs:
               echo "Unpacking $ZIP -> $LIBDIR"
               unzip -o "$FILE" -d "$LIBDIR" >/dev/null
             else
-              echo "::warning ::$ZIP not found at $ZIPROOT"
+              echo "::warning::$ZIP not found at $ZIPROOT"
             fi
           done
-
-          echo "Installed libs under $LIBDIR:"
-          find "$LIBDIR" -maxdepth 2 -type f | sed 's/^/  /' || true
 
       # ---------- Stage sketch ----------
       - name: Prepare Sketch Folder
@@ -240,10 +240,10 @@ jobs:
           cp "$SRC_INO" "$SKETCH_DIR/esp32_marauder_rewired.ino"
           rsync -a scaffold/ "$SKETCH_DIR/"
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
-          echo "Sketch dir tree (top-level):"; ls -la "$SKETCH_DIR"
+          ls -la "$SKETCH_DIR"
 
       # ---------- Autogen headers ----------
-      - name: Generate config.h (JSON-driven)
+      - name: Generate config.h
         shell: bash
         run: |
           set -euo pipefail
@@ -251,11 +251,11 @@ jobs:
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --defines-json scaffold/configs/defines/build_defines.json \
             --modules-json scaffold/configs/modules/modules_presets.json \
-            --board-flag "${BOARD_FLAG:-}" \
-            --board-label "${BOARD_LABEL:-}" \
+            --board-flag "${BOARD_FLAG}" \
+            --board-label "${BOARD_LABEL}" \
             --out "${{ steps.prep.outputs.sketch_dir }}/.autogen/config.h"
 
-      - name: Generate TFT_eSPI header (serial-only safe)
+      - name: Generate TFT_eSPI header
         shell: bash
         run: |
           set -euo pipefail
@@ -264,37 +264,63 @@ jobs:
             --boards-json scaffold/configs/boards/boards_manifest.json \
             --displays-json scaffold/configs/displays/display_presets.json \
             --pins-json scaffold/configs/pins/pin_presets.json \
-            --board-label "${BOARD_LABEL:-}" \
-            --board-flag "${BOARD_FLAG:-}" \
+            --board-label "${BOARD_LABEL}" \
+            --board-flag "${BOARD_FLAG}" \
             --model "${DISPLAY_MODEL:-}" \
             --tft-enabled "${DISPLAY_ENABLED:-}" \
             --out-dir "${{ steps.prep.outputs.sketch_dir }}/.tft_setup"
 
-      # ---------- Partitions / filesystem ----------
-      - name: Resolve FS/Partition and install custom CSV if present
+      # ---------- Partitions ----------
+      - name: Resolve partition (auto/manual) and install CSV
         id: fs
         shell: bash
         run: |
           set -euo pipefail
-          FS_IN="${FILESYSTEM:-}"
-          PART_IN="${PARTITION:-}"
-          CORE_VER="${CORE_VERSION:-2.0.11}"
-          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
-          FS="$FS_IN"
-          PART="${PART_IN}"
-          if [ -n "$PART" ]; then PART="${PART%.csv}.csv"; fi
-          if [ -n "$PART" ]; then
-            SRC="${GITHUB_WORKSPACE}/partitions/$PART"
-            if [ -f "$SRC" ]; then
-              mkdir -p "$CORE_PART_DIR"
-              cp -f "$SRC" "$CORE_PART_DIR/$PART"
-              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
+          map_choice_to_file() {
+            case "$1" in
+              "Marauder Default (SPIFFS)") echo "marauder_default.csv" ;;
+              "Marauder Default (LittleFS)") echo "marauder_littlefs.csv" ;;
+              "Min OTA (SPIFFS)") echo "min_spiffs_ota.csv" ;;
+              "Min OTA (LittleFS)") echo "min_littlefs_ota.csv" ;;
+              "OTA 1M App + 1M FS (SPIFFS)") echo "ota_1m_fs.csv" ;;
+              "Huge App + 1M FS (SPIFFS)") echo "hugeapp_1m_fs.csv" ;;
+              "OTA Dual 1M/1M + 2M FS (SPIFFS)") echo "ota_dual_1m_1m.csv" ;;
+              "App 2M + FS 2M (SPIFFS)") echo "app_2m_fs_2m.csv" ;;
+              "WiFi Capture Big FS (SPIFFS ~3MB)") echo "wifi_capture_bigfs.csv" ;;
+              "Marauder SPIFFS OTA (Tiny FS)") echo "marauder_spiffs_ota.csv" ;;
+              *) echo "" ;;
+            esac
+          }
+
+          PART_CHOICE="${PARTITION_CHOICE:-auto}"
+
+          if [ "$PART_CHOICE" = "auto" ]; then
+            PARTITION_FILE="${PARTITION%.csv}.csv"
+            echo "::notice::Using partition from manifest: $PARTITION_FILE"
+          else
+            PARTITION_FILE="$(map_choice_to_file "$PART_CHOICE")"
+            if [ -z "$PARTITION_FILE" ]; then
+              echo "::error::Unknown partition choice: $PART_CHOICE"
+              exit 1
             fi
+            echo "::notice::Overriding partition to $PARTITION_FILE"
           fi
-          echo "fs=$FS"   >> $GITHUB_OUTPUT
-          echo "partition=$PART" >> $GITHUB_OUTPUT
-          echo "Filesystem: ${FS:-<core default>}"
-          echo "Partition:  ${PART:-<core default>}"
+
+          echo "PARTITION=$PARTITION_FILE" >> $GITHUB_ENV
+
+          CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VERSION}/tools/partitions"
+          mkdir -p "$CORE_PART_DIR"
+          SRC="${GITHUB_WORKSPACE}/partitions/$PARTITION_FILE"
+
+          if [ -f "$SRC" ]; then
+            cp -f "$SRC" "$CORE_PART_DIR/$PARTITION_FILE"
+            echo "Installed custom partition CSV to $CORE_PART_DIR/$PARTITION_FILE"
+          else
+            echo "::notice::No custom CSV at partitions/$PARTITION_FILE; relying on core built-ins."
+          fi
+
+          echo "fs=$FILESYSTEM" >> $GITHUB_OUTPUT
+          echo "partition=$PARTITION_FILE" >> $GITHUB_OUTPUT
 
       # ---------- Compile ----------
       - name: Compile (Arduino CLI)
@@ -304,23 +330,31 @@ jobs:
           EXTRA_FLAGS: "-I${{ steps.prep.outputs.sketch_dir }}/.tft_setup -I${{ steps.prep.outputs.sketch_dir }}/.autogen"
         run: |
           set -euo pipefail
-          echo "FQBN:       ${FQBN}"
+          echo "FQBN: $FQBN"
           echo "Sketch dir: $(pwd)"
-          echo "Filesystem: ${FILESYSTEM:-<default>}"
-          echo "Partition:  ${PARTITION:-<default>}"
-          ls -la; ls -la .tft_setup || true; ls -la .autogen || true
-          PART_PROP=""
-          if [ -n "${{ steps.fs.outputs.partition }}" ]; then
-            PART_PROP="--build-property build.partitions=${{ steps.fs.outputs.partition }}"; PART_PROP="${PART_PROP%.csv}"
-          fi
+          echo "Filesystem: $FILESYSTEM"
+          echo "Partition:  $PARTITION"
+
           arduino-cli compile \
             --fqbn "$FQBN" \
             --warnings none \
             --export-binaries \
             --build-property "compiler.cpp.extra_flags=${EXTRA_FLAGS}" \
-            ${PART_PROP} \
+            --build-property build.partitions=${PARTITION%.csv} \
             --output-dir "$GITHUB_WORKSPACE/build_out" \
             .
+
+      - name: Log partition CSV head
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          CSV_PATH="${GITHUB_WORKSPACE}/partitions/${PARTITION:-}"
+          if [ -f "$CSV_PATH" ]; then
+            sed -n '1,20p' "$CSV_PATH"
+          else
+            echo "CSV not found in repo."
+          fi
 
       - name: Inspect ELF and save build log
         shell: bash
@@ -331,27 +365,23 @@ jobs:
             echo "===== ESP32 Marauder Rewired Build Log ====="
             echo "Run: $GITHUB_RUN_ID"
             echo "Inputs:"
-            echo "  board_choice = ${{ github.event.inputs.board_choice }}"
-            echo "  core_choice  = ${{ github.event.inputs.core_choice }}"
+            echo "  board_choice     = ${{ github.event.inputs.board_choice }}"
+            echo "  core_choice      = ${{ github.event.inputs.core_choice }}"
+            echo "  partition_choice = ${{ github.event.inputs.partition_choice }}"
             echo
             echo "Resolved environment:"
-            echo "  BOARD_LABEL        = ${BOARD_LABEL:-<unset>}"
-            echo "  BOARD_FLAG         = ${BOARD_FLAG:-<unset>}"
-            echo "  BOARD_FLAG_SOURCE  = ${BOARD_FLAG_SOURCE:-<unset>}"
-            echo "  FQBN               = ${FQBN:-<unset>}"
-            echo "  CORE_VERSION       = ${CORE_VERSION:-<unset>}"
-            echo "  FILESYSTEM         = ${FILESYSTEM:-<unset>}"
-            echo "  PARTITION          = ${PARTITION:-<unset>}"
+            echo "  BOARD_LABEL  = ${BOARD_LABEL}"
+            echo "  BOARD_FLAG   = ${BOARD_FLAG}"
+            echo "  FQBN         = ${FQBN}"
+            echo "  CORE_VERSION = ${CORE_VERSION}"
+            echo "  FILESYSTEM   = ${FILESYSTEM}"
+            echo "  PARTITION    = ${PARTITION}"
             echo
             ELF=$(find "$GITHUB_WORKSPACE/build_out" -name "*.elf" | head -n 1 || true)
-            if [ -n "$ELF" ] && [ -f "$ELF" ]; then
+            if [ -n "$ELF" ]; then
               echo "ELF: $ELF"
-              echo "--- Symbols (showMainMenu/init_tool_registry) ---"
               nm "$ELF" | grep -E "showMainMenu|init_tool_registry" || echo "<none>"
-            else
-              echo "No ELF found."
             fi
-            echo "==============================================="
           } | tee "$LOG"
 
       - name: Upload build artifacts
