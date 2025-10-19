@@ -143,7 +143,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          MAN=./scaffold/configs/boards_manifest.json
+          MAN=./scaffold/configs/boards/boards_manifest.json
 
           test -f "$MAN" || { echo "::error ::boards_manifest.json not found at $MAN"; exit 1; }
 
@@ -173,7 +173,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          MAN="./scaffold/configs/boards_manifest.json"
+          MAN="./scaffold/configs/boards/boards_manifest.json"
           WANT="${{ github.event.inputs.board_label }}"
       
           # exact row
@@ -643,7 +643,7 @@ jobs:
         run: |
           set -euo pipefail
       
-          json_BOARDS="scaffold/configs/boards_manifest.json"
+          json_BOARDS="scaffold/configs/boards/boards_manifest.json"
           json_MODS="scaffold/configs/modules_presets.json"
           json_PINS="scaffold/configs/pins/pins_presets.json"
           json_DISP="scaffold/configs/displays/display_presets.json"
