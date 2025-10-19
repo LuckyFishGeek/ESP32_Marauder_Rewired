@@ -1,4 +1,4 @@
-name: Build (Custom CSV Profiles - ESP32 Marauder Rewired)
+name: Build (Custom json Profiles - ESP32 Marauder Rewired)
 
 on:
   workflow_dispatch:
@@ -38,7 +38,7 @@ on:
 
       profile_name:
         type: choice
-        description: 'Profile from modules_presets.csv (Auto picks from manifest.json)'
+        description: 'Profile from modules_presets.json (Auto picks from manifest.json)'
         default: 'Auto (from board)'
         options:
           - Auto (from board)
@@ -53,8 +53,8 @@ on:
           - Custom
           - Airysdark mods
 
-      modules_csv:
-        description: 'If profile_name=Custom: CSV like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
+      modules_json:
+        description: 'If profile_name=Custom: json like WIFI,BLE,WEB,SD,GPS,TOUCH,LVGL,NEOPIXEL,BUZZER,BUTTONS,BATTERY,NRF24,USB_MSC,TFT_ON,DEBUG,DUAL_WIFI,2WIFI'
         required: false
         default: ''
 
@@ -70,7 +70,7 @@ on:
 
       tft_model:
         type: choice
-        description: 'Select TFT/Display model (from display_presets.csv)'
+        description: 'Select TFT/Display model (from display_presets.json)'
         default: 'None'
         options:
           - None
@@ -103,17 +103,17 @@ on:
 
       partition:
         type: choice
-        description: 'Partition CSV (pretty names) ? blank uses manifest/default'
+        description: 'Partition json (pretty names) ? blank uses manifest/default'
         default: 'Default (use manifest/default)'
         options:
           - 'Default (use manifest/default)'
-          - 'Huge App + 1MB FS (hugeapp_1m_fs.csv)'
-          - 'Marauder (LittleFS OTA) (marauder_littlefs.csv)'
-          - 'Marauder (SPIFFS OTA) (marauder_spiffs_ota.csv)'
-          - 'Minimal (LittleFS OTA) (min_littlefs_ota.csv)'
-          - 'Minimal (SPIFFS OTA) (min_spiffs_ota.csv)'
-          - 'OTA + 1MB FS (ota_1m_fs.csv)'
-          - 'Marauder Default (marauder_default.csv)'
+          - 'Huge App + 1MB FS (hugeapp_1m_fs.json)'
+          - 'Marauder (LittleFS OTA) (marauder_littlefs.json)'
+          - 'Marauder (SPIFFS OTA) (marauder_spiffs_ota.json)'
+          - 'Minimal (LittleFS OTA) (min_littlefs_ota.json)'
+          - 'Minimal (SPIFFS OTA) (min_spiffs_ota.json)'
+          - 'OTA + 1MB FS (ota_1m_fs.json)'
+          - 'Marauder Default (marauder_default.json)'
 
       extra_defines:
         description: 'Additional -D flags (space-separated, e.g. FOO=1 BAR)'
@@ -138,14 +138,14 @@ jobs:
       - name: Install deps (jq + unzip)
         run: sudo apt-get update && sudo apt-get install -y jq unzip
 
-      - name: Locate & sanitize board manifest (CSV only)
+      - name: Locate & sanitize board manifest (json only)
         id: manifest
         shell: bash
         run: |
           set -euo pipefail
-          MAN=./scaffold/configs/boards_manifest.csv
+          MAN=./scaffold/configs/boards_manifest.json
 
-          test -f "$MAN" || { echo "::error ::boards_manifest.csv not found at $MAN"; exit 1; }
+          test -f "$MAN" || { echo "::error ::boards_manifest.json not found at $MAN"; exit 1; }
 
           # Normalize CRLF -> LF
           sed -i 's/\r$//' "$MAN"
@@ -161,19 +161,19 @@ jobs:
               ;;
           esac
 
-          echo "Found CSV manifest: $MAN"
+          echo "Found json manifest: $MAN"
           echo "Detected boards:"
           tail -n +2 "$MAN" | cut -d',' -f1 | nl -ba | sed -e 's/^/  /'
 
           echo "man_path=$MAN" >> $GITHUB_OUTPUT
-          echo "man_type=csv"  >> $GITHUB_OUTPUT
+          echo "man_type=json"  >> $GITHUB_OUTPUT
 
-      - name: Resolve board from manifest (CSV)
+      - name: Resolve board from manifest (json)
         id: map
         shell: bash
         run: |
           set -euo pipefail
-          MAN="./scaffold/configs/boards_manifest.csv"
+          MAN="./scaffold/configs/boards_manifest.json"
           WANT="${{ github.event.inputs.board_label }}"
       
           # exact row
@@ -202,7 +202,7 @@ jobs:
             CORE_VER=$(echo "$LINE" | cut -d',' -f9)
           fi
       
-          # clean defines (semicolon-separated in CSV)
+          # clean defines (semicolon-separated in json)
           DEFINES="$(printf '%s' "$RAW_DEFINES" | tr ';' ' ' | tr -d '\r' | xargs || true)"
           [ -n "$FLAG" ] && DEFINES="$DEFINES -D$FLAG"
           DEFINES="$(printf '%s' "$DEFINES" | xargs || true)"
@@ -254,17 +254,17 @@ jobs:
           rm -rf "$HOME/Arduino/libraries/TFT_eSPI" || true
           echo "Removed conflicting TFT/Touch libraries"
       
-      - name: Extract pre-bundled libs (CSV-driven from scaffold/lib)
+      - name: Extract pre-bundled libs (json-driven from scaffold/lib)
         shell: bash
         run: |
           set -euo pipefail
-          CSV="scaffold/configs/lib_list.csv"
+          json="scaffold/configs/lib_list.json"
           ZIPROOT="scaffold/lib"
           LIBDIR="$HOME/Arduino/libraries"
           mkdir -p "$LIBDIR"
 
-          if [ ! -f "$CSV" ]; then
-            echo "::error ::$CSV not found"; exit 1
+          if [ ! -f "$json" ]; then
+            echo "::error ::$json not found"; exit 1
           fi
 
           while IFS=',' read -r ZIP DESC; do
@@ -280,7 +280,7 @@ jobs:
             else
               echo "WARNING: $ZIP not found in $ZIPROOT, skipping ($DESC)"
             fi
-          done < "$CSV"
+          done < "$json"
 
           echo "Installed libs in $LIBDIR:"
           ls -lh "$LIBDIR"
@@ -312,7 +312,7 @@ jobs:
           cp -r scaffold/* "$SKETCH_DIR/" || true
           echo "sketch_dir=$SKETCH_DIR" >> $GITHUB_OUTPUT
 
-      - name: Sanity check boards CSV
+      - name: Sanity check boards json
         shell: bash
         run: scaffold/scripts/sanity.sh
 
@@ -321,25 +321,25 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          PRESETS="scaffold/configs/modules_presets.csv"
+          PRESETS="scaffold/configs/modules_presets.json"
           CHOICE="${{ github.event.inputs.profile_name }}"
-          CUSTOM="${{ github.event.inputs.modules_csv }}"
+          CUSTOM="${{ github.event.inputs.modules_json }}"
           if [ "$CHOICE" = "Custom" ]; then
-            echo "csv=$CUSTOM" >> $GITHUB_OUTPUT; exit 0
+            echo "json=$CUSTOM" >> $GITHUB_OUTPUT; exit 0
           fi
           if [ ! -f "$PRESETS" ]; then
             echo "::error ::$PRESETS not found"; exit 1
           fi
           LINE=$(awk -F',' -v want="$CHOICE" 'tolower($1)==tolower(want){$1="";sub(/^,/, "");print;exit}' "$PRESETS")
-          echo "csv=$LINE" >> $GITHUB_OUTPUT
+          echo "json=$LINE" >> $GITHUB_OUTPUT
 
-      - name: Resolve Display (from display_presets.csv)
+      - name: Resolve Display (from display_presets.json)
         id: disp_resolve
         shell: bash
         run: |
           set -euo pipefail
           PRESET="${{ github.event.inputs.tft_model }}"
-          CSV="scaffold/configs/displays/display_presets.csv"
+          json="scaffold/configs/displays/display_presets.json"
 
           out(){ echo "$1=$2" >> $GITHUB_OUTPUT; }
 
@@ -356,7 +356,7 @@ jobs:
             exit 0
           fi
 
-          [ -f "$CSV" ] || { echo "::error ::$CSV not found"; exit 1; }
+          [ -f "$json" ] || { echo "::error ::$json not found"; exit 1; }
 
           LINE=$(awk -F',' -v want="$PRESET" '
             BEGIN{IGNORECASE=1}
@@ -364,10 +364,10 @@ jobs:
             NF>=4 {
               m=$2; gsub(/^[[:space:]]+|[[:space:]]+$/, "", m);
               if (m==want) { print; exit }
-            }' "$CSV")
+            }' "$json")
 
           if [ -z "$LINE" ]; then
-            echo "::error ::Display '\''$PRESET'\'' not found in '\''$CSV'\''"
+            echo "::error ::Display '\''$PRESET'\'' not found in '\''$json'\''"
             exit 1
           fi
 
@@ -406,7 +406,7 @@ jobs:
           fi
           echo "Board label: $BOARD_LABEL"
       
-          # 2) Prefer explicit header from manifest/CSV mapping if provided
+          # 2) Prefer explicit header from manifest/json mapping if provided
           EXPLICIT_HEADER="${{ steps.map.outputs.tft_header }}"
           if [ -n "$EXPLICIT_HEADER" ]; then
             if [ -f "$USD/$EXPLICIT_HEADER" ]; then
@@ -457,18 +457,18 @@ jobs:
       
           echo "Applied TFT header: $HEADER_REL"
           echo "Wrote: $TE/User_Setup_Select.h"
-      - name: Resolve board pin preset (pins_presets.csv)
+      - name: Resolve board pin preset (pins_presets.json)
         id: pinpreset
         shell: bash
         run: |
           set -euo pipefail
-          CSV="scaffold/configs/pins/pins_presets.csv"
+          json="scaffold/configs/pins/pins_presets.json"
           BOARD="${{ github.event.inputs.board_label }}"
 
           out(){ echo "$1=$2" >> "$GITHUB_OUTPUT"; }
 
-          if [ ! -f "$CSV" ]; then
-            echo "pins_presets.csv not found at $CSV (skipping)."
+          if [ ! -f "$json" ]; then
+            echo "pins_presets.json not found at $json (skipping)."
             out pins_defs ""
             exit 0
           fi
@@ -477,7 +477,7 @@ jobs:
             BEGIN{IGNORECASE=1}
             NR==1{next}
             $1==want {print $2; exit}
-          ' "$CSV")
+          ' "$json")
 
           if [ -z "$LINE" ]; then
             echo "No preset pins for board: $BOARD (ok)."
@@ -497,7 +497,7 @@ jobs:
           echo "Preset pin defines: $OUT"
           out pins_defs "$OUT"
 
-      - name: Resolve FS/Partition and install custom CSV if present
+      - name: Resolve FS/Partition and install custom json if present
         id: fs
         shell: bash
         run: |
@@ -506,24 +506,24 @@ jobs:
           PART_IN="${{ steps.map.outputs.def_part }}"
           CORE_VER="${{ steps.core.outputs.core_ver }}"
       
-          # Where the esp32 core keeps partition CSVs
+          # Where the esp32 core keeps partition jsons
           CORE_PART_DIR="$HOME/.arduino15/packages/esp32/hardware/esp32/${CORE_VER}/tools/partitions"
       
           FS="$FS_IN"
           PART="$PART_IN"
       
-          # If a custom CSV is referenced, copy it into the core so arduino-cli can find it
+          # If a custom json is referenced, copy it into the core so arduino-cli can find it
           if [ -n "$PART" ]; then
             SRC="${GITHUB_WORKSPACE}/partitions/$PART"
             if [ -f "$SRC" ]; then
               mkdir -p "$CORE_PART_DIR"
               cp -f "$SRC" "$CORE_PART_DIR/$PART"
-              echo "Installed custom partition CSV to $CORE_PART_DIR/$PART"
+              echo "Installed custom partition json to $CORE_PART_DIR/$PART"
             else
-              # If not in repo AND not already in the core, fallback to a stock CSV
+              # If not in repo AND not already in the core, fallback to a stock json
               if [ ! -f "$CORE_PART_DIR/$PART" ]; then
-                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.csv'"
-                PART="default.csv"
+                echo "::warning ::Partition '$PART' not found in repo or core; falling back to 'default.json'"
+                PART="default.json"
               fi
             fi
           fi
@@ -590,13 +590,13 @@ jobs:
         run: |
           set -euo pipefail
           D=""
-          CSV_FLAGS="${{ steps.mods.outputs.csv }}"
+          json_FLAGS="${{ steps.mods.outputs.json }}"
       
-          echo "CSV_FLAGS='${CSV_FLAGS}'"
+          echo "json_FLAGS='${json_FLAGS}'"
       
           add () {
             local key="$1" def="$2"
-            if [[ " ${CSV_FLAGS} " == *" ${key} "* ]]; then
+            if [[ " ${json_FLAGS} " == *" ${key} "* ]]; then
               D="${D} -D${def}"
             fi
           }
@@ -638,15 +638,15 @@ jobs:
           echo "Defines => $D"
           echo "defs=$D" >> $GITHUB_OUTPUT
 
-      - name: Generate configs.h from CSV
+      - name: Generate configs.h from json
         shell: bash
         run: |
           set -euo pipefail
       
-          CSV_BOARDS="scaffold/configs/boards_manifest.csv"
-          CSV_MODS="scaffold/configs/modules_presets.csv"
-          CSV_PINS="scaffold/configs/pins/pins_presets.csv"
-          CSV_DISP="scaffold/configs/displays/display_presets.csv"
+          json_BOARDS="scaffold/configs/boards_manifest.json"
+          json_MODS="scaffold/configs/modules_presets.json"
+          json_PINS="scaffold/configs/pins/pins_presets.json"
+          json_DISP="scaffold/configs/displays/display_presets.json"
           SCRIPT="scaffold/scripts/gen_configs_h.sh"
           SKETCH_DIR="_build/esp32_marauder_rewired"
       
@@ -654,22 +654,22 @@ jobs:
           [[ -f "$SCRIPT" ]] || { echo "::error ::Generator script missing: $SCRIPT"; exit 1; }
           chmod +x "$SCRIPT"
       
-          # Ensure CSVs exist
-          for f in "$CSV_BOARDS" "$CSV_MODS" "$CSV_PINS" "$CSV_DISP"; do
-            [[ -f "$f" ]] || { echo "::error ::Missing CSV: $f"; exit 1; }
+          # Ensure jsons exist
+          for f in "$json_BOARDS" "$json_MODS" "$json_PINS" "$json_DISP"; do
+            [[ -f "$f" ]] || { echo "::error ::Missing json: $f"; exit 1; }
             sed -i 's/\r$//' "$f" || true
           done
       
           BOARD="${{ github.event.inputs.board_label }}"
           PROFILE="${{ github.event.inputs.profile_name }}"
-          MODULES_INPUT="${{ github.event.inputs.modules_csv || '' }}"
+          MODULES_INPUT="${{ github.event.inputs.modules_json || '' }}"
       
           [[ -n "${BOARD// /}" ]]   || { echo "::error ::board_label is empty"; exit 1; }
           [[ -n "${PROFILE// /}" ]] || { echo "::error ::profile_name is empty"; exit 1; }
       
           # If Custom, require modules (fail fast)
           if [[ "${PROFILE,,}" == "custom" && -z "${MODULES_INPUT// /}" ]]; then
-            echo "::error ::profile=Custom requires 'modules_csv' (e.g., WIFI,BLE,SD,TFT_ON)"
+            echo "::error ::profile=Custom requires 'modules_json' (e.g., WIFI,BLE,SD,TFT_ON)"
             exit 1
           fi
       
@@ -679,10 +679,10 @@ jobs:
           CMD=( "$SCRIPT"
                 --board "$BOARD"
                 --profile "$PROFILE"
-                --boards "$CSV_BOARDS"
-                --mods "$CSV_MODS"
-                --pins "$CSV_PINS"
-                --disp "$CSV_DISP"
+                --boards "$json_BOARDS"
+                --mods "$json_MODS"
+                --pins "$json_PINS"
+                --disp "$json_DISP"
                 --out "$SKETCH_DIR/configs.h" )
       
           if [[ -n "${MODULES_INPUT// /}" ]]; then
@@ -725,8 +725,8 @@ jobs:
           EXTRA=""
           [ -n "$FS" ] && EXTRA="$EXTRA --build-property board_build.filesystem=$FS"
           if [ -n "$PART" ]; then
-            NAME="${PART%.csv}"
-            # (Optional) stage partition CSV into sketch folder (kept from your old logic)
+            NAME="${PART%.json}"
+            # (Optional) stage partition json into sketch folder (kept from your old logic)
             mkdir -p "$SKETCH_DIR/partitions"
             [ -f "partitions/$PART" ] && cp -f "partitions/$PART" "$SKETCH_DIR/partitions/" || true
             EXTRA="$EXTRA --build-property build.partitions=$NAME"
